@@ -146,7 +146,7 @@ ID стабильны — на них ссылаются docs/flows.md и код
 
 ## 12. Безопасность и NFR (SEC)
 
-- **SEC-01.** Секретов в репозитории нет; `.env.example` содержит только имена: `DATABASE_URL, RESEND_API_KEY, ANTHROPIC_API_KEY, ADMIN_EMAILS, APP_URL, SESSION_SECRET`.
+- **SEC-01.** Секретов в репозитории нет; `.env.example` содержит только имена: `DATABASE_URL, RESEND_API_KEY, ANTHROPIC_API_KEY, ADMIN_EMAILS, APP_URL, SESSION_SECRET, NEXT_PUBLIC_PLAUSIBLE_DOMAIN` (последняя — не секрет, публичный домен аналитики; Ф7 добавит `STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET` — PAY-05).
 - **SEC-02.** Pre-commit с gitleaks обязателен для всех коммитов.
 - **SEC-03.** Rate limits: регистрация 5/час/IP (REG-07); запрос magic link 3/15 мин/email (AUTH-08); T1 — TRN-03.
 - **SEC-04.** Anthropic API вызывается только с сервера (TRN-02).
