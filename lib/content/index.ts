@@ -3,6 +3,7 @@ import { loadCourse } from './loader'
 import type { CourseContent, Lesson } from './types'
 
 const COURSE_SLUG = 'ai-basics'
+// кэш на процесс: в dev правка content/ видна после рестарта (контракт: обновление урока = git push)
 const g = globalThis as unknown as { __content?: CourseContent }
 
 /** Загружает и валидирует контент один раз на процесс; ошибки — внутрь issues, никогда не бросает. */
