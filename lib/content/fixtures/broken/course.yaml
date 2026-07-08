@@ -1,0 +1,10 @@
+slug: broken
+title: "Битый курс"
+modules:
+  - id: 1
+    title: "Модуль 1"
+    lessons:
+      - id: "1.1"
+        title: "Урок 1.1"
+      - id: "1.2"
+        title: "Урок 1.2"

@@ -1,0 +1,9 @@
+questions:
+  - question: "Что такое ИИ?"
+    options: ["Программа", "Магия"]
+    correct: 0
+    explanation: "Программа, обученная на данных."
+  - question: "Вопрос 2?"
+    options: ["А", "Б", "В"]
+    correct: 1
+    explanation: "Потому что Б."
