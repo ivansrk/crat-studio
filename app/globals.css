@@ -1,4 +1,6 @@
 @import '../lib/design/tokens.css';
+@import '../lib/design/animations/animations.css';
+@import '../components/mdx/mdx.css';
 
 * { box-sizing: border-box; }
 html { font-size: var(--fs-base); }

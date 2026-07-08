@@ -1,0 +1,17 @@
+.mdx-figure img { max-width: 100%; border-radius: 8px; }
+.mdx-figure figcaption { color: var(--lavender); font-size: var(--fs-small); margin-top: .5rem; }
+
+.mdx-gallery { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem; }
+
+.mdx-callout { border-left: 3px solid var(--neon); background: rgba(255, 75, 58, .07); padding: 1rem 1.25rem; border-radius: 0 8px 8px 0; margin: 1.5rem 0; }
+.mdx-callout-warning { border-color: var(--lavender); background: rgba(185, 167, 214, .08); }
+.mdx-callout-example { border-color: var(--mint); background: rgba(127, 214, 180, .07); }
+
+.mdx-video { position: relative; aspect-ratio: 16 / 9; }
+.mdx-video iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; border-radius: 8px; }
+
+.mdx-download { display: inline-block; border: 1px solid var(--neon); box-shadow: var(--neon-glow); padding: .75rem 1.5rem; border-radius: 8px; text-decoration: none; }
+
+.mdx-trainer-stub { border: 1px dashed var(--lavender); padding: 1.5rem; text-align: center; border-radius: 8px; color: var(--lavender); }
+
+.mdx-divider { border: 0; border-top: 1px solid rgba(242, 233, 220, .2); margin: 2.5rem auto; width: 60%; }
