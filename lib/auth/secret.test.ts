@@ -8,6 +8,17 @@ describe('sessionSecret', () => {
     vi.stubEnv('SESSION_SECRET', 'real-secret')
     expect(sessionSecret()).toBe('real-secret')
   })
+  it('прод с валидным длинным секретом возвращает его', () => {
+    const long = 'a'.repeat(48)
+    vi.stubEnv('SESSION_SECRET', long)
+    vi.stubEnv('NODE_ENV', 'production')
+    expect(sessionSecret()).toBe(long)
+  })
+  it('прод с коротким секретом → throw', () => {
+    vi.stubEnv('SESSION_SECRET', 'abc')
+    vi.stubEnv('NODE_ENV', 'production')
+    expect(() => sessionSecret()).toThrow('слишком короткий')
+  })
   it('прод без SESSION_SECRET → throw (fail-fast)', () => {
     vi.stubEnv('SESSION_SECRET', '')
     vi.stubEnv('NODE_ENV', 'production')
