@@ -79,7 +79,14 @@ type QuizQuestionList = Quiz['questions'] | undefined
 function readYaml<T>(p: string, err: (m: string) => void): T | null {
   const raw = readFile(p, err)
   if (raw === null) return null
-  try { return yaml.load(raw) as T } catch (e) { err(`${path.basename(p)} не парсится: ${(e as Error).message}`); return null }
+  let parsed: unknown
+  // loadAll: пустой файл / файл из одних комментариев даёт [], а не исключение (в отличие от load в js-yaml v5)
+  try { parsed = yaml.loadAll(raw)[0] } catch (e) { err(`${path.basename(p)} не парсится: ${(e as Error).message}`); return null }
+  if (parsed == null || typeof parsed !== 'object' || Array.isArray(parsed)) {
+    err(`${path.basename(p)} пуст или не является объектом`)
+    return null
+  }
+  return parsed as T
 }
 function readFile(p: string, err: (m: string) => void): string | null {
   if (!fs.existsSync(p)) { err(`отсутствует обязательный файл ${path.basename(p)}`); return null }

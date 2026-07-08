@@ -29,6 +29,18 @@ describe('loadCourse', () => {
     expect(msgs).toMatch(/3 вопроса \(0\)/)
     expect(c.lessons.has('1.1')).toBe(false)
   })
+  it('пустой quiz.yaml — error-issue, урок не в lessons, без исключений', () => {
+    const c = loadCourse(fx('quiz-empty'))
+    const msgs = c.issues.filter(i => i.level === 'error').map(i => i.message).join('\n')
+    expect(msgs).toMatch(/quiz\.yaml пуст или не является объектом/)
+    expect(c.lessons.has('1.1')).toBe(false)
+  })
+  it('meta.yaml из одного комментария — error-issue, урок не в lessons', () => {
+    const c = loadCourse(fx('meta-comment-only'))
+    const msgs = c.issues.filter(i => i.level === 'error').map(i => i.message).join('\n')
+    expect(msgs).toMatch(/meta\.yaml пуст или не является объектом/)
+    expect(c.lessons.has('1.1')).toBe(false)
+  })
   it('несуществующий каталог курса — одна ошибка, пустой курс', () => {
     const c = loadCourse(fx('nope'))
     expect(c.issues[0].level).toBe('error')
