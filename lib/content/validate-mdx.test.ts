@@ -40,4 +40,10 @@ describe('validateMdx', () => {
   it('атрибут-выражение (JS) вместо строки — ошибка, не проходит молча', () => {
     expect(ok('<Figure src={dyn} />').length).toBeGreaterThan(0)
   })
+  it('атрибут-выражение на компоненте без спец-проверки — ошибка', () => {
+    expect(ok('<Video kinescope={x} />').length).toBeGreaterThan(0)
+  })
+  it('spread-атрибут {...props} — ошибка', () => {
+    expect(ok('<Callout {...props}>x</Callout>').length).toBeGreaterThan(0)
+  })
 })
