@@ -1,0 +1,14 @@
+:root {
+  --bg-deep: #0E0B0B;
+  --red-sky: #7E2F2A;
+  --red-sky-2: #A03B2E;
+  --neon: #FF4B3A;
+  --neon-glow: 0 0 24px rgba(255, 75, 58, .45);
+  --mint: #7FD6B4;
+  --lavender: #B9A7D6;
+  --paper: #F2E9DC;
+  --ink: #1A1614;
+  --fs-base: 19px;      /* UX-01: 18–20px */
+  --fs-small: 17px;     /* «мелкого» текста нет */
+  --maxw-text: 46rem;
+}
