@@ -46,4 +46,29 @@ describe('validateMdx', () => {
   it('spread-атрибут {...props} — ошибка', () => {
     expect(ok('<Callout {...props}>x</Callout>').length).toBeGreaterThan(0)
   })
+  it('Figure без обязательного src — ошибка', () => {
+    expect(ok('<Figure />').join()).toMatch(/src/)
+  })
+  it('Download без обязательного file — ошибка', () => {
+    expect(ok('<Download>x</Download>').join()).toMatch(/file/)
+  })
+  it('Trainer/Animation без id — ошибка про обязательный атрибут, не «id="undefined"»', () => {
+    expect(ok('<Trainer />').join()).toMatch(/обязательн.*id/i)
+    expect(ok('<Animation />').join()).toMatch(/обязательн.*id/i)
+    expect(ok('<Trainer />').join()).not.toMatch(/undefined/)
+  })
+  it('valueless-атрибут (boolean shorthand) — ошибка, но не про JS-выражение', () => {
+    const msgs = ok('<Trainer id="t1" disabled />').join()
+    expect(msgs).toMatch(/disabled/)
+    expect(msgs).not.toMatch(/JS-выражен/i)
+  })
+  it('внешний URL картинки — ошибка про внешние URL, не «несуществующий файл»', () => {
+    const msgs = ok('![x](https://evil.example/pic.png)').join()
+    expect(msgs).toMatch(/внешн/i)
+    expect(msgs).not.toMatch(/несуществующ/i)
+  })
+  it('cheatsheet.pdf — исключение только для Download, Figure проверяется как обычно', () => {
+    expect(ok('<Download file="cheatsheet.pdf">чек-лист</Download>')).toHaveLength(0)
+    expect(ok('<Figure src="cheatsheet.pdf" />').join()).toMatch(/cheatsheet\.pdf/)
+  })
 })
