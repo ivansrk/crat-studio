@@ -17,6 +17,18 @@ describe('loadCourse', () => {
     expect(msgs).toMatch(/3 вопроса/)
     expect(c.lessons.has('1.1')).toBe(false)
   })
+  it('quiz.yaml с questions-не-массивом — error-issue, без исключения', () => {
+    const c = loadCourse(fx('quiz-not-array'))
+    const msgs = c.issues.filter(i => i.level === 'error').map(i => i.message).join('\n')
+    expect(msgs).toMatch(/questions должен быть списком/)
+    expect(c.lessons.has('1.1')).toBe(false)
+  })
+  it('quiz.yaml без ключа questions — error «3 вопроса», урок не в lessons', () => {
+    const c = loadCourse(fx('quiz-no-questions'))
+    const msgs = c.issues.filter(i => i.level === 'error').map(i => i.message).join('\n')
+    expect(msgs).toMatch(/3 вопроса \(0\)/)
+    expect(c.lessons.has('1.1')).toBe(false)
+  })
   it('несуществующий каталог курса — одна ошибка, пустой курс', () => {
     const c = loadCourse(fx('nope'))
     expect(c.issues[0].level).toBe('error')

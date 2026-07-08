@@ -59,7 +59,12 @@ function loadLesson(courseDir: string, moduleId: number, id: string, issues: Con
 function validateQuiz(q: Quiz, err: (m: string) => void) {
   const blocks: [string, QuizQuestionList][] = [['questions', q.questions], ['deferred', q.deferred]]
   for (const [name, list] of blocks) {
-    if (!list) continue
+    if (list == null) {
+      // отсутствие deferred — штатно (D-012); отсутствие questions = 0 вопросов → ошибка ниже
+      if (name === 'questions') err(`в quiz.yaml не ровно 3 вопроса (0)`)
+      continue
+    }
+    if (!Array.isArray(list)) { err(`${name} должен быть списком`); continue }
     if (name === 'questions' && list.length !== 3) err(`в quiz.yaml не ровно 3 вопроса (${list.length})`)
     list.forEach((it, i) => {
       if (!it.question?.trim() || !it.explanation?.trim()) err(`${name}[${i}]: пустой question/explanation`)

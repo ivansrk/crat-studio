@@ -1,0 +1,8 @@
+slug: quiz-not-array
+title: "Курс с quiz.yaml, где questions — не массив"
+modules:
+  - id: 1
+    title: "Модуль 1"
+    lessons:
+      - id: "1.1"
+        title: "Урок 1.1"

@@ -1,0 +1,8 @@
+slug: quiz-no-questions
+title: "Курс с quiz.yaml без questions"
+modules:
+  - id: 1
+    title: "Модуль 1"
+    lessons:
+      - id: "1.1"
+        title: "Урок 1.1"
