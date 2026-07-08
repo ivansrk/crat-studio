@@ -14,6 +14,10 @@ export function getContent(): CourseContent {
 export function getLesson(id: string): Lesson | null {
   return getContent().lessons.get(id) ?? null
 }
+/** URL-база ассетов урока, БЕЗ хвостового слэша. Знание о раскладке контента живёт в lib/content. */
+export function assetBase(lesson: Lesson): string {
+  return `/content-assets/${COURSE_SLUG}/module-${lesson.moduleId}/lesson-${lesson.meta.id}`
+}
 export function contentErrors() {
   return getContent().issues.filter(i => i.level === 'error')
 }

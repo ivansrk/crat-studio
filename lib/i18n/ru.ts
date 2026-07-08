@@ -6,6 +6,7 @@ export const ru = {
     downloadCheatsheet: 'Скачать шпаргалку',
     finishLesson: 'Завершить урок',
     unavailable: 'Урок временно недоступен, мы уже чиним',
+    retry: 'Попробовать снова',
     trainerSoon: 'Тренажёр появится на этом месте',
   },
   callout: { idea: 'Совет', warning: 'Внимание', example: 'Пример' },
