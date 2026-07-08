@@ -80,4 +80,26 @@ describe('loadCourse', () => {
     expect(msgs).toMatch(/questions\[0\]: correct вне диапазона/)
     expect(c.lessons.has('1.3')).toBe(false)
   })
+  it('lesson.mdx с компонентом вне белого списка — error «lesson.mdx:», урок не в lessons', () => {
+    const c = loadCourse(fx('bad-mdx'))
+    const msgs = c.issues.filter(i => i.level === 'error').map(i => i.message).join('\n')
+    expect(msgs).toMatch(/lesson\.mdx:.*Hacker/)
+    expect(c.lessons.has('1.1')).toBe(false)
+  })
+  it('lesson.mdx с <Figure> на реально существующий файл в assets/ — 0 ошибок', () => {
+    const c = loadCourse(fx('with-asset'))
+    expect(c.issues.filter(i => i.level === 'error')).toHaveLength(0)
+    expect(c.lessons.has('1.1')).toBe(true)
+  })
+  it('каталог урока на диске без записи в course.yaml — warning, не ошибка', () => {
+    const c = loadCourse(fx('valid-course'))
+    const warnings = c.issues.filter(i => i.level === 'warning').map(i => i.message).join('\n')
+    expect(warnings).toMatch(/module-1[\\/]lesson-9\.9.*не указан в course\.yaml.*игнорируется/)
+    expect(c.issues.filter(i => i.level === 'error')).toHaveLength(0)
+  })
+  it('отсутствие deferred в quiz.yaml — warning про 7 дней (D-012)', () => {
+    const c = loadCourse(fx('valid-course'))
+    const warnings = c.issues.filter(i => i.level === 'warning').map(i => i.message).join('\n')
+    expect(warnings).toMatch(/deferred.*7 дней.*D-012/)
+  })
 })

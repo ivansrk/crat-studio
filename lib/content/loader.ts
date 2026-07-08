@@ -2,6 +2,8 @@ import fs from 'node:fs'
 import path from 'node:path'
 import * as yaml from 'js-yaml'
 import type { CourseContent, CourseYaml, ContentIssue, Lesson, LessonMeta, Quiz } from './types'
+import { validateMdx } from './validate-mdx'
+import { animationIds } from '@/lib/design/animations/registry'
 
 export function loadCourse(courseDir: string): CourseContent {
   const issues: ContentIssue[] = []
@@ -29,15 +31,36 @@ export function loadCourse(courseDir: string): CourseContent {
     issues.push({ level: 'error', message: `slug "${course.slug}" ≠ каталогу "${path.basename(courseDir)}"` })
 
   const seen = new Set<string>()
+  const expectedDirs = new Set<string>()
   for (const mod of course.modules ?? []) {
     for (const ref of mod.lessons ?? []) {
+      expectedDirs.add(`module-${mod.id}/lesson-${ref.id}`)
       if (seen.has(ref.id)) { issues.push({ level: 'error', message: `дубль id урока ${ref.id}` }); continue }
       seen.add(ref.id)
       const lesson = loadLesson(courseDir, mod.id, ref.id, issues)
       if (lesson) lessons.set(ref.id, lesson)
     }
   }
+  warnOrphanLessonDirs(courseDir, expectedDirs, issues)
   return { course, lessons, issues, loadedAt: new Date() }
+}
+
+/** Warning §6: каталог урока на диске без записи в course.yaml — игнорируется, но не молча. */
+function warnOrphanLessonDirs(courseDir: string, expectedDirs: Set<string>, issues: ContentIssue[]) {
+  for (const modEntry of safeReaddir(courseDir)) {
+    if (!modEntry.isDirectory() || !modEntry.name.startsWith('module-')) continue
+    const moduleDir = path.join(courseDir, modEntry.name)
+    for (const lessonEntry of safeReaddir(moduleDir)) {
+      if (!lessonEntry.isDirectory() || !lessonEntry.name.startsWith('lesson-')) continue
+      const key = `${modEntry.name}/${lessonEntry.name}`
+      if (!expectedDirs.has(key))
+        issues.push({ level: 'warning', message: `каталог ${key} не указан в course.yaml, игнорируется` })
+    }
+  }
+}
+
+function safeReaddir(dir: string): fs.Dirent[] {
+  return fs.existsSync(dir) ? fs.readdirSync(dir, { withFileTypes: true }) : []
 }
 
 function loadLesson(courseDir: string, moduleId: number, id: string, issues: ContentIssue[]): Lesson | null {
@@ -52,7 +75,18 @@ function loadLesson(courseDir: string, moduleId: number, id: string, issues: Con
   const practiceMd = readFile(path.join(dir, 'practice.md'), err)
 
   if (meta && meta.id !== id) err(`meta.id "${meta.id}" ≠ id урока "${id}"`)
-  if (quiz) validateQuiz(quiz, err)
+  if (mdx !== null) {
+    const assetsDir = path.join(dir, 'assets')
+    const existingAssets = new Set<string>(
+      fs.existsSync(assetsDir) ? fs.readdirSync(assetsDir).map(f => `assets/${f}`) : [],
+    )
+    for (const m of validateMdx(mdx, { existingAssets, animationIds })) err(`lesson.mdx: ${m}`)
+  }
+  if (quiz) {
+    validateQuiz(quiz, err)
+    if (quiz.deferred == null)
+      issues.push({ level: 'warning', lessonId: id, message: 'нет deferred — через 7 дней будут заданы основные вопросы (D-012)' })
+  }
   const hasCheatsheet = fs.existsSync(path.join(dir, 'cheatsheet.pdf'))
   if (meta?.cheatsheet && !hasCheatsheet) err(`cheatsheet: true, а cheatsheet.pdf отсутствует`)
   if (meta && !meta.video_id) issues.push({ level: 'warning', lessonId: id, message: 'пустой video_id (LES-03, штатно)' })

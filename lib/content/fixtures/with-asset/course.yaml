@@ -1,0 +1,8 @@
+slug: with-asset
+title: "Курс с картинкой в assets/ для тестов валидации"
+modules:
+  - id: 1
+    title: "Модуль 1"
+    lessons:
+      - id: "1.1"
+        title: "Урок 1.1 (с картинкой)"
