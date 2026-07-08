@@ -10,7 +10,7 @@ import { Divider } from './Divider'
 
 type Props = Record<string, unknown>
 
-const asProp = <T,>(component: T) => component as React.ComponentType<Props>
+const asProp = <P,>(component: React.ComponentType<P>) => component as React.ComponentType<Props>
 
 export function mdxComponents(assetBase: string): Record<MdxComponentName, React.ComponentType<Props>> {
   return {

@@ -1,3 +1,5 @@
+import { t } from '@/lib/i18n'
+
 const ICONS = { idea: '💡', warning: '⚠️', example: '🧭' } as const
 
 export function Callout({
@@ -8,8 +10,8 @@ export function Callout({
   children: React.ReactNode
 }) {
   return (
-    <aside className={`mdx-callout mdx-callout-${type}`} aria-label={type}>
-      {ICONS[type]} {children}
+    <aside className={`mdx-callout mdx-callout-${type}`} aria-label={t.callout[type]}>
+      <span aria-hidden="true">{ICONS[type]}</span> {children}
     </aside>
   )
 }

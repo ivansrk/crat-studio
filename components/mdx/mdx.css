@@ -3,9 +3,9 @@
 
 .mdx-gallery { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem; }
 
-.mdx-callout { border-left: 3px solid var(--neon); background: rgba(255, 75, 58, .07); padding: 1rem 1.25rem; border-radius: 0 8px 8px 0; margin: 1.5rem 0; }
-.mdx-callout-warning { border-color: var(--lavender); background: rgba(185, 167, 214, .08); }
-.mdx-callout-example { border-color: var(--mint); background: rgba(127, 214, 180, .07); }
+.mdx-callout { border-left: 3px solid var(--neon); background: color-mix(in srgb, var(--neon) 7%, transparent); padding: 1rem 1.25rem; border-radius: 0 8px 8px 0; margin: 1.5rem 0; }
+.mdx-callout-warning { border-color: var(--lavender); background: color-mix(in srgb, var(--lavender) 8%, transparent); }
+.mdx-callout-example { border-color: var(--mint); background: color-mix(in srgb, var(--mint) 7%, transparent); }
 
 .mdx-video { position: relative; aspect-ratio: 16 / 9; }
 .mdx-video iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; border-radius: 8px; }
@@ -14,4 +14,4 @@
 
 .mdx-trainer-stub { border: 1px dashed var(--lavender); padding: 1.5rem; text-align: center; border-radius: 8px; color: var(--lavender); }
 
-.mdx-divider { border: 0; border-top: 1px solid rgba(242, 233, 220, .2); margin: 2.5rem auto; width: 60%; }
+.mdx-divider { border: 0; border-top: 1px solid color-mix(in srgb, var(--paper) 20%, transparent); margin: 2.5rem auto; width: 60%; }

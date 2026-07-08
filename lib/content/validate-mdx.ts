@@ -13,7 +13,11 @@ const REQUIRED_ATTRS: Record<string, string> = {
   Download: 'file',
   Trainer: 'id',
   Animation: 'id',
+  Video: 'kinescope',
 }
+
+/** Допустимые значения type у <Callout>; отсутствие атрибута валидно (= idea). */
+const CALLOUT_TYPES = new Set(['idea', 'warning', 'example'])
 
 /** Единственный файл, который Download может указывать вне assets/ (генерируется отдельно). */
 const DOWNLOAD_CHEATSHEET = 'cheatsheet.pdf'
@@ -82,6 +86,11 @@ export function validateMdx(src: string, ctx: MdxValidationCtx): string[] {
           } else if (typeof a.value !== 'string') {
             errors.push(`JS-выражение в атрибуте <${name}> запрещено: ${a.name}={...}`)
           }
+        }
+        if (name === 'Callout') {
+          const typeAttr = strAttr(node, 'type')
+          if (typeAttr.present && typeAttr.value !== undefined && !CALLOUT_TYPES.has(typeAttr.value))
+            errors.push(`недопустимый type у <Callout>: "${typeAttr.value}" (допустимо: idea, warning, example)`)
         }
         const required = REQUIRED_ATTRS[name]
         if (required) {

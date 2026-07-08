@@ -67,6 +67,17 @@ describe('validateMdx', () => {
     expect(msgs).toMatch(/внешн/i)
     expect(msgs).not.toMatch(/несуществующ/i)
   })
+  it('Video без обязательного kinescope — ошибка', () => {
+    expect(ok('<Video />').join()).toMatch(/kinescope/)
+    expect(ok('<Video kinescope="abc123" />')).toHaveLength(0)
+  })
+  it('Callout с недопустимым type — ошибка; без type или с валидным — ок', () => {
+    expect(ok('<Callout type="danger">x</Callout>').join()).toMatch(/недопустимый type у <Callout>/)
+    expect(ok('<Callout>x</Callout>')).toHaveLength(0)
+    expect(ok('<Callout type="idea">x</Callout>')).toHaveLength(0)
+    expect(ok('<Callout type="warning">x</Callout>')).toHaveLength(0)
+    expect(ok('<Callout type="example">x</Callout>')).toHaveLength(0)
+  })
   it('cheatsheet.pdf — исключение только для Download, Figure проверяется как обычно', () => {
     expect(ok('<Download file="cheatsheet.pdf">чек-лист</Download>')).toHaveLength(0)
     expect(ok('<Figure src="cheatsheet.pdf" />').join()).toMatch(/cheatsheet\.pdf/)
