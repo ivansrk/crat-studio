@@ -1,0 +1,7 @@
+# секреты — никогда в репо (SEC-01)
+.env
+.env.*
+!.env.example
+
+node_modules/
+.next/

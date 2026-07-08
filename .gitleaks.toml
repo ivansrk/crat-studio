@@ -1,0 +1,25 @@
+# gitleaks — конфиг поверх встроенных правил (SEC-01, SEC-02)
+title = "crat-studio"
+
+[extend]
+useDefault = true # все стандартные правила gitleaks (AWS, generic api key, private key и т.д.)
+
+# Дополнительные правила под наши провайдеры
+[[rules]]
+id = "anthropic-api-key"
+description = "Anthropic API key"
+regex = '''sk-ant-[a-zA-Z0-9\-_]{20,}'''
+keywords = ["sk-ant-"]
+
+[[rules]]
+id = "resend-api-key"
+description = "Resend API key"
+regex = '''re_[a-zA-Z0-9]{20,}'''
+keywords = ["re_"]
+
+[allowlist]
+description = "Файлы без секретов по определению"
+paths = [
+  '''\.env\.example$''',
+  '''docs/.*\.md$''',
+]
