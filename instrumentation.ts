@@ -6,5 +6,12 @@ export async function register() {
       console.error(`[content] ${i.lessonId ? i.lessonId + ' ' : ''}${i.message}`)
     const warnings = issues.filter(i => i.level === 'warning').length
     if (warnings > 0) console.warn(`[content] предупреждений: ${warnings}`)
+
+    try {
+      const { syncAdmins } = await import('./lib/auth/sync-admins')
+      await syncAdmins()
+    } catch (e) {
+      console.error('[startup] syncAdmins не выполнен (нет БД?):', (e as Error).message)
+    }
   }
 }
