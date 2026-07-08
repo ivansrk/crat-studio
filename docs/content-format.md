@@ -81,7 +81,7 @@ mission_prompt: false    # true только в уроке 1.1: показать
 | Компонент | Пропсы | Что делает |
 | --- | --- | --- |
 | `<Figure src caption? />` | src — путь в assets/, caption — подпись | Иллюстрация с подписью, крупно |
-| `<Gallery images={…}? >` | children: несколько `<Figure>` | Галерея из 2–6 изображений |
+| `<Gallery>…</Gallery>` | children: несколько `<Figure>` (только так; props у Gallery нет) | Галерея из 2–6 изображений |
 | `<Callout type>текст</Callout>` | type: `idea` \| `warning` \| `example` | Врезка в стиле CRAT |
 | `<Video kinescope />` | kinescope — id ролика | Kinescope-плеер в любом месте урока |
 | `<Download file>подпись</Download>` | file — путь в assets/ или cheatsheet.pdf | Кнопка скачивания PDF/файла |
