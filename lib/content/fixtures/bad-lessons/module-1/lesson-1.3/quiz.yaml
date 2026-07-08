@@ -1,0 +1,12 @@
+questions:
+  - question: "Вопрос без ключа correct?"
+    options: ["А", "Б"]
+    explanation: "Здесь забыли correct."
+  - question: "Вопрос 2?"
+    options: ["А", "Б", "В"]
+    correct: 1
+    explanation: "Потому что Б."
+  - question: "Вопрос 3?"
+    options: ["Да", "Нет"]
+    correct: 0
+    explanation: "Да."

@@ -46,4 +46,38 @@ describe('loadCourse', () => {
     expect(c.issues[0].level).toBe('error')
     expect(c.lessons.size).toBe(0)
   })
+  it('course.yaml = null — error, без исключения, пустой курс', () => {
+    const c = loadCourse(fx('null-course'))
+    const msgs = c.issues.filter(i => i.level === 'error').map(i => i.message).join('\n')
+    expect(msgs).toMatch(/course\.yaml пуст или не является объектом/)
+    expect(c.lessons.size).toBe(0)
+  })
+  it('slug ≠ имени каталога — error', () => {
+    const c = loadCourse(fx('wrong-slug'))
+    const msgs = c.issues.filter(i => i.level === 'error').map(i => i.message).join('\n')
+    expect(msgs).toMatch(/slug "not-the-dir-name" ≠ каталогу "wrong-slug"/)
+  })
+  it('дубль id урока в course.yaml — error «дубль»', () => {
+    const c = loadCourse(fx('bad-lessons'))
+    const msgs = c.issues.filter(i => i.level === 'error').map(i => i.message).join('\n')
+    expect(msgs).toMatch(/дубль id урока 1\.1/)
+  })
+  it('meta.id ≠ id каталога — error, урок не в lessons', () => {
+    const c = loadCourse(fx('bad-lessons'))
+    const msgs = c.issues.filter(i => i.level === 'error').map(i => i.message).join('\n')
+    expect(msgs).toMatch(/meta\.id "9\.9" ≠ id урока "1\.1"/)
+    expect(c.lessons.has('1.1')).toBe(false)
+  })
+  it('cheatsheet: true без cheatsheet.pdf — error, урок не в lessons', () => {
+    const c = loadCourse(fx('bad-lessons'))
+    const msgs = c.issues.filter(i => i.level === 'error').map(i => i.message).join('\n')
+    expect(msgs).toMatch(/cheatsheet\.pdf отсутствует/)
+    expect(c.lessons.has('1.2')).toBe(false)
+  })
+  it('вопрос без correct — error «correct вне диапазона», урок не в lessons', () => {
+    const c = loadCourse(fx('bad-lessons'))
+    const msgs = c.issues.filter(i => i.level === 'error').map(i => i.message).join('\n')
+    expect(msgs).toMatch(/questions\[0\]: correct вне диапазона/)
+    expect(c.lessons.has('1.3')).toBe(false)
+  })
 })

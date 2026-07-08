@@ -13,13 +13,18 @@ export function loadCourse(courseDir: string): CourseContent {
     issues.push({ level: 'error', message: `course.yaml не найден: ${courseYamlPath}` })
     return { course: empty, lessons, issues, loadedAt: new Date() }
   }
-  let course: CourseYaml
+  let parsed: unknown
   try {
-    course = yaml.load(fs.readFileSync(courseYamlPath, 'utf8')) as CourseYaml
+    parsed = yaml.loadAll(fs.readFileSync(courseYamlPath, 'utf8'))[0]
   } catch (e) {
     issues.push({ level: 'error', message: `course.yaml не парсится: ${(e as Error).message}` })
     return { course: empty, lessons, issues, loadedAt: new Date() }
   }
+  if (!isPlainObject(parsed)) {
+    issues.push({ level: 'error', message: 'course.yaml пуст или не является объектом' })
+    return { course: empty, lessons, issues, loadedAt: new Date() }
+  }
+  const course = parsed as CourseYaml
   if (course.slug !== path.basename(courseDir))
     issues.push({ level: 'error', message: `slug "${course.slug}" ≠ каталогу "${path.basename(courseDir)}"` })
 
@@ -69,12 +74,16 @@ function validateQuiz(q: Quiz, err: (m: string) => void) {
     list.forEach((it, i) => {
       if (!it.question?.trim() || !it.explanation?.trim()) err(`${name}[${i}]: пустой question/explanation`)
       if (!it.options || it.options.length < 2 || it.options.length > 4) err(`${name}[${i}]: вариантов должно быть 2–4`)
-      else if (it.correct < 0 || it.correct >= it.options.length) err(`${name}[${i}]: correct вне диапазона`)
+      else if (!Number.isInteger(it.correct) || it.correct < 0 || it.correct >= it.options.length) err(`${name}[${i}]: correct вне диапазона`)
     })
   }
 }
 
 type QuizQuestionList = Quiz['questions'] | undefined
+
+function isPlainObject(v: unknown): v is Record<string, unknown> {
+  return v != null && typeof v === 'object' && !Array.isArray(v)
+}
 
 function readYaml<T>(p: string, err: (m: string) => void): T | null {
   const raw = readFile(p, err)
@@ -82,7 +91,7 @@ function readYaml<T>(p: string, err: (m: string) => void): T | null {
   let parsed: unknown
   // loadAll: пустой файл / файл из одних комментариев даёт [], а не исключение (в отличие от load в js-yaml v5)
   try { parsed = yaml.loadAll(raw)[0] } catch (e) { err(`${path.basename(p)} не парсится: ${(e as Error).message}`); return null }
-  if (parsed == null || typeof parsed !== 'object' || Array.isArray(parsed)) {
+  if (!isPlainObject(parsed)) {
     err(`${path.basename(p)} пуст или не является объектом`)
     return null
   }

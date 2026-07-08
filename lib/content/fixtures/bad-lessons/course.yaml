@@ -1,0 +1,14 @@
+slug: bad-lessons
+title: "Курс с битыми уроками для тестов веток валидации"
+modules:
+  - id: 1
+    title: "Модуль 1"
+    lessons:
+      - id: "1.1"
+        title: "Урок 1.1 (meta.id не совпадает)"
+      - id: "1.1"
+        title: "Дубль урока 1.1"
+      - id: "1.2"
+        title: "Урок 1.2 (cheatsheet без pdf)"
+      - id: "1.3"
+        title: "Урок 1.3 (вопрос без correct)"
