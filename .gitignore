@@ -15,6 +15,9 @@ coverage/
 *.tsbuildinfo
 next-env.d.ts
 
+# prisma generated client (Prisma 7: provider = "prisma-client")
+/lib/generated/
+
 # misc
 .DS_Store
 *.pem
