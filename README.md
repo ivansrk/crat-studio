@@ -1,36 +1,38 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# CRAT studio
 
-## Getting Started
+Сайт студии + платформа онлайн-курсов: главная (`/`), лендинг курса «ИИ в профессиональной и личной деятельности» (`/ai-basics`), ЛМС — кабинет студента и админка (`/app`, `/admin`).
 
-First, run the development server:
+Спецификации и решения — источник правды для этого проекта: [CLAUDE.md](./CLAUDE.md), [docs/](./docs) (requirements.md, data-model.md, flows.md, content-format.md, phases.md, seed.md), [DECISIONS.md](./DECISIONS.md).
+
+## Команды
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm run dev             # локальный запуск
+npm run build           # прод-сборка (включает prisma generate)
+npm run typecheck       # tsc --noEmit
+npm run lint             # eslint
+npm test                # vitest run
+npm run seed            # scripts/seed.ts (идемпотентен)
+npx prisma migrate dev  # локальная миграция
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Локальная разработка
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+1. Node 22 (см. `.nvmrc`).
+2. `npm i`
+3. Postgres в Docker:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+   ```bash
+   docker run -d --name crat-pg -e POSTGRES_PASSWORD=dev -e POSTGRES_DB=crat -p 5432:5432 postgres:16
+   ```
 
-## Learn More
+4. Скопировать `.env.example` в `.env` и заполнить `DATABASE_URL` (например, `postgresql://postgres:dev@localhost:5432/crat`).
+5. `npx prisma migrate dev`
+6. `npm run dev`
 
-To learn more about Next.js, take a look at the following resources:
+## Деплой на Render
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+1. Render → New → Blueprint → репозиторий `ivansrk/crat-studio` (`render.yaml` подхватится автоматически).
+2. Заполнить env-переменные: `ADMIN_EMAILS`, `APP_URL`, `NEXT_PUBLIC_PLAUSIBLE_DOMAIN` (`RESEND_API_KEY` и `ANTHROPIC_API_KEY` можно позже — понадобятся в Ф1/Ф4). `DATABASE_URL` и `SESSION_SECRET` создаются автоматически.
+3. После первого деплоя — в настройках Postgres включить автобэкапы (SEC-07).
+4. Проверить `/health`.

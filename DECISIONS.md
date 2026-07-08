@@ -4,6 +4,13 @@
 
 ---
 
+## 2026-07-08 — Решения фазы Ф0 (реализация)
+
+### D-026. Тулинг Ф0: vitest, next-mdx-remote v6, Prisma 7 с driver-адаптером, instrumentation-хук
+**Решение:** тесты — vitest; рендер MDX — next-mdx-remote/rsc с явной картой компонентов (белый список lib/content/whitelist.ts — один источник для валидатора и рендера); Prisma 7: генератор `prisma-client` (output lib/generated/prisma, в .gitignore), адаптер @prisma/adapter-pg, prisma.config.ts, dotenv в dependencies (нужен prisma migrate deploy на Render); валидация контента на старте — instrumentation.ts; фактические версии: Next 16, React 19.
+**Причина:** минимальный стек под CNT-02 «валидация при старте» в среде Next.js; Prisma 7 требует driver-адаптер (prisma-client-js удалён).
+**Альтернативы:** @next/mdx (компилирует только импортируемые файлы — не подходит для content/ вне бандла), jest (медленнее, лишняя конфигурация), даунгрейд на Prisma 6 (зачем — v7 работает).
+
 ## 2026-07-08 — Расширение видения платформы (утверждено Иваном в сессии брейнсторма)
 
 ### D-018. Урок — MDX с белым списком компонентов (контракт контента v2)
