@@ -4,7 +4,7 @@ import { isUniqueViolation } from '@/lib/db-errors'
 import { scoreAnswers, isQuizPassed, nextQuestionIndex, isReplay, QUIZ_TOTAL, type StoredAnswer } from './quiz-logic'
 import type { QuizResult } from '@/lib/generated/prisma/client'
 
-const COURSE = 'ai-basics'
+const COURSE = 'ai-basics' // MVP: один курс; мультикурс = прокинуть courseSlug через сигнатуры (схема уже courseSlug-aware)
 const DEFERRED_DAYS_MS = 7 * 24 * 60 * 60 * 1000 // LES-13
 
 /** LessonProgress создаётся при первом открытии урока (firstOpenedAt = default now). */
@@ -40,6 +40,8 @@ export type AnswerOutcome =
 export async function recordAnswer(userId: string, lessonId: string, attemptId: string, questionIndex: number, chosen: number): Promise<AnswerOutcome> {
   const attempt = await db.quizResult.findFirst({ where: { id: attemptId, userId, lessonId } })
   if (!attempt) return { ok: false, reason: 'not_found' }
+  const lesson = getLesson(lessonId)
+  if (!lesson) return { ok: false, reason: 'not_found' } // битый/удалённый урок — не путать с bad_option (ревью T2)
   const answers = (attempt.answers as StoredAnswer[] | null) ?? []
 
   // Двойной клик по варианту (ревью T2): повтор того же (questionIndex, chosen) — идемпотентный ok
@@ -54,8 +56,7 @@ export async function recordAnswer(userId: string, lessonId: string, attemptId: 
   }
 
   if (attempt.finishedAt) return { ok: false, reason: 'finished' }
-  const lesson = getLesson(lessonId)
-  const question = lesson?.quiz.questions[questionIndex]
+  const question = lesson.quiz.questions[questionIndex]
   if (!question || chosen < 0 || chosen >= question.options.length) return { ok: false, reason: 'bad_option' }
   if (nextQuestionIndex(answers) !== questionIndex) return { ok: false, reason: 'already_answered' } // отвечать можно только на текущий
 
