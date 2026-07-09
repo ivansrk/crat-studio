@@ -188,6 +188,19 @@ export const ru = {
     statusInProgress: 'в процессе',
     statusNotStarted: 'не начат',
   },
+  // Ф4 T2: блок «3 вопроса на 2 минуты» (CAB-04…06) — карточка в кабинете + /app/review.
+  review: {
+    kicker: 'Повторение',
+    cabinetTitle: '3 вопроса на 2 минуты',
+    lessonLabel: 'Урок',
+    submit: 'Ответить',
+    incomplete: 'Ответьте на все вопросы',
+    scoreLabel: 'Результат',
+    correct: 'Верно',
+    incorrect: 'Не совсем',
+    backToCabinet: 'В кабинет',
+    doneTitle: 'Повторение пройдено!',
+  },
   callout: { idea: 'Совет', warning: 'Внимание', example: 'Пример' },
   health: { ok: 'ok', contentValid: 'контент валиден', contentErrors: 'ошибки контента' },
   auth: {

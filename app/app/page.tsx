@@ -5,6 +5,7 @@ import { currentUser } from '@/lib/auth/current-user'
 import { hasCourseAccess } from '@/lib/progress/access'
 import { getCourseProgress } from '@/lib/progress'
 import { isLessonPassed } from '@/lib/progress/quiz-logic'
+import { getDueDeferred } from '@/lib/progress/deferred'
 import { logoutAction } from '@/app/actions/logout'
 import { saveMissionAction } from '@/app/actions/lesson'
 import { getCurrentSubmission } from '@/lib/project'
@@ -43,6 +44,8 @@ export default async function Cabinet() {
   const { byLesson, completedCount } = await getCourseProgress(user.id)
   const total = lessonCount() // знаменатель «N/12» из course.yaml, не хардкод (ревью T6)
   const pct = Math.min(100, (completedCount / total) * 100)
+  // Ф4 T2: due-блок повторения (CAB-04/06) — один запрос, без кэша (план); показывается ВВЕРХУ кабинета.
+  const dueReview = await getDueDeferred(user.id)
   const projectSubmission = await getCurrentSubmission(user.id) // T5: доп. запрос — приемлемо (план)
   const projectStatusText = projectSubmission ? PROJECT_STATUS_LABEL[projectSubmission.status] : t.project.statusNone
   // T7: один findFirst — есть ли действующий сертификат (CERT-06/D-011: PDF по требованию, не хранится).
@@ -75,6 +78,16 @@ export default async function Cabinet() {
             </div>
             <p className="crat-muted">{completedCount}/{total} · {t.cabinet.progressLabel}</p>
           </section>
+
+          {/* Ф4 T2: повторение приоритетно — сразу после прогресса, до миссии и уроков (CAB-04…06). */}
+          {dueReview && (
+            <div className="crat-card cabinet-review">
+              <h2 className="crat-kicker">{t.review.kicker}</h2>
+              <p className="cabinet-review-title">{t.review.cabinetTitle}</p>
+              <p className="crat-muted">{t.review.lessonLabel}: {dueReview.lessonTitle}</p>
+              <Link className="crat-button primary" href="/app/review">{t.review.submit}</Link>
+            </div>
+          )}
 
           <div className="crat-card cabinet-mission">
             <h2>{t.lesson.missionTitle}</h2>
