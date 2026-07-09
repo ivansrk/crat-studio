@@ -8,7 +8,16 @@
 @import '../components/cabinet.css';
 
 * { box-sizing: border-box; }
-html { font-size: var(--fs-base); }
+html {
+  font-size: var(--fs-base);
+  /* якоря главной не ныряют под sticky-шапку (ревью T4) */
+  scroll-padding-top: 7rem;
+  scroll-behavior: smooth;
+}
+/* мобайл: nav шапки переносится в 2–3 строки (шапка до ~230px) — запас больше */
+@media (max-width: 760px) {
+  html { scroll-padding-top: 12.5rem; }
+}
 body {
   margin: 0;
   background: var(--bg-deep);
@@ -21,4 +30,5 @@ a { color: var(--neon); }
 main { max-width: var(--maxw-text); margin: 0 auto; padding: 2rem 1rem; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
+  html { scroll-behavior: auto; }
 }

@@ -157,12 +157,35 @@ main.crat-home {
 .course-card {
   display: grid;
   gap: 1.25rem;
-  justify-items: start;
+}
+
+/* мобайл 360px: grid-дети по умолчанию min-width:auto — длинный заголовок/факты раздували карточку */
+.course-card > * {
+  min-width: 0;
+}
+
+.course-card h3 {
+  overflow-wrap: anywhere;
+}
+
+.course-card .crat-button {
+  justify-self: start;
 }
 
 .course-facts {
   font-family: var(--font-mono), monospace;
   font-size: var(--fs-small);
+  overflow-wrap: anywhere;
+}
+
+/* узкий экран: display-кегль ломал «профессиональной» посреди слова — умеренный размер, слова целые */
+@media (max-width: 480px) {
+  .course-card h3 {
+    font-size: 1.5rem;
+  }
+  .course-card .crat-button {
+    padding-inline: 1.2rem;
+  }
 }
 
 /* автоматизации */

@@ -16,7 +16,9 @@ import { TeamCard } from '@/components/site/TeamCard'
  */
 export default function Home() {
   const { course } = getContent()
-  const courseFacts = `${course.modules.length} модуля / ${lessonCount()} уроков / ${t.home.courseFactsTail}`
+  const courseFacts = t.home.courseFacts
+    .replace('{modules}', String(course.modules.length))
+    .replace('{lessons}', String(lessonCount()))
 
   return (
     <>

@@ -32,8 +32,9 @@ export const ru = {
     creativeKicker: 'creative',
 
     courseFocusTitle: 'Первый курс',
-    // хвост строки фактов курса; числа модулей/уроков — из course.yaml через getContent()/lessonCount(), не хардкод
-    courseFactsTail: 'мини-проект / сертификат',
+    // числа — из course.yaml (getContent()/lessonCount()), не хардкод; форма «модуля» — под текущие 4:
+    // при изменении состава курса строка правится здесь, в словаре
+    courseFacts: '{modules} модуля / {lessons} уроков / мини-проект / сертификат',
     courseCta: 'Открыть программу',
 
     automationSectionTitle: 'Автоматизации без корпоративного театра',
