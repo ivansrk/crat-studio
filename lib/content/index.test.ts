@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { getContent, contentErrors, nextLessonId, lessonCount } from './index'
+import { getContent, contentErrors, nextLessonId, lessonCount, getArticles, getArticle, articleIssues } from './index'
 
 describe('контент репозитория', () => {
   it('12 уроков из content/ai-basics валидны', () => {
@@ -22,5 +22,15 @@ describe('nextLessonId', () => {
   it('null для последнего урока (4.3) и для неизвестного id', () => {
     expect(nextLessonId('4.3')).toBeNull()
     expect(nextLessonId('9.9')).toBeNull()
+  })
+})
+
+describe('статьи (content/articles — раздел опционален, пока не заведён)', () => {
+  it('getArticles() — пусто, без ошибок, пока content/articles не существует', () => {
+    expect(getArticles()).toEqual([])
+    expect(articleIssues()).toEqual([])
+  })
+  it('getArticle(slug) — null для отсутствующего раздела', () => {
+    expect(getArticle('nope')).toBeNull()
   })
 })

@@ -5,7 +5,12 @@ import type { Root } from 'mdast'
 import type { MdxJsxAttribute, MdxJsxFlowElement, MdxJsxTextElement } from 'mdast-util-mdx-jsx'
 import { MDX_COMPONENTS, TRAINER_IDS } from './whitelist'
 
-export type MdxValidationCtx = { existingAssets: Set<string>; animationIds: Set<string> }
+export type MdxValidationCtx = {
+  existingAssets: Set<string>
+  animationIds: Set<string>
+  /** Opt-in: имена компонентов, запрещённых в этом разделе (напр. Trainer в статьях, §8). Не влияет на уроки. */
+  forbidComponents?: string[]
+}
 
 /** Обязательные строковые пропы компонентов; отсутствие — ошибка. */
 const REQUIRED_ATTRS: Record<string, string> = {
@@ -71,6 +76,10 @@ export function validateMdx(src: string, ctx: MdxValidationCtx): string[] {
       case 'mdxJsxFlowElement':
       case 'mdxJsxTextElement': {
         const name = node.name ?? ''
+        if (name && ctx.forbidComponents?.includes(name)) {
+          errors.push(`компонент <${name}> запрещён в этом разделе`)
+          break
+        }
         if (!whitelist.has(name)) {
           errors.push(`компонент вне белого списка: <${name || '(фрагмент)'}>`)
           break

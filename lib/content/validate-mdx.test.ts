@@ -82,4 +82,17 @@ describe('validateMdx', () => {
     expect(ok('<Download file="cheatsheet.pdf">чек-лист</Download>')).toHaveLength(0)
     expect(ok('<Figure src="cheatsheet.pdf" />').join()).toMatch(/cheatsheet\.pdf/)
   })
+  it('forbidComponents: компонент из списка запрещён, даже если он в белом списке (§8)', () => {
+    const r = validateMdx('<Trainer id="t1" />', {
+      existingAssets: new Set(),
+      animationIds: new Set(ANIMS),
+      forbidComponents: ['Trainer'],
+    })
+    expect(r.join()).toMatch(/компонент <Trainer> запрещён в этом разделе/)
+    // проверка ДО whitelist: сообщение не должно быть "вне белого списка"
+    expect(r.join()).not.toMatch(/вне белого списка/)
+  })
+  it('forbidComponents не задан — поведение уроков не меняется (Trainer с известным id проходит)', () => {
+    expect(ok('<Trainer id="t1" />')).toHaveLength(0)
+  })
 })
