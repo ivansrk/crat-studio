@@ -127,6 +127,17 @@
   margin-bottom: 2.5rem;
 }
 
+/* Ф3 T7: блок сертификата в кабинете — номер + две кнопки (CERT-05/06). */
+.cabinet-cert {
+  margin-bottom: 2.5rem;
+}
+.cabinet-cert-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .75rem;
+  margin-top: .5rem;
+}
+
 /* Ф3 T5: страница мини-проекта (/app/project, PROJ-01…06) — узкая колонка кабинета. */
 .project-page {
   max-width: 46rem;

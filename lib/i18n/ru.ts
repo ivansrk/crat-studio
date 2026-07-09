@@ -291,6 +291,16 @@ export const ru = {
     pdfIssuedTo: 'Сертификат выдан',
     pdfCompleted: 'за прохождение курса',
     pdfVerify: 'Проверить подлинность',
+    // Публичная страница /cert/{number} (CERT-06, D-010) + блок в кабинете (T7)
+    kicker: 'Сертификат',
+    cabinetTitle: 'Ваш сертификат',
+    downloadPdf: 'Скачать PDF',
+    verifyPage: 'Страница подтверждения',
+    notFound: 'Сертификат не найден',
+    revoked: 'Сертификат отозван по запросу владельца',
+    issuedTo: 'Выдан',
+    completedCourse: 'за прохождение курса',
+    issuedOn: 'Дата выдачи',
   },
   project: {
     kicker: 'Мини-проект',

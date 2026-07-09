@@ -8,6 +8,7 @@ import { isLessonPassed } from '@/lib/progress/quiz-logic'
 import { logoutAction } from '@/app/actions/logout'
 import { saveMissionAction } from '@/app/actions/lesson'
 import { getCurrentSubmission } from '@/lib/project'
+import { db } from '@/lib/db'
 import { t } from '@/lib/i18n'
 import type { SubmissionStatus } from '@/lib/generated/prisma/client'
 
@@ -44,6 +45,8 @@ export default async function Cabinet() {
   const pct = Math.min(100, (completedCount / total) * 100)
   const projectSubmission = await getCurrentSubmission(user.id) // T5: доп. запрос — приемлемо (план)
   const projectStatusText = projectSubmission ? PROJECT_STATUS_LABEL[projectSubmission.status] : t.project.statusNone
+  // T7: один findFirst — есть ли действующий сертификат (CERT-06/D-011: PDF по требованию, не хранится).
+  const certificate = await db.certificate.findFirst({ where: { userId: user.id, courseSlug: 'ai-basics', status: 'VALID' } })
 
   return (
     <main className="crat-page">
@@ -111,6 +114,18 @@ export default async function Cabinet() {
             </div>
             <Link className="crat-button" href="/app/project">{t.project.cabinetCta}</Link>
           </div>
+
+          {/* T7: блок сертификата — только при выданном VALID (CERT-01/05/06). */}
+          {certificate && (
+            <div className="crat-card cabinet-cert">
+              <h2 className="crat-kicker">{t.cert.cabinetTitle}</h2>
+              <p className="cert-number">{certificate.number}</p>
+              <div className="cabinet-cert-actions">
+                <Link className="crat-button primary" href="/app/certificate">{t.cert.downloadPdf}</Link>
+                <Link className="crat-button" href={`/cert/${certificate.number}`}>{t.cert.verifyPage}</Link>
+              </div>
+            </div>
+          )}
 
           <form action={logoutAction}><button className="crat-button" type="submit">{t.auth.logout}</button></form>
         </div>

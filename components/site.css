@@ -187,6 +187,14 @@ main.crat-page {
   overflow-wrap: anywhere;
 }
 
+/* номер сертификата (/cert/{number}, кабинет) — CERT-06 */
+.cert-number {
+  font-family: var(--font-mono), monospace;
+  color: var(--neon);
+  letter-spacing: .08em;
+  margin: 0 0 .75rem;
+}
+
 /* узкий экран: display-кегль ломал «профессиональной» посреди слова — умеренный размер, слова целые */
 @media (max-width: 480px) {
   .course-card h3 {

@@ -114,6 +114,10 @@ export async function recomputeCompletion(userId: string, lessonId: string) {
     update: {},
     create: { userId, courseSlug: COURSE, lessonId, dueAt: new Date(completedAt.getTime() + DEFERRED_DAYS_MS) },
   })
+  // CERT-01 триггер №1; dynamic — разрыв статического цикла progress↔cert
+  // (E7: последний урок при уже-approved проекте — симметрично триггеру №2 в admin/review-project).
+  const { checkAndIssueCertificate } = await import('@/lib/cert')
+  await checkAndIssueCertificate(userId).catch(e => console.error('[cert] выдача после урока:', e))
 }
 
 export type LessonState = {
