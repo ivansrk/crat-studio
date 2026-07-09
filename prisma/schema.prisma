@@ -240,7 +240,7 @@ model EmailLog {
   user      User?       @relation(fields: [userId], references: [id], onDelete: Cascade)
   type      EmailType
   subject   String
-  payload   Json        // данные для рендера письма — нужны для ручной переотправки (ADM-08)
+  payload   Json        // данные письма для отладки; сырых токенов не содержит (D-028) — переотправка (ADM-08) рендерит заново
   status    EmailStatus @default(QUEUED)
   attempts  Int         @default(0)
   lastError String?

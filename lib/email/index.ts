@@ -39,7 +39,7 @@ export async function deliverWithRetries(send: SendFn, onFinal: (p: Progress) =>
  *  Потерянные при рестарте ретраи остаются QUEUED/FAILED и видны в админке (D-013). */
 export async function sendEmail(opts: {
   to: string; userId?: string | null; type: EmailType; subject: string; html: string
-  payload: Prisma.InputJsonValue // данные для ручной переотправки (ADM-08)
+  payload: Prisma.InputJsonValue // данные письма для отладки; сырых токенов не содержит (D-028) — переотправка (ADM-08) рендерит заново
 }): Promise<string> {
   const log = await db.emailLog.create({
     data: { toEmail: opts.to, userId: opts.userId ?? null, type: opts.type, subject: opts.subject, payload: opts.payload },

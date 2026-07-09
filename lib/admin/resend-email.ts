@@ -14,13 +14,20 @@ export function isStaleQueued(log: Pick<EmailLog, 'status' | 'createdAt'>, now: 
   return log.status === 'QUEUED' && now.getTime() - log.createdAt.getTime() > STALE_QUEUED_MS
 }
 
-export type ResendResult = 'sent' | 'not_found' | 'user_gone'
+export type ResendResult = 'sent' | 'not_found' | 'user_gone' | 'unsupported_type'
 
 /** ADM-08: переотправка = НОВАЯ запись в email_log (MAIL-05) с НОВЫМ токеном (D-028) —
  *  сырых токенов в payload не храним, свежая ссылка полезнее истёкшей. */
 export async function resendFromLog(emailLogId: string): Promise<ResendResult> {
   const log = await db.emailLog.findUnique({ where: { id: emailLogId } })
   if (!log) return 'not_found'
+  // Исчерпывающий switch по типу: CERTIFICATE (Ф3) и будущие типы НЕ переотправлять молча login-ссылкой.
+  let body: string
+  switch (log.type) {
+    case 'MAGIC_LINK': body = t.email.magicLinkBody; break
+    case 'ACCESS_GRANTED': body = t.email.accessBody; break
+    default: return 'unsupported_type'
+  }
   let url: string
   try {
     url = await mintLoginUrl(log.toEmail) // D-028: всегда свежий токен
@@ -28,7 +35,6 @@ export async function resendFromLog(emailLogId: string): Promise<ResendResult> {
     if (e instanceof Error && e.message === 'user not found') return 'user_gone' // GDPR-удалённый адресат
     throw e
   }
-  const body = log.type === 'MAGIC_LINK' ? t.email.magicLinkBody : t.email.accessBody
   await sendEmail({
     to: log.toEmail, userId: log.userId, type: log.type, subject: log.subject,
     html: renderEmail({ body, buttonText: t.email.magicLinkButton, buttonUrl: url }),

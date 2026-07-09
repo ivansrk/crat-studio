@@ -14,6 +14,7 @@ export default async function Emails({ searchParams }: { searchParams: Promise<{
       <h1>{t.admin.emails}</h1>
       {resend === 'ok' && <p>{t.admin.resent}</p>}
       {resend === 'user_gone' && <p role="alert" className="form-alert">{t.admin.emailUserGone}</p>}
+      {resend === 'unsupported' && <p role="alert" className="form-alert">{t.admin.emailUnsupported}</p>}
       {logs.length === 0 ? <p>{t.admin.noData}</p> : (
         <table className="admin-table">
           <thead>
@@ -33,9 +34,9 @@ export default async function Emails({ searchParams }: { searchParams: Promise<{
               <tr key={log.id}>
                 <td>{formatDateTime(log.createdAt)}</td>
                 <td>{log.toEmail}</td>
-                <td>{log.type}</td>
+                <td>{t.admin.emailType[log.type]}</td>
                 <td className={log.status === 'FAILED' || stuck ? 'form-alert' : undefined}>
-                  {log.status === 'QUEUED' ? (stuck ? t.admin.emailStuck : t.admin.emailQueued) : log.status}
+                  {log.status === 'QUEUED' ? (stuck ? t.admin.emailStuck : t.admin.emailQueued) : t.admin.emailStatus[log.status]}
                   {log.attempts > 0 && ` (${log.attempts})`}
                 </td>
                 <td>{log.lastError ?? ''}</td>
