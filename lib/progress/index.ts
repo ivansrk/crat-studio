@@ -1,7 +1,7 @@
 import { db } from '@/lib/db'
 import { getLesson } from '@/lib/content'
 import { isUniqueViolation } from '@/lib/db-errors'
-import { scoreAnswers, isQuizPassed, nextQuestionIndex, isReplay, isValidChoice, QUIZ_TOTAL, type StoredAnswer } from './quiz-logic'
+import { scoreAnswers, isQuizPassed, isLessonPassed, nextQuestionIndex, isReplay, isValidChoice, QUIZ_TOTAL, type StoredAnswer } from './quiz-logic'
 import type { QuizResult } from '@/lib/generated/prisma/client'
 
 const COURSE = 'ai-basics' // MVP: один курс; мультикурс = прокинуть courseSlug через сигнатуры (схема уже courseSlug-aware)
@@ -118,19 +118,14 @@ export async function recomputeCompletion(userId: string, lessonId: string) {
 
 export type LessonState = {
   quizPassed: boolean; practiceDone: boolean; completed: boolean
-  attemptsCount: number
 }
 
 export async function getLessonState(userId: string, lessonId: string): Promise<LessonState> {
-  const [p, attemptsCount] = await Promise.all([
-    db.lessonProgress.findUnique({ where: { userId_courseSlug_lessonId: { userId, courseSlug: COURSE, lessonId } } }),
-    db.quizResult.count({ where: { userId, lessonId } }),
-  ])
+  const p = await db.lessonProgress.findUnique({ where: { userId_courseSlug_lessonId: { userId, courseSlug: COURSE, lessonId } } })
   return {
     quizPassed: !!p?.quizPassedAt,
     practiceDone: !!p?.practiceDoneAt,
-    completed: !!p?.quizPassedAt && !!p?.practiceDoneAt, // отображение «пройден» — живое (E16)
-    attemptsCount,
+    completed: isLessonPassed(p), // отображение «пройден» — живое (E16)
   }
 }
 
@@ -140,6 +135,6 @@ export async function getCourseProgress(userId: string) {
   const byLesson = new Map(rows.map(r => [r.lessonId, r]))
   return {
     byLesson,
-    completedCount: rows.filter(r => r.quizPassedAt && r.practiceDoneAt).length,
+    completedCount: rows.filter(r => isLessonPassed(r)).length,
   }
 }

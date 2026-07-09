@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation'
 import { db } from '@/lib/db'
 import { getContent } from '@/lib/content'
 import { getCourseProgress } from '@/lib/progress'
+import { isLessonPassed } from '@/lib/progress/quiz-logic'
 import { formatDate } from '@/lib/i18n/format-date'
 import { t } from '@/lib/i18n'
 
@@ -36,9 +37,9 @@ export default async function StudentProgress({ params }: { params: Promise<{ us
         <tbody>
         {lessons.map(l => {
           const p = byLesson.get(l.id)
-          // «Пройден» — ЖИВОЕ определение, как у студента (D-029/E16): quizPassedAt && practiceDoneAt;
+          // «Пройден» — ЖИВОЕ определение, как у студента (D-029/E16, isLessonPassed — правило 9);
           // completedAt — только тайминг deferred (первое достижение, не откатывается), в UI не светим.
-          const doneAt = p?.quizPassedAt && p.practiceDoneAt
+          const doneAt = isLessonPassed(p)
             ? new Date(Math.max(p.quizPassedAt.getTime(), p.practiceDoneAt.getTime()))
             : null
           return (

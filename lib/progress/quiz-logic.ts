@@ -12,6 +12,15 @@ export const scoreAnswers = (answers: StoredAnswer[]): number => {
 
 export const isQuizPassed = (score: number): boolean => score >= PASS_SCORE
 
+/** Правило 9/D-004/E16: единственное ЖИВОЕ определение «урок пройден» — квиз зачтён И практика отмечена.
+ *  completedAt не участвует (это тайминг deferred, не откатывается). Type guard, чтобы после проверки
+ *  вызывающий код работал с датами без non-null-assertions (админ-колонка «Пройден» берёт max двух дат). */
+export function isLessonPassed<T extends { quizPassedAt: Date | null; practiceDoneAt: Date | null }>(
+  p: T | null | undefined,
+): p is T & { quizPassedAt: Date; practiceDoneAt: Date } {
+  return !!p?.quizPassedAt && !!p?.practiceDoneAt
+}
+
 /** Идемпотентный повтор ответа (двойной клик, ревью T2): вопрос уже отвечен ТЕМ ЖЕ chosen →
  *  сохранённая запись; иначе null (реальный out-of-order). Первый ответ побеждает (как в scoreAnswers). */
 export function isReplay(answers: StoredAnswer[], questionIndex: number, chosen: number): StoredAnswer | null {

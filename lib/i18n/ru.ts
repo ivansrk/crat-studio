@@ -84,7 +84,6 @@ export const ru = {
     requestAgain: 'Запросить новую ссылку',
     logout: 'Выйти',
     cabinetTitle: 'Кабинет',
-    cabinetStub: 'Уроки уже можно открывать. Прогресс и квизы появятся в следующем обновлении.',
   },
   email: {
     magicLinkSubject: 'Ваша ссылка для входа — CRAT studio',

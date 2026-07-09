@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { scoreAnswers, isQuizPassed, nextQuestionIndex, isReplay, isValidChoice, PASS_SCORE, QUIZ_TOTAL, type StoredAnswer } from './quiz-logic'
+import { scoreAnswers, isQuizPassed, isLessonPassed, nextQuestionIndex, isReplay, isValidChoice, PASS_SCORE, QUIZ_TOTAL, type StoredAnswer } from './quiz-logic'
 
 const a = (questionIndex: number, chosen: number, correct: boolean): StoredAnswer => ({ questionIndex, chosen, correct })
 
@@ -46,5 +46,14 @@ describe('quiz-logic', () => {
   it('isValidChoice: валидный индекс проходит', () => {
     expect(isValidChoice(0, 4)).toBe(true)
     expect(isValidChoice(3, 4)).toBe(true)
+  })
+  it('isLessonPassed: обе даты → true (правило 9, D-004)', () => {
+    expect(isLessonPassed({ quizPassedAt: new Date(), practiceDoneAt: new Date() })).toBe(true)
+  })
+  it('isLessonPassed: одна дата или нет записи → false', () => {
+    expect(isLessonPassed({ quizPassedAt: new Date(), practiceDoneAt: null })).toBe(false)
+    expect(isLessonPassed({ quizPassedAt: null, practiceDoneAt: new Date() })).toBe(false)
+    expect(isLessonPassed(null)).toBe(false)
+    expect(isLessonPassed(undefined)).toBe(false)
   })
 })

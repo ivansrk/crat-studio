@@ -4,7 +4,7 @@ import { currentUser } from '@/lib/auth/current-user'
 import { hasCourseAccess } from '@/lib/progress/access'
 import { db } from '@/lib/db'
 import { getLesson } from '@/lib/content'
-import { nextQuestionIndex, type StoredAnswer } from '@/lib/progress/quiz-logic'
+import { nextQuestionIndex, QUIZ_TOTAL, type StoredAnswer } from '@/lib/progress/quiz-logic'
 import { answerAction } from '@/app/actions/quiz'
 import { startQuizAction } from '@/app/actions/lesson'
 import { t } from '@/lib/i18n'
@@ -64,7 +64,7 @@ export default async function QuizPage({ params, searchParams }: {
     <main className="quiz">
       <h1>{lesson.meta.title} — {t.quiz.title}</h1>
       {fbBlock}
-      <p className="quiz-progress">{t.quiz.questionLabel} {qi + 1}/3</p>
+      <p className="quiz-progress">{t.quiz.questionLabel} {qi + 1}/{QUIZ_TOTAL}</p>
       <h2>{q.question}</h2>
       <div className="quiz-options">
         {q.options.map((opt, i) => (

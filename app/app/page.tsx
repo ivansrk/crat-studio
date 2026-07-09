@@ -4,6 +4,7 @@ import { getContent, lessonCount } from '@/lib/content'
 import { currentUser } from '@/lib/auth/current-user'
 import { hasCourseAccess } from '@/lib/progress/access'
 import { getCourseProgress } from '@/lib/progress'
+import { isLessonPassed } from '@/lib/progress/quiz-logic'
 import { logoutAction } from '@/app/actions/logout'
 import { saveMissionAction } from '@/app/actions/lesson'
 import { t } from '@/lib/i18n'
@@ -54,7 +55,7 @@ export default async function Cabinet() {
         <section key={m.id}><h3>{m.title}</h3>
           <ul>{m.lessons.map(l => {
             const p = byLesson.get(l.id)
-            const status = p?.quizPassedAt && p?.practiceDoneAt
+            const status = isLessonPassed(p)
               ? `✓ ${t.cabinet.statusDone}`
               : p
                 ? t.cabinet.statusInProgress
