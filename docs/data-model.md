@@ -136,7 +136,9 @@ model MagicLink {
   @@index([email, createdAt]) // rate limit 3/15мин (AUTH-08)
 }
 
-// Прогресс по уроку. lessonId — id из course.yaml ("1.1"). Урок пройден = completedAt != null.
+// Прогресс по уроку. lessonId — id из course.yaml ("1.1").
+// «Пройден» для отображения = quizPassedAt && practiceDoneAt (живое, E16);
+// completedAt — момент ПЕРВОГО достижения, не откатывается (для deferred/сертификата).
 model LessonProgress {
   id             String    @id @default(cuid())
   userId         String
