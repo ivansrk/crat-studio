@@ -1,6 +1,7 @@
 import { syncAdmins } from '@/lib/auth/sync-admins'
 import { db } from '@/lib/db'
 import { newToken, hashToken, MAGIC_TTL_MS } from '@/lib/auth/magic-link'
+import { warsawDayStart } from '@/lib/trainers/limits'
 
 const SEED = (n: string) => `${n}@seed.crat.example`
 
@@ -279,6 +280,42 @@ async function seedF3() {
   await printMagicLink(SEED('diplomant'), 'v3')
 }
 
+/** Ф4: у student@ — бэкдейт урока 1.1 (пройден ≥7 дней назад, LES-13) и dueAt его
+ *  DeferredQuizState в прошлом → блок «3 вопроса» виден сразу при входе (CAB-04/06), без ожидания
+ *  cron (D-005). Плюс 19 записей TrainerUsage(t1) за сегодняшний Warsaw-день — следующий запрос
+ *  студента к тренажёру 20-й (ещё ok), после него — daily-отказ (TRN-03).
+ *  TrainerUsage не append-only журнал (в отличие от Consent, D-014) — deleteMany+createMany
+ *  делают блок идемпотентным при повторных прогонах seed, в отличие от upsert по неуникальному usedAt. */
+async function seedF4() {
+  const student = await db.user.findUniqueOrThrow({ where: { email: SEED('student') } })
+  const now = new Date()
+  const backdate = new Date(now.getTime() - 8 * 24 * 60 * 60 * 1000)
+
+  await db.lessonProgress.update({
+    where: { userId_courseSlug_lessonId: { userId: student.id, courseSlug: COURSE, lessonId: '1.1' } },
+    data: { quizPassedAt: backdate, practiceDoneAt: backdate, completedAt: backdate },
+  })
+  await db.deferredQuizState.update({
+    where: { userId_courseSlug_lessonId: { userId: student.id, courseSlug: COURSE, lessonId: '1.1' } },
+    data: { dueAt: new Date(now.getTime() - 24 * 60 * 60 * 1000), answeredAt: null },
+  })
+
+  const dayStart = warsawDayStart(now)
+  await db.trainerUsage.deleteMany({ where: { userId: student.id, trainerId: 't1', usedAt: { gte: dayStart } } })
+  // Не в последнюю минуту — иначе minute-лимит (3/мин) сработает раньше daily (20/день) при следующем запросе.
+  // windowEnd клампится минимум на dayStart+19с — защита от отрицательного/нулевого шага, если seed
+  // запускается в первые минуты Warsaw-суток (в реальности не встречается, но не должно падать).
+  const windowEnd = Math.max(now.getTime() - 10 * 60 * 1000, dayStart.getTime() + 19_000)
+  const stepMs = (windowEnd - dayStart.getTime()) / 19
+  await db.trainerUsage.createMany({
+    data: Array.from({ length: 19 }, (_, i) => ({
+      userId: student.id,
+      trainerId: 't1',
+      usedAt: new Date(dayStart.getTime() + stepMs * (i + 1)),
+    })),
+  })
+}
+
 async function main() {
   const admins = await syncAdmins()
   console.log(`[seed v0] админы синхронизированы: ${admins.join(', ') || '(ADMIN_EMAILS пуст)'}`)
@@ -288,6 +325,8 @@ async function main() {
   console.log('[seed v2] прогресс/попытки/брошенный квиз готовы')
   await seedF3()
   console.log('[seed v3] дипломант 12/12 + SUBMITTED, needs_changes студенту готовы')
+  await seedF4()
+  console.log('[seed v4] повторение к сдаче, тренажёр 19/20')
 }
 
 main()
