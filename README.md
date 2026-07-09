@@ -36,3 +36,7 @@ npx prisma migrate dev  # локальная миграция
 2. Заполнить env-переменные: `ADMIN_EMAILS`, `APP_URL`, `NEXT_PUBLIC_PLAUSIBLE_DOMAIN` (`RESEND_API_KEY` и `ANTHROPIC_API_KEY` можно позже — понадобятся в Ф1/Ф4). `DATABASE_URL` и `SESSION_SECRET` создаются автоматически.
 3. После первого деплоя — в настройках Postgres включить автобэкапы (SEC-07).
 4. Проверить `/health`.
+
+### Сертификаты (Playwright/Chromium, CERT-04, D-011)
+
+PDF сертификата рендерится по требованию (не хранится) через Playwright + Chromium. На Render (native-окружение, без Docker) chromium ставится в `buildCommand` (`npx playwright install chromium`, без `--with-deps` — системные библиотеки для headless Chromium в Ubuntu-образе Render уже есть, апт-пакеты не нужны). Путь кэша браузера зафиксирован явно через `PLAYWRIGHT_BROWSERS_PATH=/opt/render/project/src/.cache/ms-playwright` (Render применяет envVars и к build, и к runtime — иначе дефолтный `$HOME/.cache` может не совпасть между фазами и рантайм не найдёт установленный браузер). Риск первого деплоя — проверить `/app/certificate` на проде: если Playwright не находит chromium, смотреть лог build (браузер должен ставиться там) и сверять `PLAYWRIGHT_BROWSERS_PATH` в обеих фазах.

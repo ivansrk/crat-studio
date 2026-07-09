@@ -3,13 +3,16 @@ services:
     name: crat-studio
     runtime: node
     plan: starter
-    buildCommand: npm ci --include=dev && npm run build
+    buildCommand: npm ci --include=dev && npx playwright install chromium && npm run build
     preDeployCommand: npx prisma migrate deploy
     startCommand: npm run start
     healthCheckPath: /api/health
     envVars:
       - key: DATABASE_URL
         fromDatabase: { name: crat-studio-db, property: connectionString }
+      # CERT-04/D-011: путь фиксирован (не дефолтный $HOME/.cache) — build и runtime
+      # получают одинаковые envVars от Render, так что оба процесса смотрят в одно место.
+      - { key: PLAYWRIGHT_BROWSERS_PATH, value: /opt/render/project/src/.cache/ms-playwright }
       - { key: ADMIN_EMAILS, sync: false }
       - { key: APP_URL, sync: false }
       - { key: SESSION_SECRET, generateValue: true }
