@@ -138,6 +138,23 @@
   margin-top: .5rem;
 }
 
+/* Ф5-полировка: страница урока (/app/lessons/[id]) не имела своего класса —
+   попадала под общий main{padding:2rem 1rem} вместо системного отступа
+   остальных страниц кабинета (тот же паттерн, что .project-page/.review-page). */
+.lesson-page {
+  max-width: 46rem;
+  margin-inline: auto;
+  padding: clamp(2rem, 6vw, 4rem) clamp(1.25rem, 4vw, 2.5rem);
+  display: grid;
+  gap: 1.5rem;
+}
+.lesson-page h1 {
+  overflow-wrap: anywhere;
+}
+.lesson-page .crat-card {
+  margin: 0;
+}
+
 /* Ф3 T5: страница мини-проекта (/app/project, PROJ-01…06) — узкая колонка кабинета. */
 .project-page {
   max-width: 46rem;

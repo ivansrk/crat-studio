@@ -62,7 +62,7 @@ export default async function QuizPage({ params, searchParams }: {
 
   return (
     <main className="quiz quiz-stage crat-noise">
-      <h1>{lesson.meta.title} — {t.quiz.title}</h1>
+      <h1 className="crat-muted quiz-lesson-title">{lesson.meta.title} — {t.quiz.title}</h1>
       {fbBlock}
       {/* «Сцена с прожектором» (бриф §9): вопрос в световом пятне, варианты — crat-card. */}
       <div className="quiz-spotlight">

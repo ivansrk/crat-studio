@@ -25,8 +25,8 @@ export default async function LessonPage({ params }: { params: Promise<{ lessonI
   const base = assetBase(lesson)
   const next = nextLessonId(lessonId)
   return (
-    <main>
-      <h1>{lesson.meta.title}</h1>
+    <main className="lesson-page">
+      <h1 className="crat-display">{lesson.meta.title}</h1>
       {lesson.meta.video_id
         ? <Video kinescope={lesson.meta.video_id} />
         : <p className="mdx-trainer-stub">{t.lesson.videoSoon}</p>}
@@ -44,11 +44,11 @@ export default async function LessonPage({ params }: { params: Promise<{ lessonI
       ) : (
         <form action={startQuizAction}>
           <input type="hidden" name="lessonId" value={lessonId} />
-          <button className="crat-button" type="submit">{t.lesson.finishLesson}</button>
+          <button className="crat-button primary" type="submit">{t.lesson.finishLesson}</button>
         </form>
       )}
 
-      <section>
+      <section className="crat-card">
         <h2>{t.lesson.practiceTitle}</h2>
         <MDXRemote source={lesson.practiceMd} components={mdxComponents(base)} />
         <form action={togglePracticeAction}>
@@ -66,9 +66,9 @@ export default async function LessonPage({ params }: { params: Promise<{ lessonI
       {/* Миссия — ДО ссылки «Следующий урок» (рефлексия до выхода из урока).
           mission_prompt — контент-флаг, урок может быть любым → returnTo из lessonId. */}
       {lesson.meta.mission_prompt && (
-        <section>
+        <section className="crat-card cabinet-mission">
           <h2>{t.lesson.missionTitle}</h2>
-          <p>{t.lesson.missionHint}</p>
+          <p className="crat-muted">{t.lesson.missionHint}</p>
           <form action={saveMissionAction}>
             <input type="hidden" name="returnTo" value={`/app/lessons/${lessonId}`} />
             <textarea name="mission" defaultValue={user.mission ?? ''} />
@@ -79,7 +79,7 @@ export default async function LessonPage({ params }: { params: Promise<{ lessonI
 
       <p>
         {next
-          ? <Link className="crat-button" href={`/app/lessons/${next}`}>{t.lesson.nextLesson}</Link>
+          ? <Link className="crat-button primary" href={`/app/lessons/${next}`}>{t.lesson.nextLesson}</Link>
           : t.lesson.courseDone}
       </p>
     </main>
