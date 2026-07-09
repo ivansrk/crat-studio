@@ -22,7 +22,9 @@ export type SaveDraftResult = 'saved' | 'locked'
  *  NEEDS_CHANGES — первое редактирование после правок открывает НОВУЮ попытку
  *  (attempt+1, DRAFT, предзаполнена текущими полями, поверх — applied draft; D-016: старая строка не меняется).
  *  DRAFT — update на месте. Нет попытки — create attempt 1.
- *  P2002-ретрай на гонку attempt (паттерн startAttempt из lib/progress). */
+ *  P2002-ретрай на гонку attempt (паттерн startAttempt из lib/progress).
+ *  Контракт: ожидает все 7 ключей на каждый вызов (одна полная форма) —
+ *  частичный объект обнулит непереданные поля (normalizeDraft: отсутствующее → null). */
 export async function saveDraft(userId: string, draft: Record<string, unknown>): Promise<SaveDraftResult> {
   const normalized = normalizeDraft(draft)
   for (let tryN = 0; tryN < 2; tryN++) {
@@ -32,11 +34,15 @@ export async function saveDraft(userId: string, draft: Record<string, unknown>):
     try {
       if (current?.status === 'NEEDS_CHANGES') {
         await db.submission.create({
+          // ...draftFields(current) при полном draft перекрывается normalized целиком —
+          // страховка на случай частичного draft от будущего вызывающего (предзаполнение прошлой попыткой, PROJ-04).
           data: { userId, courseSlug: COURSE, attempt: current.attempt + 1, status: 'DRAFT', ...draftFields(current), ...normalized },
         })
       } else if (current) {
-        // DRAFT
-        await db.submission.update({ where: { id: current.id }, data: normalized })
+        // DRAFT. Status-guard против TOCTOU: submitProject из второй вкладки мог успеть
+        // flip'нуть DRAFT→SUBMITTED — редактировать отправленный отчёт нельзя (PROJ-03/06).
+        const updated = await db.submission.updateMany({ where: { id: current.id, status: 'DRAFT' }, data: normalized })
+        if (updated.count !== 1) return 'locked'
       } else {
         await db.submission.create({ data: { userId, courseSlug: COURSE, attempt: 1, status: 'DRAFT', ...normalized } })
       }
@@ -55,7 +61,12 @@ export async function submitProject(userId: string): Promise<SubmitResult> {
   const current = await getCurrentSubmission(userId)
   if (current?.status !== 'DRAFT') return 'locked'
   if (!isSubmittable(draftFields(current))) return 'incomplete'
-  await db.submission.update({ where: { id: current.id }, data: { status: 'SUBMITTED', submittedAt: new Date() } })
+  // Status-guard против TOCTOU (двойной submit из двух вкладок): переводим только из DRAFT.
+  const updated = await db.submission.updateMany({
+    where: { id: current.id, status: 'DRAFT' },
+    data: { status: 'SUBMITTED', submittedAt: new Date() },
+  })
+  if (updated.count !== 1) return 'locked'
   return 'submitted'
 }
 

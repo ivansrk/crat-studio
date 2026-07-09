@@ -22,7 +22,8 @@ export function normalizeDraft(input: Record<string, unknown>): ProjectDraft {
   return draft
 }
 
-/** Готов к отправке на проверку — все 7 полей непустые (PROJ-01). */
+/** Готов к отправке на проверку — все 7 полей непустые (PROJ-01).
+ *  Ожидает УЖЕ нормализованный draft (normalizeDraft); whitespace-строки не перепроверяет. */
 export function isSubmittable(d: ProjectDraft): boolean {
   return PROJECT_FIELDS.every(f => !!d[f])
 }
