@@ -25,7 +25,8 @@ export async function resendEmailAction(formData: FormData) {
   const result = await resendFromLog(String(formData.get('emailLogId')))
   revalidatePath('/admin/emails')
   if (result === 'user_gone') redirect('/admin/emails?resend=user_gone') // GDPR-удалённый адресат (D-028)
-  if (result === 'unsupported_type') redirect('/admin/emails?resend=unsupported') // ревью T10: CERTIFICATE (Ф3) — не login-письмо
+  if (result === 'unsupported_type') redirect('/admin/emails?resend=unsupported')
+  if (result === 'cert_gone') redirect('/admin/emails?resend=cert_gone') // CERT-05: сертификат отозван/не найден
   if (result === 'sent') redirect('/admin/emails?resend=ok')
 }
 

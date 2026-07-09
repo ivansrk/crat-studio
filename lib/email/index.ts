@@ -40,13 +40,16 @@ export async function deliverWithRetries(send: SendFn, onFinal: (p: Progress) =>
 export async function sendEmail(opts: {
   to: string; userId?: string | null; type: EmailType; subject: string; html: string
   payload: Prisma.InputJsonValue // данные письма для отладки; сырых токенов не содержит (D-028) — переотправка (ADM-08) рендерит заново
+  attachments?: { filename: string; content: Buffer }[] // CERT-05: PDF-сертификат по требованию (D-011), не хранится
 }): Promise<string> {
   const log = await db.emailLog.create({
     data: { toEmail: opts.to, userId: opts.userId ?? null, type: opts.type, subject: opts.subject, payload: opts.payload },
   })
   const resend = new Resend(process.env.RESEND_API_KEY)
   const send: SendFn = async () => {
-    const { data, error } = await resend.emails.send({ from: FROM, to: opts.to, subject: opts.subject, html: opts.html })
+    const { data, error } = await resend.emails.send({
+      from: FROM, to: opts.to, subject: opts.subject, html: opts.html, attachments: opts.attachments,
+    })
     if (error) throw new Error(error.message)
     return { id: data?.id }
   }
