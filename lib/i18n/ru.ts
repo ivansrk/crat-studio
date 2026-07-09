@@ -158,7 +158,6 @@ export const ru = {
     finishLesson: 'Завершить урок',
     unavailable: 'Урок временно недоступен, мы уже чиним',
     retry: 'Попробовать снова',
-    trainerSoon: 'Тренажёр появится на этом месте',
     quizPassed: 'Квиз сдан',
     retakeQuiz: 'Пересдать квиз',
     practiceTitle: 'Практика',
@@ -365,5 +364,6 @@ export const ru = {
     t2Title: 'Правда или нейросеть?',
     t3Title: 'Опиши картинку',
     backToCabinet: 'В кабинет',
+    backToCatalog: 'К тренажёрам',
   },
 } as const

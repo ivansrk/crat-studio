@@ -22,9 +22,7 @@ export default async function T1Page() {
 
       <T1Form />
 
-      {/* План T5: ссылка назад — на каталог тренажёров (не в кабинет), но подпись переиспользует
-          t.trainers.backToCabinet (единственная «назад»-строка тренажёров). */}
-      <p><Link className="crat-button" href="/app/trainers">{t.trainers.backToCabinet}</Link></p>
+      <p><Link className="crat-button" href="/app/trainers">{t.trainers.backToCatalog}</Link></p>
     </main>
   )
 }
