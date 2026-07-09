@@ -11,6 +11,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       <nav className="admin-nav crat-nav">
         <Link href="/admin">{t.admin.registrations}</Link>
         <Link href="/admin/students">{t.admin.students}</Link>
+        <Link href="/admin/projects">{t.admin.projects}</Link>
         <Link href="/admin/emails">{t.admin.emails}</Link>
       </nav>
       {children}

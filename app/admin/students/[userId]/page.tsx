@@ -3,19 +3,29 @@ import { db } from '@/lib/db'
 import { getContent } from '@/lib/content'
 import { getCourseProgress } from '@/lib/progress'
 import { isLessonPassed } from '@/lib/progress/quiz-logic'
+import { getCurrentSubmission } from '@/lib/project'
 import { formatDate } from '@/lib/i18n/format-date'
 import { t } from '@/lib/i18n'
 
 export const dynamic = 'force-dynamic'
+
+const SUBMISSION_STATUS_LABEL = {
+  DRAFT: t.project.statusDraft,
+  SUBMITTED: t.project.statusSubmitted,
+  NEEDS_CHANGES: t.project.statusNeedsChanges,
+  APPROVED: t.project.statusApproved,
+} as const
 
 export default async function StudentProgress({ params }: { params: Promise<{ userId: string }> }) {
   const { userId } = await params
   const user = await db.user.findUnique({ where: { id: userId } })
   if (!user) notFound() // гейт админа — в app/admin/layout.tsx; здесь только валидность userId
 
-  const [{ byLesson }, deferred] = await Promise.all([
+  const [{ byLesson }, deferred, submission, certificate] = await Promise.all([
     getCourseProgress(userId),
     db.deferredQuizState.findMany({ where: { userId }, orderBy: { dueAt: 'asc' } }),
+    getCurrentSubmission(userId),
+    db.certificate.findFirst({ where: { userId, status: { in: ['VALID', 'REVOKED'] } }, orderBy: { issuedAt: 'desc' } }),
   ])
   const lessons = getContent().course.modules.flatMap(m => m.lessons) // все 12 строк всегда (ADM-05)
 
@@ -80,10 +90,16 @@ export default async function StudentProgress({ params }: { params: Promise<{ us
       )}
 
       <h2>{t.admin.projectTitle}</h2>
-      <p>{t.admin.projectPhase3}</p>
+      {submission
+        ? <p>{SUBMISSION_STATUS_LABEL[submission.status]} · попытка {submission.attempt}</p>
+        : <p>{t.project.statusNone}</p>}
 
       <h2>{t.admin.certTitle}</h2>
-      <p>{t.admin.projectPhase3}</p>
+      {certificate ? (
+        <p>
+          {certificate.number} · {certificate.status === 'VALID' ? t.admin.certStatusValid : t.admin.certStatusRevoked} · {formatDate(certificate.issuedAt)}
+        </p>
+      ) : <p>{t.admin.notYet}</p>}
     </main>
   )
 }

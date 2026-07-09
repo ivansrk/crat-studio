@@ -31,6 +31,21 @@ export async function resendEmailAction(formData: FormData) {
   if (result === 'sent') redirect('/admin/emails?resend=ok')
 }
 
+export async function reviewProjectAction(formData: FormData) {
+  const admin = await requireAdmin()
+  const { reviewProject } = await import('@/lib/admin/review-project')
+  const verdict = formData.get('verdict') === 'approve' ? 'approve' : 'needs_changes' // две кнопки name="verdict"
+  const result = await reviewProject(
+    String(formData.get('submissionId')),
+    verdict,
+    String(formData.get('comment') ?? ''),
+    String(formData.get('seenUpdatedAt')),
+    admin.id,
+  )
+  revalidatePath('/admin/projects')
+  redirect(`/admin/projects?review=${result}`)
+}
+
 export async function gdprDeleteAction(formData: FormData) {
   await requireAdmin()
   const { gdprDeleteStudent } = await import('@/lib/admin/gdpr')
