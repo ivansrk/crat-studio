@@ -1,9 +1,57 @@
-/* CAB-01: полоса прогресса с фигуркой на «горизонте» — семантический задел под арт Ф5. */
+/* CAB-01 бриф §9: «линия горизонта» — 4 модуля-«здания» + полоса прогресса с фигуркой. */
+
+.horizon {
+  margin: 1.75rem 0 2.5rem;
+}
+
+.horizon-buildings {
+  display: flex;
+  align-items: flex-end;
+  gap: 1rem;
+}
+
+.building {
+  flex: 1 1 0;
+  min-width: 0;
+  background: var(--bg-black);
+  border: 1px solid var(--line-soft);
+  border-bottom: none;
+  border-radius: 6px 6px 0 0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: .9rem .5rem;
+  transition: border-color .3s ease;
+}
+/* силуэты разной высоты — сохраняется при любом статусе, высота не зависит от прогресса */
+.horizon-buildings > .building:nth-child(1) { height: clamp(4.5rem, 11vw, 6.5rem); }
+.horizon-buildings > .building:nth-child(2) { height: clamp(6.5rem, 15vw, 9.5rem); }
+.horizon-buildings > .building:nth-child(3) { height: clamp(5.5rem, 13vw, 8rem); }
+.horizon-buildings > .building:nth-child(4) { height: clamp(7.5rem, 17vw, 11rem); }
+
+.building-done { border-color: var(--line-red); }
+
+.building-sign {
+  font-family: var(--font-mono), monospace;
+  text-transform: uppercase;
+  font-size: var(--fs-small);
+  line-height: 1.35;
+  text-align: center;
+  color: var(--paper-muted); /* не начат */
+}
+/* пройден полностью и частично — обе вывески светятся неоном; пульс (red-glow, crat.css)
+   добавляется классом только для полностью пройденного модуля (ревью T6). */
+.building-sign-partial,
+.building-sign-done {
+  color: var(--neon);
+  text-shadow: 0 0 8px color-mix(in srgb, var(--neon) 55%, transparent);
+}
+
+/* CAB-01: полоса прогресса с фигуркой на «горизонте», под зданиями. */
 .progress-track {
   position: relative;
   height: 2.2rem;
-  border-bottom: 2px solid color-mix(in srgb, var(--paper) 30%, transparent);
-  margin: 1rem 0 2rem;
+  border-bottom: 2px solid var(--line-soft);
   padding: 0 .9rem; /* запас под половину фигурки на краях 0%/100% (ревью T6) */
 }
 .progress-figure {
@@ -13,3 +61,58 @@
   font-size: 1.6rem;
   transform: translateX(-50%); /* центр фигурки на позиции left — внутри трека и на 0%, и на 100% */
 }
+
+/* CAB-02: миссия — crat-card. */
+.cabinet-mission {
+  margin-bottom: 2rem;
+}
+.cabinet-mission textarea {
+  width: 100%;
+  min-height: 6rem;
+  background: var(--ink);
+  color: var(--paper);
+  border: 1px solid var(--line-soft);
+  border-radius: 8px;
+  padding: .8rem 1rem;
+  font: inherit;
+  margin-top: .5rem;
+  transition: border-color .3s ease;
+}
+.cabinet-mission textarea:hover { border-color: var(--line-red); }
+.cabinet-mission textarea:focus-visible { outline: 2px solid var(--neon); outline-offset: 2px; }
+
+/* CAB-03: список модулей/уроков — карточка на модуль, строки уроков со статус-label. */
+.cabinet-modules {
+  display: grid;
+  gap: 1.25rem;
+  margin-bottom: 2.5rem;
+}
+
+.module-card-title {
+  display: block;
+  margin: 0 0 1rem;
+}
+
+.module-lessons {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: .6rem;
+}
+.module-lesson-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: .4rem 1rem;
+}
+.module-lesson-status {
+  font-family: var(--font-mono), monospace;
+  text-transform: uppercase;
+  font-size: var(--fs-small);
+  color: var(--paper-muted);
+  flex: none;
+}
+.lesson-status-done { color: var(--neon); }
+.lesson-status-progress { color: var(--lavender); }

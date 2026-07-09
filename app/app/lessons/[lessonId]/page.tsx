@@ -31,20 +31,20 @@ export default async function LessonPage({ params }: { params: Promise<{ lessonI
         ? <Video kinescope={lesson.meta.video_id} />
         : <p className="mdx-trainer-stub">{t.lesson.videoSoon}</p>}
       <MDXRemote source={lesson.mdx} components={mdxComponents(base)} />
-      {lesson.hasCheatsheet && <p><a className="mdx-download" href={`${base}/cheatsheet.pdf`} download>{t.lesson.downloadCheatsheet}</a></p>}
+      {lesson.hasCheatsheet && <p><a className="crat-button" href={`${base}/cheatsheet.pdf`} download>{t.lesson.downloadCheatsheet}</a></p>}
 
       {state.quizPassed ? (
         <>
           <p>{t.lesson.quizPassed}</p>
           <form action={startQuizAction}>
             <input type="hidden" name="lessonId" value={lessonId} />
-            <button className="mdx-download" type="submit">{t.lesson.retakeQuiz}</button>
+            <button className="crat-button" type="submit">{t.lesson.retakeQuiz}</button>
           </form>
         </>
       ) : (
         <form action={startQuizAction}>
           <input type="hidden" name="lessonId" value={lessonId} />
-          <button className="mdx-download" type="submit">{t.lesson.finishLesson}</button>
+          <button className="crat-button" type="submit">{t.lesson.finishLesson}</button>
         </form>
       )}
 
@@ -57,7 +57,7 @@ export default async function LessonPage({ params }: { params: Promise<{ lessonI
             <input type="checkbox" name="done" defaultChecked={state.practiceDone} />
             {' '}{t.lesson.practiceDone}
           </label>
-          <p><button className="mdx-download" type="submit">{t.lesson.save}</button></p>
+          <p><button className="crat-button" type="submit">{t.lesson.save}</button></p>
         </form>
       </section>
 
@@ -72,14 +72,14 @@ export default async function LessonPage({ params }: { params: Promise<{ lessonI
           <form action={saveMissionAction}>
             <input type="hidden" name="returnTo" value={`/app/lessons/${lessonId}`} />
             <textarea name="mission" defaultValue={user.mission ?? ''} />
-            <p><button className="mdx-download" type="submit">{t.lesson.save}</button></p>
+            <p><button className="crat-button" type="submit">{t.lesson.save}</button></p>
           </form>
         </section>
       )}
 
       <p>
         {next
-          ? <Link className="mdx-download" href={`/app/lessons/${next}`}>{t.lesson.nextLesson}</Link>
+          ? <Link className="crat-button" href={`/app/lessons/${next}`}>{t.lesson.nextLesson}</Link>
           : t.lesson.courseDone}
       </p>
     </main>

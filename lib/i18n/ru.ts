@@ -191,6 +191,7 @@ export const ru = {
   callout: { idea: 'Совет', warning: 'Внимание', example: 'Пример' },
   health: { ok: 'ok', contentValid: 'контент валиден', contentErrors: 'ошибки контента' },
   auth: {
+    kicker: 'Вход в кабинет',
     title: 'Вход',
     emailLabel: 'Почта',
     submit: 'Получить ссылку для входа',

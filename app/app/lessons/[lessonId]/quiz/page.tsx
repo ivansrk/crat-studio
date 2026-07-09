@@ -41,15 +41,15 @@ export default async function QuizPage({ params, searchParams }: {
   // Финальный экран
   if (attempt.finishedAt) {
     return (
-      <main className="quiz">
+      <main className="quiz quiz-stage crat-noise">
         {fbBlock}
-        <h1>{attempt.passed ? t.quiz.passedTitle : t.quiz.failedTitle}</h1>
+        <h1 className="crat-display">{attempt.passed ? t.quiz.passedTitle : t.quiz.failedTitle}</h1>
         <p>{t.quiz.scoreLabel}: {attempt.score}/{attempt.total}</p>
         {!attempt.passed && (
           <form action={startQuizAction}><input type="hidden" name="lessonId" value={lessonId} />
-            <button className="mdx-download" type="submit">{t.lesson.retakeQuiz}</button></form>
+            <button className="crat-button" type="submit">{t.lesson.retakeQuiz}</button></form>
         )}
-        <p><Link className="mdx-download" href={`/app/lessons/${lessonId}`}>{t.quiz.backToLesson}</Link></p>
+        <p><Link className="crat-button" href={`/app/lessons/${lessonId}`}>{t.quiz.backToLesson}</Link></p>
       </main>
     )
   }
@@ -61,11 +61,14 @@ export default async function QuizPage({ params, searchParams }: {
   const q = lesson.quiz.questions[qi]
 
   return (
-    <main className="quiz">
+    <main className="quiz quiz-stage crat-noise">
       <h1>{lesson.meta.title} — {t.quiz.title}</h1>
       {fbBlock}
-      <p className="quiz-progress">{t.quiz.questionLabel} {qi + 1}/{QUIZ_TOTAL}</p>
-      <h2>{q.question}</h2>
+      {/* «Сцена с прожектором» (бриф §9): вопрос в световом пятне, варианты — crat-card. */}
+      <div className="quiz-spotlight">
+        <p className="quiz-progress">{t.quiz.questionLabel} {qi + 1}/{QUIZ_TOTAL}</p>
+        <h2>{q.question}</h2>
+      </div>
       <div className="quiz-options">
         {q.options.map((opt, i) => (
           <form key={i} action={answerAction}>
@@ -73,7 +76,7 @@ export default async function QuizPage({ params, searchParams }: {
             <input type="hidden" name="attemptId" value={attempt.id} />
             <input type="hidden" name="questionIndex" value={qi} />
             <input type="hidden" name="chosen" value={i} />
-            <button className="quiz-option" type="submit">{opt}</button>
+            <button className="quiz-option crat-card" type="submit">{opt}</button>
           </form>
         ))}
       </div>

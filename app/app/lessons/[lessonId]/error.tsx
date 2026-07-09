@@ -12,7 +12,7 @@ export default function LessonError({ error, reset }: { error: Error; reset: () 
   return (
     <main>
       <p>{t.lesson.unavailable}</p>
-      <p><button className="mdx-download" onClick={reset}>{t.lesson.retry}</button></p>
+      <p><button className="crat-button" onClick={reset}>{t.lesson.retry}</button></p>
     </main>
   )
 }
