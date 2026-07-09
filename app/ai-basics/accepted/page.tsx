@@ -6,7 +6,7 @@ export default function Accepted() {
     <main>
       <h1>{t.landing.acceptedTitle}</h1>
       <p>{t.landing.acceptedBody}</p>
-      <p><Link className="mdx-download" href="/">{t.home.heroTitle}</Link></p>
+      <p><Link className="mdx-download" href="/">{t.landing.backHome}</Link></p>
     </main>
   )
 }

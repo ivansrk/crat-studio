@@ -3,4 +3,6 @@
 .signup-form label.check { grid-template-columns: auto 1fr; align-items: start; gap: .6rem; }
 .signup-form input:not([type=checkbox]) { background: var(--ink); color: var(--paper); border: 1px solid color-mix(in srgb, var(--paper) 25%, transparent); border-radius: 8px; padding: .8rem 1rem; font-size: var(--fs-base); }
 .signup-form input[type=checkbox] { width: 1.3rem; height: 1.3rem; margin-top: .25rem; }
+.signup-form button, button.mdx-download { font: inherit; background: var(--ink); color: var(--paper); cursor: pointer; }
+.signup-form input:focus-visible { outline: 2px solid var(--neon); outline-offset: 2px; }
 .form-alert { color: var(--neon); }

@@ -1,16 +1,19 @@
 import { registerAction } from '@/app/actions/register'
 import { t } from '@/lib/i18n'
 
-export function SignupForm({ notice, returnTo }: { notice?: 'invalid' | 'rate'; returnTo?: string }) {
+const Req = () => <span aria-hidden="true"> *</span>
+
+export function SignupForm({ notice, returnTo, showTitle = true }: { notice?: 'invalid' | 'rate'; returnTo?: string; showTitle?: boolean }) {
   return (
     <form id="signup" action={registerAction} className="signup-form">
-      <h2>{t.landing.signupTitle}</h2>
+      {showTitle && <h2>{t.landing.signupTitle}</h2>}
       <p>{t.landing.signupNote}</p>
+      <p>{t.landing.requiredNote}</p>
       {returnTo && <input type="hidden" name="returnTo" value={returnTo} />}
       {notice && <p role="alert" className="form-alert">{notice === 'rate' ? t.landing.rate : t.landing.invalid}</p>}
-      <label>{t.landing.firstName}<input name="firstName" required autoComplete="given-name" /></label>
-      <label>{t.landing.lastName}<input name="lastName" required autoComplete="family-name" /></label>
-      <label>{t.landing.email}<input name="email" type="email" required autoComplete="email" /></label>
+      <label><span>{t.landing.firstName}<Req /></span><input name="firstName" required autoComplete="given-name" /></label>
+      <label><span>{t.landing.lastName}<Req /></span><input name="lastName" required autoComplete="family-name" /></label>
+      <label><span>{t.landing.email}<Req /></span><input name="email" type="email" required autoComplete="email" /></label>
       <label>{t.landing.phone}<input name="phone" autoComplete="tel" /></label>
       <label>{t.landing.telegram}<input name="telegram" /></label>
       <label className="check"><input type="checkbox" name="dataConsent" required /> {t.landing.dataConsent}</label>

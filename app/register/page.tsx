@@ -12,7 +12,7 @@ export default async function Register({ searchParams }: { searchParams: Promise
       <h1>{t.landing.signupTitle}</h1>
       {user
         ? <p><Link className="mdx-download" href="/app">{t.home.toCabinet}</Link></p>
-        : <SignupForm returnTo="/register" notice={signup === 'invalid' ? 'invalid' : signup === 'rate' ? 'rate' : undefined} />}
+        : <SignupForm returnTo="/register" showTitle={false} notice={signup === 'invalid' ? 'invalid' : signup === 'rate' ? 'rate' : undefined} />}
     </main>
   )
 }
