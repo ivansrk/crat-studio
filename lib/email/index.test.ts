@@ -54,6 +54,16 @@ describe('deliverWithRetries', () => {
     spy.mockRestore()
   })
 
+  it('async-onFinal реджектнулся на успехе → без ретрая и без unhandled rejection', async () => {
+    const spy = vi.spyOn(console, 'error').mockImplementation(() => {})
+    const send = vi.fn().mockResolvedValue({ id: 'r1' })
+    const onFinal = vi.fn(async () => { throw new Error('db down') })
+    await expect(deliverWithRetries(send, onFinal)).resolves.toBeUndefined()
+    expect(send).toHaveBeenCalledTimes(1)
+    expect(spy).toHaveBeenCalled()
+    spy.mockRestore()
+  })
+
   it('onFinal кинул на FAILED → промис резолвится без unhandled rejection', async () => {
     const spy = vi.spyOn(console, 'error').mockImplementation(() => {})
     const send = vi.fn().mockRejectedValue(new Error('x'))

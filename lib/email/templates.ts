@@ -1,7 +1,7 @@
 import { t } from '@/lib/i18n'
 
 export function renderEmail(opts: { body: string; buttonText?: string; buttonUrl?: string; unsubscribeUrl?: string }): string {
-  const btn = opts.buttonUrl
+  const btn = opts.buttonUrl && opts.buttonText
     ? `<p style="margin:28px 0"><a href="${opts.buttonUrl}" style="background:#FF4B3A;color:#F2E9DC;padding:14px 28px;border-radius:8px;text-decoration:none;font-size:18px">${opts.buttonText}</a></p>`
     : ''
   const unsub = opts.unsubscribeUrl
