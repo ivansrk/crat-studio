@@ -36,12 +36,17 @@ export default async function StudentProgress({ params }: { params: Promise<{ us
         <tbody>
         {lessons.map(l => {
           const p = byLesson.get(l.id)
+          // «Пройден» — ЖИВОЕ определение, как у студента (D-029/E16): quizPassedAt && practiceDoneAt;
+          // completedAt — только тайминг deferred (первое достижение, не откатывается), в UI не светим.
+          const doneAt = p?.quizPassedAt && p.practiceDoneAt
+            ? new Date(Math.max(p.quizPassedAt.getTime(), p.practiceDoneAt.getTime()))
+            : null
           return (
             <tr key={l.id}>
               <td>{l.title}</td>
               <td>{p?.quizPassedAt ? formatDate(p.quizPassedAt) : t.admin.notYet}</td>
               <td>{p?.practiceDoneAt ? formatDate(p.practiceDoneAt) : t.admin.notYet}</td>
-              <td>{p?.completedAt ? formatDate(p.completedAt) : t.admin.notYet}</td>
+              <td>{doneAt ? formatDate(doneAt) : t.admin.notYet}</td>
             </tr>
           )
         })}
