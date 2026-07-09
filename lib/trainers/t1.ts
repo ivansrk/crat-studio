@@ -32,6 +32,9 @@ export async function askT1(userId: string, userText: string): Promise<T1Result>
       model: MODEL,
       max_tokens: MAX_TOKENS,
       system: SYSTEM,
+      // Sonnet 5: без явного disabled включается adaptive thinking и ест max_tokens —
+      // держим выключенным, короткий тренажёрный ответ рассуждений не требует.
+      thinking: { type: 'disabled' },
       messages: [{ role: 'user', content: userText.slice(0, 2000) }],
     })
     const reply = extractText(msg.content)
