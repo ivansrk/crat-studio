@@ -15,19 +15,19 @@ enum Role {
 }
 
 enum RegistrationStatus {
-  NEW         // первая заявка
+  NEW // первая заявка
   RESUBMITTED // повторная отправка того же email (REG-05)
-  ENROLLED    // по заявке выдан доступ
+  ENROLLED // по заявке выдан доступ
 }
 
 enum ConsentType {
   DATA_PROCESSING // обязательное согласие на обработку ПД
-  NEWSLETTER      // опциональное согласие на рассылку
+  NEWSLETTER // опциональное согласие на рассылку
 }
 
 enum ConsentSource {
   REGISTRATION_FORM
-  ADMIN            // ручное изменение админом
+  ADMIN // ручное изменение админом
   UNSUBSCRIBE_LINK // отписка из письма (MAIL-06)
 }
 
@@ -47,6 +47,15 @@ enum EmailType {
   MAGIC_LINK
   ACCESS_GRANTED
   CERTIFICATE
+  WELCOME // Ф7а AUTH-15: пароль + ссылка на курс при создании учётки
+  PASSWORD_RESET // Ф7а AUTH-16
+  DOUBLE_OPT_IN // Ф7б REG-11/12
+  CONSULTATION // Ф7б CONS-03: уведомление админам
+}
+
+enum ResetTokenPurpose {
+  PASSWORD_RESET // Ф7а AUTH-16/17 и разовая «задайте пароль» (D-034)
+  OPT_IN // Ф7б подтверждение регистрации / double opt-in (REG-12/13)
 }
 
 enum EmailStatus {
@@ -58,16 +67,19 @@ enum EmailStatus {
 // ------------------------------------------------------------------ модели
 
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  firstName String
-  lastName  String
-  phone     String?
-  telegram  String?
-  role      Role     @default(STUDENT)
-  mission   String?  // личная миссия: заполняется в уроке 1.1, редактируема (CAB-02)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id              String   @id @default(cuid())
+  email           String   @unique
+  firstName       String
+  lastName        String
+  phone           String?
+  telegram        String?
+  role            Role     @default(STUDENT)
+  mission         String? // личная миссия: заполняется в уроке 1.1, редактируема (CAB-02)
+  passwordHash    String? // Ф7а: bcryptjs-хэш (AUTH-14, D-032); null у существующих юзеров до первой установки (AUTH-19, D-034)
+  whatsapp        String? // Ф7б: мессенджер whatsapp (REG-10)
+  resendContactId String? // Ф7б: id контакта в Resend Audience, для CRM (CRM-04)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
   enrollments   Enrollment[]
   progress      LessonProgress[]
@@ -82,18 +94,18 @@ model User {
 
 // Заявка с публичной формы. User создаётся ТОЛЬКО когда админ выдаёт доступ.
 model Registration {
-  id             String             @id @default(cuid())
-  email          String             @unique // повторная отправка → update, не дубль (REG-05)
-  firstName      String
-  lastName       String
-  phone          String?
-  telegram       String?
-  status         RegistrationStatus @default(NEW)
-  source         String             @default("landing") // с какой страницы/ссылки пришла
-  submitCount    Int                @default(1)         // сколько раз отправляли форму
-  alreadyEnrolled Boolean           @default(false)     // пометка для админки (REG-09)
-  createdAt      DateTime           @default(now())
-  updatedAt      DateTime           @updatedAt          // = дата последней отправки
+  id              String             @id @default(cuid())
+  email           String             @unique // повторная отправка → update, не дубль (REG-05)
+  firstName       String
+  lastName        String
+  phone           String?
+  telegram        String?
+  status          RegistrationStatus @default(NEW)
+  source          String             @default("landing") // с какой страницы/ссылки пришла
+  submitCount     Int                @default(1) // сколько раз отправляли форму
+  alreadyEnrolled Boolean            @default(false) // пометка для админки (REG-09)
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt // = дата последней отправки
 }
 
 // Append-only журнал согласий (D-014). Действующее = последняя запись (email, type).
@@ -117,21 +129,24 @@ model Enrollment {
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   courseSlug  String   @default("ai-basics")
   source      String   @default("manual") // задел под Stripe и др. (D-001)
-  grantedById String?  // админ, выдавший доступ (без FK: админ может быть удалён из env)
+  grantedById String? // админ, выдавший доступ (без FK: админ может быть удалён из env)
   createdAt   DateTime @default(now())
 
   @@unique([userId, courseSlug]) // защита от двойной выдачи, ADM-04
 }
 
-// Одноразовые токены входа. Хранится только SHA-256 хэш (D-009).
-model MagicLink {
-  id        String    @id @default(cuid())
-  tokenHash String    @unique
-  email     String    // на кого выписан
-  userId    String?   // может быть null, если письмо шлётся до захода (не используется в MVP)
-  expiresAt DateTime  // createdAt + 15 минут (AUTH-03)
+// Одноразовые токены восстановления/установки пароля и подтверждения регистрации (double opt-in).
+// Бывш. MagicLink — вход по ссылке отменён (D-031), токен переиспользован под reset/opt-in.
+// Хранится только SHA-256 хэш (D-009). TTL 60 минут — задаётся в коде (AUTH-03).
+model PasswordResetToken {
+  id        String            @id @default(cuid())
+  tokenHash String            @unique
+  email     String // на кого выписан
+  userId    String? // null для токенов подтверждения регистрации (User ещё не создан)
+  purpose   ResetTokenPurpose @default(PASSWORD_RESET)
+  expiresAt DateTime // createdAt + 60 минут (AUTH-03, D-031)
   usedAt    DateTime? // одноразовость: UPDATE ... WHERE usedAt IS NULL (AUTH-04)
-  createdAt DateTime  @default(now())
+  createdAt DateTime          @default(now())
 
   @@index([email, createdAt]) // rate limit 3/15мин (AUTH-08)
 }
@@ -144,7 +159,7 @@ model LessonProgress {
   userId         String
   user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   courseSlug     String    @default("ai-basics")
-  lessonId       String    // "1.1" … "4.3"
+  lessonId       String // "1.1" … "4.3"
   firstOpenedAt  DateTime  @default(now())
   quizPassedAt   DateTime? // первый зачёт ≥2/3; не сбрасывается (LES-09)
   practiceDoneAt DateTime? // чекбокс «Сделал»; можно снять → null (LES-11)
@@ -161,8 +176,8 @@ model QuizResult {
   user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   courseSlug String    @default("ai-basics")
   lessonId   String
-  attempt    Int       // 1, 2, … в рамках (userId, lessonId)
-  answers    Json      // [{questionIndex, chosen, correct}] — по мере ответов
+  attempt    Int // 1, 2, … в рамках (userId, lessonId)
+  answers    Json // [{questionIndex, chosen, correct}] — по мере ответов
   score      Int       @default(0)
   total      Int       @default(3)
   passed     Boolean   @default(false) // score >= 2 (LES-08)
@@ -207,8 +222,8 @@ model Submission {
   application  String? // где применит
   adminComment String? // обязателен при NEEDS_CHANGES (ADM-06)
   reviewedById String?
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt // для optimistic concurrency (ADM-07)
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt // для optimistic concurrency (ADM-07)
   submittedAt  DateTime?
   reviewedAt   DateTime?
 
@@ -217,16 +232,16 @@ model Submission {
 
 // Переживает GDPR-удаление владельца в обезличенном виде (D-010, CERT-07).
 model Certificate {
-  id         String            @id @default(cuid())
-  number     String            @unique // CRAT-2026-0001 (CERT-03)
-  userId     String?
-  user       User?             @relation(fields: [userId], references: [id], onDelete: SetNull)
-  fullName   String?           // снапшот ФИО на момент выдачи; null после GDPR-удаления
-  courseSlug String            @default("ai-basics")
-  courseTitle String           // снапшот названия курса
-  status     CertificateStatus @default(VALID)
-  issuedAt   DateTime          @default(now())
-  revokedAt  DateTime?
+  id          String            @id @default(cuid())
+  number      String            @unique // CRAT-2026-0001 (CERT-03)
+  userId      String?
+  user        User?             @relation(fields: [userId], references: [id], onDelete: SetNull)
+  fullName    String? // снапшот ФИО на момент выдачи; null после GDPR-удаления
+  courseSlug  String            @default("ai-basics")
+  courseTitle String // снапшот названия курса
+  status      CertificateStatus @default(VALID)
+  issuedAt    DateTime          @default(now())
+  revokedAt   DateTime?
 }
 
 // Счётчик номеров сертификатов по годам; берётся SELECT ... FOR UPDATE в транзакции выдачи.
@@ -242,11 +257,11 @@ model EmailLog {
   user      User?       @relation(fields: [userId], references: [id], onDelete: Cascade)
   type      EmailType
   subject   String
-  payload   Json        // данные письма для отладки; сырых токенов не содержит (D-028) — переотправка (ADM-08) рендерит заново
+  payload   Json // данные письма для отладки; сырых токенов не содержит (D-028) — переотправка (ADM-08) рендерит заново
   status    EmailStatus @default(QUEUED)
   attempts  Int         @default(0)
   lastError String?
-  resendId  String?     // id сообщения у Resend
+  resendId  String? // id сообщения у Resend
   createdAt DateTime    @default(now())
   sentAt    DateTime?
 
@@ -258,7 +273,7 @@ model TrainerUsage {
   id        String   @id @default(cuid())
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  trainerId String   // "t1"
+  trainerId String // "t1"
   usedAt    DateTime @default(now())
 
   @@index([userId, trainerId, usedAt]) // ≤20/день (Warsaw) и ≤3/мин — count по окнам

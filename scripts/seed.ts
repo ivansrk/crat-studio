@@ -77,7 +77,7 @@ async function printMagicLink(email: string, version: string) {
   const user = await db.user.findUnique({ where: { email } })
   if (!user) return
   const raw = newToken()
-  await db.magicLink.create({ data: { tokenHash: hashToken(raw), email, userId: user.id, expiresAt: new Date(Date.now() + MAGIC_TTL_MS) } })
+  await db.passwordResetToken.create({ data: { tokenHash: hashToken(raw), email, userId: user.id, expiresAt: new Date(Date.now() + MAGIC_TTL_MS) } })
   console.log(`[seed ${version}] вход для ${email}: ${process.env.APP_URL ?? 'http://localhost:3000'}/auth/${raw}`)
 }
 

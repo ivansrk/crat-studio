@@ -270,7 +270,7 @@ export const ru = {
     emailUnsupported: 'Этот тип письма пока нельзя переотправить',
     emailCertGone: 'Сертификат отозван или не найден — переотправка невозможна',
     emailSendFailed: 'Не удалось сформировать письмо — попробуйте ещё раз',
-    emailType: { MAGIC_LINK: 'ссылка входа', ACCESS_GRANTED: 'доступ выдан', CERTIFICATE: 'сертификат' },
+    emailType: { MAGIC_LINK: 'ссылка входа', ACCESS_GRANTED: 'доступ выдан', CERTIFICATE: 'сертификат', WELCOME: 'приветствие с паролем', PASSWORD_RESET: 'восстановление пароля', DOUBLE_OPT_IN: 'подтверждение регистрации', CONSULTATION: 'заявка на консультацию' },
     emailStatus: { SENT: 'отправлено', FAILED: 'ошибка' },
     colName: 'Имя',
     colEmail: 'Почта',

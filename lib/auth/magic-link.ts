@@ -13,11 +13,11 @@ export const hashToken = (raw: string) => createHash('sha256').update(raw).diges
 
 /** Выпускает новый magic-link и возвращает URL входа. Сырой токен живёт только в письме (D-028);
  *  вызывающие гарантируют существование пользователя. */
-export async function mintLoginUrl(email: string, client: Pick<PrismaClient, 'magicLink' | 'user'> = db): Promise<string> {
+export async function mintLoginUrl(email: string, client: Pick<PrismaClient, 'passwordResetToken' | 'user'> = db): Promise<string> {
   const user = await client.user.findUnique({ where: { email } })
   if (!user) throw new Error('user not found')
   const raw = newToken()
-  await client.magicLink.create({ data: { tokenHash: hashToken(raw), email, userId: user.id, expiresAt: new Date(Date.now() + MAGIC_TTL_MS) } })
+  await client.passwordResetToken.create({ data: { tokenHash: hashToken(raw), email, userId: user.id, expiresAt: new Date(Date.now() + MAGIC_TTL_MS) } })
   return `${process.env.APP_URL}/auth/${raw}`
 }
 
@@ -40,11 +40,11 @@ export type ConsumeResult = { ok: true; userId: string; isAdmin: boolean } | { o
 /** AUTH-04: строго одноразово — атомарный updateMany WHERE usedAt IS NULL. */
 export async function consumeMagicLink(raw: string): Promise<ConsumeResult> {
   const tokenHash = hashToken(raw)
-  const link = await db.magicLink.findUnique({ where: { tokenHash } })
+  const link = await db.passwordResetToken.findUnique({ where: { tokenHash } })
   if (!link) return { ok: false, reason: 'unknown' }
   if (link.usedAt) return { ok: false, reason: 'used' }            // AUTH-05
   if (link.expiresAt < new Date()) return { ok: false, reason: 'expired' } // AUTH-06
-  const claimed = await db.magicLink.updateMany({ where: { tokenHash, usedAt: null }, data: { usedAt: new Date() } })
+  const claimed = await db.passwordResetToken.updateMany({ where: { tokenHash, usedAt: null }, data: { usedAt: new Date() } })
   if (claimed.count !== 1) return { ok: false, reason: 'used' }    // гонка двух кликов
   const user = await db.user.findUnique({ where: { email: link.email } })
   if (!user) return { ok: false, reason: 'unknown' }               // GDPR-удалён между выпиской и кликом
