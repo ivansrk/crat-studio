@@ -34,8 +34,10 @@ export async function grantAccess(registrationId: string, adminUserId: string): 
     throw e
   }
 
-  // Нота ревью T4: транзакция уже успешна (доступ выдан) — сбой письма после неё не «выдача не удалась»,
-  // а отдельный статус, чтобы админ переотправил письмо, а не пытался выдать доступ повторно.
+  // Нота ревью T4/T9: транзакция уже успешна (доступ выдан) — сбой письма после неё не «выдача не удалась».
+  // Ловим сбой ПОСТАНОВКИ письма в очередь (emailLog.create): sendEmail резолвится сразу после создания
+  // записи, доставка fire-and-forget. Сбои доставки асинхронны и видны как FAILED в email_log (D-013),
+  // кнопка переотправки — раздел «Письма» (T10).
   try {
     await sendEmail({
       to: user.email, userId: user.id, type: 'ACCESS_GRANTED', subject: t.email.accessSubject,
