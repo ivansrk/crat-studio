@@ -40,3 +40,13 @@ npx prisma migrate dev  # локальная миграция
 ### Сертификаты (Playwright/Chromium, CERT-04, D-011)
 
 PDF сертификата рендерится по требованию (не хранится) через Playwright + Chromium. На Render (native-окружение, без Docker) chromium ставится в `buildCommand` (`npx playwright install chromium`, без `--with-deps` — системные библиотеки для headless Chromium в Ubuntu-образе Render уже есть, апт-пакеты не нужны). Путь кэша браузера зафиксирован явно через `PLAYWRIGHT_BROWSERS_PATH=/opt/render/project/src/.cache/ms-playwright` (Render применяет envVars и к build, и к runtime — иначе дефолтный `$HOME/.cache` может не совпасть между фазами и рантайм не найдёт установленный браузер). Риск первого деплоя — проверить `/app/certificate` на проде: если Playwright не находит chromium, смотреть лог build (браузер должен ставиться там) и сверять `PLAYWRIGHT_BROWSERS_PATH` в обеих фазах.
+
+## Запуск-пакет (Ф6)
+
+Внешние шаги (руками Ивана, после деплоя на прод-домен):
+
+1. **Google Search Console** — подтвердить владение `cratstudio.com`, отправить `https://cratstudio.com/sitemap.xml`.
+2. **Яндекс.Вебмастер** — то же самое: подтвердить `cratstudio.com`, отправить `sitemap.xml`.
+3. **UptimeRobot** — HTTPS-монитор на `https://cratstudio.com/api/health`, keyword-проверка на `ok`.
+
+Статьи (`/articles`) приходят из course-factory заменой файлов в `content/articles/` — 2 текущие статьи в репозитории черновые (курсив-пометка на странице) и будут заменены при первой поставке (5–10 статей к запуску, ART-04).
