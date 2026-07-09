@@ -9,6 +9,7 @@ export default async function Students() {
   return (
     <main className="admin-wide">
       <h1>{t.admin.students}</h1>
+      <p><a className="mdx-download" href="/admin/export/csv">{t.admin.exportCsv}</a></p>
       <table className="admin-table">
         <thead>
         <tr>
