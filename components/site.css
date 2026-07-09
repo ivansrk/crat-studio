@@ -19,6 +19,14 @@
   padding-block: 1rem;
 }
 
+/* flex-дети по умолчанию min-width:auto — mono-подпись хедера
+   ("APPLIED AI / EDUCATION / …") не переносилась и раздувала документ
+   на 360px (тот же класс бага, что у .course-card > *). */
+.site-header-inner > *,
+.site-footer-inner > * {
+  min-width: 0;
+}
+
 .site-brand {
   display: flex;
   flex-direction: column;
@@ -75,7 +83,8 @@
 
 /* ---------- главная — редакционный монтаж (Ф5 Task 4, бриф §7) ---------- */
 
-main.crat-home {
+main.crat-home,
+main.crat-page {
   max-width: none;
   padding: 0;
 }
@@ -306,11 +315,84 @@ main.crat-home {
   flex: none;
 }
 
-.signup-form { display: grid; gap: 1rem; margin-top: 2rem; }
+/* ---------- лендинг /ai-basics (Ф5 Task 5, бриф §8) ---------- */
+
+/* main.crat-page: та же широкая обвязка, что у главной (main.crat-home) —
+   секции сами задают ширину через .crat-shell, глобальный main{max-width:46rem}
+   тут не подходит (карточки программы/команды шире текстовой колонки). */
+
+.hero-section .crat-red-line {
+  margin-top: .75rem;
+}
+.hero-section h1 {
+  margin-top: 1rem;
+  /* course.title (из content, не куратированный текст брифа) содержит длинные
+     слова («профессиональной») — та же защита, что у .course-card h3 на главной. */
+  overflow-wrap: anywhere;
+}
+@media (max-width: 480px) {
+  .hero-section h1 {
+    font-size: 1.8rem;
+  }
+}
+
+.program-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5rem;
+  margin-top: 2rem;
+}
+@media (max-width: 700px) {
+  .program-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.program-module {
+  display: grid;
+  gap: .75rem;
+  align-content: start;
+}
+.program-module h3 {
+  margin: 0;
+}
+
+.program-lessons {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: .5rem;
+}
+.program-lessons li {
+  display: flex;
+  align-items: baseline;
+  gap: .75rem;
+  color: var(--paper-muted);
+}
+.program-lesson-num {
+  flex: none;
+}
+
+.accepted-card {
+  display: grid;
+  gap: 1rem;
+  justify-items: start;
+  max-width: var(--maxw-text);
+}
+.accepted-card .crat-button {
+  margin-top: .5rem;
+}
+
+/* ---------- форма заявки (SignupForm, REG-03) ---------- */
+
+.signup-form { display: grid; gap: 1rem; max-width: var(--maxw-text); }
 .signup-form label { display: grid; gap: .35rem; }
 .signup-form label.check { grid-template-columns: auto 1fr; align-items: start; gap: .6rem; }
-.signup-form input:not([type=checkbox]) { background: var(--ink); color: var(--paper); border: 1px solid color-mix(in srgb, var(--paper) 25%, transparent); border-radius: 8px; padding: .8rem 1rem; font-size: var(--fs-base); }
-.signup-form input[type=checkbox] { width: 1.3rem; height: 1.3rem; margin-top: .25rem; }
-.signup-form button, button.mdx-download { font: inherit; background: var(--ink); color: var(--paper); cursor: pointer; }
+.signup-form input:not([type=checkbox]) { background: var(--ink); color: var(--paper); border: 1px solid var(--line-soft); border-radius: 8px; padding: .8rem 1rem; font-size: var(--fs-base); transition: border-color .3s ease; }
+.signup-form input:not([type=checkbox]):hover { border-color: var(--line-red); }
+.signup-form input[type=checkbox] { width: 1.5rem; height: 1.5rem; margin-top: .1rem; accent-color: var(--neon); cursor: pointer; }
 .signup-form input:focus-visible { outline: 2px solid var(--neon); outline-offset: 2px; }
+.signup-form.crat-card:hover { transform: none; border-color: var(--line-soft); }
+.signup-form .crat-button { justify-self: start; }
 .form-alert { color: var(--neon); }

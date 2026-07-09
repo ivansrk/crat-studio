@@ -2,15 +2,23 @@ import Link from 'next/link'
 import { t } from '@/lib/i18n'
 import { SiteHeader } from '@/components/site/SiteHeader'
 import { SiteFooter } from '@/components/site/SiteFooter'
+import { SectionLabel } from '@/components/site/SectionLabel'
 
 export default function Accepted() {
   return (
     <>
       <SiteHeader />
-      <main>
-        <h1>{t.landing.acceptedTitle}</h1>
-        <p>{t.landing.acceptedBody}</p>
-        <p><Link className="mdx-download" href="/">{t.landing.backHome}</Link></p>
+      <main className="crat-page">
+        <section className="crat-section">
+          <div className="crat-shell">
+            <SectionLabel kicker={t.landing.courseLabel} />
+            <div className="crat-card accepted-card">
+              <h1 className="crat-display">{t.landing.acceptedTitle}</h1>
+              <p className="crat-muted">{t.landing.acceptedBody}</p>
+              <Link className="crat-button primary" href="/">{t.landing.backHome}</Link>
+            </div>
+          </div>
+        </section>
       </main>
       <SiteFooter />
     </>

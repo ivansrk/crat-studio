@@ -5,6 +5,7 @@ import { SignupForm } from '@/components/signup-form'
 import { t } from '@/lib/i18n'
 import { SiteHeader } from '@/components/site/SiteHeader'
 import { SiteFooter } from '@/components/site/SiteFooter'
+import { SectionLabel } from '@/components/site/SectionLabel'
 
 export const metadata: Metadata = {
   title: t.seo.registerTitle,
@@ -19,11 +20,16 @@ export default async function Register({ searchParams }: { searchParams: Promise
   return (
     <>
       <SiteHeader />
-      <main>
-        <h1>{t.landing.signupTitle}</h1>
-        {user
-          ? <p><Link className="mdx-download" href="/app">{t.home.toCabinet}</Link></p>
-          : <SignupForm returnTo="/register" showTitle={false} notice={signup === 'invalid' ? 'invalid' : signup === 'rate' ? 'rate' : undefined} />}
+      <main className="crat-page">
+        <section className="crat-section">
+          <div className="crat-shell">
+            <SectionLabel kicker={t.landing.courseLabel} />
+            <h1 className="crat-display">{t.landing.signupTitle}</h1>
+            {user
+              ? <p><Link className="crat-button primary" href="/app">{t.home.toCabinet}</Link></p>
+              : <SignupForm returnTo="/register" showTitle={false} notice={signup === 'invalid' ? 'invalid' : signup === 'rate' ? 'rate' : undefined} />}
+          </div>
+        </section>
       </main>
       <SiteFooter />
     </>
