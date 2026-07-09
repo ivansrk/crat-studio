@@ -279,4 +279,38 @@ export const ru = {
     pdfCompleted: 'за прохождение курса',
     pdfVerify: 'Проверить подлинность',
   },
+  project: {
+    kicker: 'Мини-проект',
+    title: 'Финальный мини-проект',
+    intro: 'Опишите, как вы применили ИИ для реальной задачи — коротко, своими словами.',
+    // Порядок = PROJECT_FIELDS (lib/project/fields.ts) = порядок формы (PROJ-01).
+    fieldTask: 'Какую задачу решали',
+    fieldTool: 'Каким инструментом',
+    fieldPrompt: 'Какой запрос дали',
+    fieldResult: 'Что получили',
+    fieldRefined: 'Что уточнили',
+    fieldVerified: 'Как проверили результат',
+    fieldApplication: 'Где будете применять',
+    saveDraft: 'Сохранить черновик',
+    submit: 'Отправить на проверку',
+    adminCommentTitle: 'Комментарий от проверяющего',
+    // Статусные блоки (PROJ-02/03/04/06)
+    statusSubmittedTitle: 'Отчёт на проверке',
+    statusSubmittedBody: 'Мы сообщим, когда проверим — ничего делать не нужно.',
+    statusApprovedTitle: 'Принят!',
+    statusApprovedBody: 'Мини-проект зачтён. Если пройдены все уроки — сертификат уже в кабинете.',
+    // Баннеры по ?project= (T5-план)
+    bannerSaved: 'Черновик сохранён',
+    bannerSubmitted: 'Отчёт отправлен на проверку',
+    bannerIncomplete: 'Заполните все 7 полей',
+    bannerLocked: 'Отчёт уже на проверке или принят',
+    // Статус в кабинете (CAB, block «Финальный мини-проект»)
+    cabinetLinkLabel: 'Мини-проект',
+    statusNone: 'не начат',
+    statusDraft: 'черновик',
+    statusSubmitted: 'на проверке',
+    statusNeedsChanges: 'нужны правки',
+    statusApproved: 'принят',
+    cabinetCta: 'Открыть мини-проект',
+  },
 } as const

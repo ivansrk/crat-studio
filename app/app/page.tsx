@@ -7,7 +7,16 @@ import { getCourseProgress } from '@/lib/progress'
 import { isLessonPassed } from '@/lib/progress/quiz-logic'
 import { logoutAction } from '@/app/actions/logout'
 import { saveMissionAction } from '@/app/actions/lesson'
+import { getCurrentSubmission } from '@/lib/project'
 import { t } from '@/lib/i18n'
+import type { SubmissionStatus } from '@/lib/generated/prisma/client'
+
+const PROJECT_STATUS_LABEL: Record<SubmissionStatus, string> = {
+  DRAFT: t.project.statusDraft,
+  SUBMITTED: t.project.statusSubmitted,
+  NEEDS_CHANGES: t.project.statusNeedsChanges,
+  APPROVED: t.project.statusApproved,
+}
 
 export default async function Cabinet() {
   // currentUser не null после layout-гейта (app/app/layout.tsx), но TS этого не знает —
@@ -33,6 +42,8 @@ export default async function Cabinet() {
   const { byLesson, completedCount } = await getCourseProgress(user.id)
   const total = lessonCount() // знаменатель «N/12» из course.yaml, не хардкод (ревью T6)
   const pct = Math.min(100, (completedCount / total) * 100)
+  const projectSubmission = await getCurrentSubmission(user.id) // T5: доп. запрос — приемлемо (план)
+  const projectStatusText = projectSubmission ? PROJECT_STATUS_LABEL[projectSubmission.status] : t.project.statusNone
 
   return (
     <main className="crat-page">
@@ -90,6 +101,15 @@ export default async function Cabinet() {
                 })}</ul>
               </div>
             ))}
+          </div>
+
+          {/* T5: статус мини-проекта + ссылка — после списка уроков (PROJ-01…06). */}
+          <div className="crat-card cabinet-project">
+            <div>
+              <h2 className="crat-kicker">{t.project.cabinetLinkLabel}</h2>
+              <p className="crat-muted">{projectStatusText}</p>
+            </div>
+            <Link className="crat-button" href="/app/project">{t.project.cabinetCta}</Link>
           </div>
 
           <form action={logoutAction}><button className="crat-button" type="submit">{t.auth.logout}</button></form>
