@@ -1,0 +1,83 @@
+import { notFound } from 'next/navigation'
+import { db } from '@/lib/db'
+import { getContent } from '@/lib/content'
+import { getCourseProgress } from '@/lib/progress'
+import { formatDate } from '@/lib/i18n/format-date'
+import { t } from '@/lib/i18n'
+
+export const dynamic = 'force-dynamic'
+
+export default async function StudentProgress({ params }: { params: Promise<{ userId: string }> }) {
+  const { userId } = await params
+  const user = await db.user.findUnique({ where: { id: userId } })
+  if (!user) notFound() // гейт админа — в app/admin/layout.tsx; здесь только валидность userId
+
+  const [{ byLesson }, deferred] = await Promise.all([
+    getCourseProgress(userId),
+    db.deferredQuizState.findMany({ where: { userId }, orderBy: { dueAt: 'asc' } }),
+  ])
+  const lessons = getContent().course.modules.flatMap(m => m.lessons) // все 12 строк всегда (ADM-05)
+
+  return (
+    <main className="admin-wide">
+      <h1>{user.firstName} {user.lastName}</h1>
+      <p>{user.email}</p>
+
+      <h2>{t.admin.progress}</h2>
+      <table className="admin-table">
+        <thead>
+        <tr>
+          <th>{t.admin.colLesson}</th>
+          <th>{t.admin.colQuiz}</th>
+          <th>{t.admin.colPractice}</th>
+          <th>{t.admin.colDone}</th>
+        </tr>
+        </thead>
+        <tbody>
+        {lessons.map(l => {
+          const p = byLesson.get(l.id)
+          return (
+            <tr key={l.id}>
+              <td>{l.title}</td>
+              <td>{p?.quizPassedAt ? formatDate(p.quizPassedAt) : t.admin.notYet}</td>
+              <td>{p?.practiceDoneAt ? formatDate(p.practiceDoneAt) : t.admin.notYet}</td>
+              <td>{p?.completedAt ? formatDate(p.completedAt) : t.admin.notYet}</td>
+            </tr>
+          )
+        })}
+        </tbody>
+      </table>
+
+      <h2>{t.admin.mission}</h2>
+      <p>{user.mission ?? t.admin.notYet}</p>
+
+      <h2>{t.admin.deferredTitle}</h2>
+      {deferred.length === 0 ? <p>{t.admin.notYet}</p> : (
+        <table className="admin-table">
+          <thead>
+          <tr>
+            <th>{t.admin.colLesson}</th>
+            <th>{t.admin.colDueAt}</th>
+            <th>{t.admin.colAnsweredAt}</th>
+          </tr>
+          </thead>
+          <tbody>
+          {deferred.map(d => (
+            <tr key={d.id}>
+              <td>{d.lessonId}</td>
+              <td>{formatDate(d.dueAt)}</td>
+              <td>{d.answeredAt ? formatDate(d.answeredAt) : t.admin.notYet}</td>
+            </tr>
+          ))}
+          </tbody>
+        </table>
+      )}
+
+      <h2>{t.admin.projectTitle}</h2>
+      <p>{t.admin.projectPhase3}</p>
+
+      <h2>{t.admin.certTitle}</h2>
+      <p>{t.admin.projectPhase3}</p>
+    </main>
+  )
+}

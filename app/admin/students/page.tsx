@@ -21,6 +21,7 @@ export default async function Students({ searchParams }: { searchParams: Promise
               <th>{t.admin.colName}</th>
               <th>{t.admin.colEmail}</th>
               <th>{t.admin.colEnrolledAt}</th>
+              <th></th>
               <th>{t.admin.colActions}</th>
             </tr>
             </thead>
@@ -30,6 +31,7 @@ export default async function Students({ searchParams }: { searchParams: Promise
                 <td>{u.firstName} {u.lastName}</td>
                 <td>{u.email}</td>
                 <td>{u.enrollments[0] ? formatDate(u.enrollments[0].createdAt) : ''}</td>
+                <td><a className="mdx-download" href={`/admin/students/${u.id}`}>{t.admin.progress}</a></td>
                 <td>
                   <form action={gdprDeleteAction}>
                     <input type="hidden" name="userId" value={u.id} />
