@@ -1,4 +1,4 @@
-# Требования (EARS)
+pfxt# Требования (EARS)
 
 Формат EARS:
 - Постоянные: «Система должна …»
@@ -148,7 +148,7 @@ ID стабильны — на них ссылаются docs/flows.md и код
 
 - **SEC-01.** Секретов в репозитории нет; `.env.example` содержит только имена: `DATABASE_URL, RESEND_API_KEY, ANTHROPIC_API_KEY, ADMIN_EMAILS, APP_URL, SESSION_SECRET, NEXT_PUBLIC_PLAUSIBLE_DOMAIN` (последняя — не секрет, публичный домен аналитики; Ф7 добавит `STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET` — PAY-05).
 - **SEC-02.** Pre-commit с gitleaks обязателен для всех коммитов.
-- **SEC-03.** Rate limits: регистрация 5/час/IP (REG-07); запрос magic link 3/15 мин/email (AUTH-08); T1 — TRN-03.
+- **SEC-03.** Rate limits: регистрация 5/час/IP (REG-07); запрос magic link 3/15 мин/email (AUTH-08) И 10/15 мин/IP (защита от перебора базы email по многим адресам; ответ наружу тот же — SEC-06); T1 — TRN-03.
 - **SEC-04.** Anthropic API вызывается только с сервера (TRN-02).
 - **SEC-05.** Все мутации — только POST с проверкой сессии; admin-API дополнительно проверяет роль по env (AUTH-10).
 - **SEC-06.** Ответы системы не должны раскрывать существование email в базе (AUTH-02).
