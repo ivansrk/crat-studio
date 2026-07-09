@@ -1,11 +1,12 @@
 import { db } from '@/lib/db'
-import type { ConsentSource, ConsentType } from '@/lib/generated/prisma/client'
+import type { ConsentSource, ConsentType, PrismaClient } from '@/lib/generated/prisma/client'
 
-/** Append-only (D-014): отписка/повтор = новая строка, история не переписывается. */
+/** Append-only (D-014): отписка/повтор = новая строка, история не переписывается.
+ *  client позволяет писать в рамках db.$transaction (передать tx). */
 export async function appendConsent(opts: {
   email: string; type: ConsentType; granted: boolean; source: ConsentSource; userId?: string | null
-}) {
-  await db.consent.create({ data: { ...opts, email: opts.email.trim().toLowerCase() } })
+}, client: Pick<PrismaClient, 'consent'> = db) {
+  await client.consent.create({ data: { ...opts, email: opts.email.trim().toLowerCase() } })
 }
 
 /** Чистая свёртка «действующее согласие = последняя запись» — используется CSV-экспортом (ADM-09). */
