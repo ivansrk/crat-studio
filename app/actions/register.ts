@@ -6,7 +6,8 @@ import { submitRegistration } from '@/lib/registration'
 
 export async function registerAction(formData: FormData) {
   const h = await headers()
-  const ip = (h.get('x-forwarded-for') ?? 'local').split(',')[0].trim()
+  // rightmost = добавлен прокси Render; клиентская часть заголовка подделываема (спуфинг лимита)
+  const ip = (h.get('x-forwarded-for') ?? 'local').split(',').at(-1)!.trim()
   if (!limiters.registration.allow(`reg:${ip}`)) redirect('/ai-basics?signup=rate')   // REG-07, мягко
   const result = await submitRegistration({
     firstName: String(formData.get('firstName') ?? ''),

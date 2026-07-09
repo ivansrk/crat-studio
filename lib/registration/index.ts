@@ -53,7 +53,12 @@ export async function submitRegistration(input: RegistrationInput): Promise<'acc
     // Двойной сабмит (double-click): оба запроса видят findUnique=null → второй create падает P2002 →
     // повторяем транзакцию, заявка уже существует → update-ветка. Оба запроса получают 'accepted'.
     if (!isUniqueViolation(e)) throw e
-    await persist()
+    try {
+      await persist()
+    } catch (e2) {
+      // Теоретический второй P2002 подряд: данные первой гонки уже в базе, пользователю чинить нечего — accepted.
+      if (!isUniqueViolation(e2)) throw e2
+    }
   }
   return 'accepted'
 }
