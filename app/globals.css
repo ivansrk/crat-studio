@@ -3,6 +3,7 @@
 @import '../components/mdx/mdx.css';
 @import '../components/site.css';
 @import '../components/admin.css';
+@import '../components/quiz.css';
 
 * { box-sizing: border-box; }
 html { font-size: var(--fs-base); }

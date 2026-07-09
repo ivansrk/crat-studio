@@ -52,6 +52,16 @@ export const ru = {
     missionTitle: 'Моя личная миссия',
     missionHint: 'Зачем я учусь работать с ИИ — своими словами',
   },
+  quiz: {
+    title: 'Проверка',
+    questionLabel: 'Вопрос',
+    correct: 'Верно!',
+    incorrect: 'Не совсем.',
+    passedTitle: 'Квиз сдан!',
+    failedTitle: 'Пока не хватило — попробуйте ещё раз',
+    scoreLabel: 'Результат',
+    backToLesson: 'Вернуться к уроку',
+  },
   callout: { idea: 'Совет', warning: 'Внимание', example: 'Пример' },
   health: { ok: 'ok', contentValid: 'контент валиден', contentErrors: 'ошибки контента' },
   auth: {

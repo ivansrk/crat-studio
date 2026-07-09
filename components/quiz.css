@@ -1,0 +1,7 @@
+.quiz-options { display: grid; gap: .8rem; }
+.quiz-option { text-align: left; font: inherit; background: var(--ink); color: var(--paper); border: 1px solid color-mix(in srgb, var(--paper) 25%, transparent); border-radius: 8px; padding: 1rem 1.25rem; cursor: pointer; width: 100%; }
+.quiz-option:hover { border-color: var(--neon); }
+.quiz-fb { padding: 1rem 1.25rem; border-radius: 8px; margin: 1rem 0; }
+.quiz-fb-ok { background: color-mix(in srgb, var(--mint) 12%, transparent); }
+.quiz-fb-no { background: color-mix(in srgb, var(--neon) 10%, transparent); }
+.quiz-progress { color: var(--lavender); }
