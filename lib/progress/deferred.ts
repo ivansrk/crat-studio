@@ -9,11 +9,16 @@ export type DeferredRow = { id: string; lessonId: string; dueAt: Date; answeredA
 export type DeferredQuestion = QuizQuestion
 
 /** CAB-04/06: должный и несданный блок — самый давний по dueAt; null если нет.
- *  Сравнение по timestamp (dueAt хранится UTC; «7 дней» заложены при создании — LES-13). */
+ *  Сравнение по timestamp (dueAt хранится UTC; «7 дней» заложены при создании — LES-13).
+ *  При равных dueAt (реальный кейс: seed пишет один dueAt на несколько уроков) — тай-брейк
+ *  по id (меньший побеждает): выбор детерминирован независимо от порядка входа (ревью T1). */
 export function pickDueDeferred(rows: DeferredRow[], now: Date): DeferredRow | null {
   const due = rows.filter(r => r.answeredAt === null && r.dueAt.getTime() <= now.getTime())
   if (due.length === 0) return null
-  return due.reduce((oldest, r) => (r.dueAt.getTime() < oldest.dueAt.getTime() ? r : oldest))
+  return due.reduce((oldest, r) => {
+    const dt = r.dueAt.getTime() - oldest.dueAt.getTime()
+    return dt < 0 || (dt === 0 && r.id < oldest.id) ? r : oldest
+  })
 }
 
 export type DueDeferred = { deferred: DeferredRow; lessonId: string; lessonTitle: string; questions: QuizQuestion[] }
@@ -23,6 +28,7 @@ export type DueDeferred = { deferred: DeferredRow; lessonId: string; lessonTitle
 export async function getDueDeferred(userId: string): Promise<DueDeferred | null> {
   const rows = await db.deferredQuizState.findMany({
     where: { userId, courseSlug: COURSE, answeredAt: null },
+    orderBy: [{ dueAt: 'asc' }, { id: 'asc' }], // детерминированный порядок при равных dueAt (ревью T1)
   })
   const now = new Date()
   let remaining: DeferredRow[] = rows
