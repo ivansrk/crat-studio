@@ -1,0 +1,260 @@
+/*
+ * Ф5-дизайн — utility-система CRAT (docs/design-brief.md §4–6).
+ * Формула: чёрный — пространство, красный — свет, интерфейс тихий.
+ * UX-01: кегль нигде не ниже var(--fs-small) (17px) — мелкий текст запрещён.
+ * prefers-reduced-motion уже глушится глобально в app/globals.css — не дублировать здесь.
+ */
+
+/* ---------- shell / section ---------- */
+
+.crat-shell {
+  max-width: 76rem;
+  margin-inline: auto;
+  padding-inline: clamp(1.25rem, 4vw, 2.5rem);
+}
+
+.crat-section {
+  padding-block: clamp(4rem, 10vh, 7rem);
+}
+
+/* ---------- typography helpers ---------- */
+
+.crat-kicker {
+  display: inline-block;
+  font-family: var(--font-mono), monospace;
+  text-transform: uppercase;
+  letter-spacing: .18em;
+  font-size: var(--fs-small);
+  color: var(--paper-muted);
+}
+
+.crat-display {
+  font-family: var(--font-accent), serif;
+  font-size: clamp(2.4rem, 6vw, 4.2rem);
+  line-height: 1.05;
+  margin: 0;
+}
+
+.crat-muted {
+  color: var(--paper-muted);
+}
+
+/* ---------- buttons ---------- */
+
+.crat-button {
+  display: inline-flex;
+  align-items: center;
+  gap: .5rem;
+  font: inherit;
+  font-size: var(--fs-small);
+  color: var(--paper);
+  background: var(--ink);
+  border: 1px solid var(--line-soft);
+  border-radius: 10px;
+  padding: 1rem 1.9rem;
+  cursor: pointer;
+  text-decoration: none;
+  transition: border-color .3s ease, box-shadow .3s ease, transform .3s ease;
+}
+.crat-button:hover {
+  border-color: var(--line-red);
+  box-shadow: var(--neon-glow);
+}
+.crat-button:focus-visible {
+  outline: 2px solid var(--neon);
+  outline-offset: 2px;
+}
+.crat-button.primary {
+  border-color: var(--neon);
+  box-shadow: 0 0 12px rgba(255, 75, 58, .25);
+}
+.crat-button.primary:hover {
+  box-shadow: var(--neon-glow);
+}
+.crat-button.secondary {
+  background: transparent;
+}
+
+/* ---------- card / grid ---------- */
+
+.crat-card {
+  background: color-mix(in srgb, var(--paper) 4%, transparent);
+  border: 1px solid var(--line-soft);
+  border-radius: 14px;
+  padding: 2rem;
+  transition: transform .35s ease, border-color .35s ease;
+}
+.crat-card:hover {
+  transform: translateY(-4px);
+  border-color: var(--line-red);
+}
+
+.crat-grid {
+  display: grid;
+  gap: 1.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+}
+.crat-grid.cols-4 {
+  grid-template-columns: repeat(4, 1fr);
+}
+@media (max-width: 900px) {
+  .crat-grid.cols-4 {
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  }
+}
+
+/* ---------- visual frame (CSS «киноэкран», без картинок) ---------- */
+
+.crat-visual-frame {
+  position: relative;
+  overflow: hidden;
+  aspect-ratio: 16 / 9;
+  border-radius: 14px;
+  background: radial-gradient(circle at 30% 20%, rgba(177, 18, 18, .35), transparent 60%), var(--bg-void);
+}
+
+.crat-visual-frame.horizon {
+  background: linear-gradient(to bottom, var(--red-dark) 0%, var(--bg-void) 72%);
+}
+.crat-visual-frame.horizon::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 38%;
+  height: 2px;
+  background: var(--neon);
+  box-shadow: var(--neon-glow);
+}
+
+.crat-visual-frame.spot-mint {
+  background: radial-gradient(circle at 68% 62%, rgba(127, 214, 180, .12), transparent 55%), var(--bg-void);
+}
+
+.crat-visual-frame.neon-line::after {
+  content: '';
+  position: absolute;
+  inset: auto 12% 14% 12%;
+  height: 1px;
+  background: var(--neon);
+  box-shadow: var(--neon-glow);
+}
+
+/* ---------- noise / grain ---------- */
+
+.crat-noise {
+  position: relative;
+}
+.crat-noise::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  opacity: .06;
+  pointer-events: none;
+}
+
+/* ---------- misc marks ---------- */
+
+.crat-red-line {
+  display: block;
+  width: 3.5rem;
+  height: 2px;
+  background: var(--neon);
+  box-shadow: var(--neon-glow);
+}
+
+.crat-tag {
+  font-family: var(--font-mono), monospace;
+  text-transform: uppercase;
+  font-size: var(--fs-small);
+  color: var(--lavender);
+}
+.crat-tag::before {
+  content: '[';
+}
+.crat-tag::after {
+  content: ']';
+}
+
+/* ---------- nav links ---------- */
+
+.crat-nav a {
+  display: inline-block;
+  text-decoration: none;
+  color: var(--paper);
+  font-size: var(--fs-small);
+  background-image: linear-gradient(var(--neon), var(--neon));
+  background-position: 0 100%;
+  background-repeat: no-repeat;
+  background-size: 0% 2px;
+  transition: background-size .3s ease;
+}
+.crat-nav a:hover,
+.crat-nav a:focus-visible {
+  background-size: 100% 2px;
+}
+
+/* ---------- animations (CSS-only, бриф §6) ---------- */
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.fade-up {
+  animation: fadeUp .7s ease-out both;
+}
+.fade-up.d1 {
+  animation-delay: .12s;
+}
+.fade-up.d2 {
+  animation-delay: .24s;
+}
+.fade-up.d3 {
+  animation-delay: .36s;
+}
+
+@keyframes redGlowPulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 rgba(255, 75, 58, 0);
+  }
+  50% {
+    box-shadow: var(--neon-glow);
+  }
+}
+.red-glow {
+  animation: redGlowPulse 3.2s ease-in-out infinite;
+}
+
+.reveal-line {
+  text-decoration: none;
+  background-image: linear-gradient(var(--neon), var(--neon));
+  background-position: 0 100%;
+  background-repeat: no-repeat;
+  background-size: 0% 2px;
+  transition: background-size .35s ease;
+}
+.reveal-line:hover,
+.reveal-line:focus-visible {
+  background-size: 100% 2px;
+}
+
+.cinematic-card {
+  position: relative;
+  overflow: hidden;
+}
+.cinematic-card > img,
+.cinematic-card > .cinematic-bg {
+  transition: transform 6s ease;
+}
+.cinematic-card:hover > img,
+.cinematic-card:hover > .cinematic-bg {
+  transform: scale(1.08);
+}

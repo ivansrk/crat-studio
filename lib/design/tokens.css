@@ -11,4 +11,15 @@
   --fs-base: 19px;      /* UX-01: 18–20px */
   --fs-small: 17px;     /* «мелкого» текста нет */
   --maxw-text: 46rem;
+
+  /* Ф5: расширение — бриф §4 (визуальная формула, существующие токены выше не менять) */
+  --bg-black: #050505;
+  --bg-void: #000000;
+  --red-blood: #B11212;
+  --red-dark: #4A0909;
+  --cyan-faded: #48D6C0;
+  --violet-shadow: #4A2A5E;
+  --paper-muted: #BEB8AD;
+  --line-soft: rgba(242, 233, 220, .16);
+  --line-red: rgba(255, 75, 58, .48);
 }
