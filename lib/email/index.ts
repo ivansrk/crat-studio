@@ -8,22 +8,30 @@ export const FROM = 'CRAT studio <hello@cratstudio.com>'
 type SendFn = () => Promise<{ id?: string }>
 type Progress = { status: 'SENT' | 'FAILED'; attempts: number; resendId?: string; lastError?: string }
 
+/** Ошибка onFinal не должна ни превращать успех в ретрай (дубль письма), ни ронять промис (void-вызов). */
+function safeFinal(onFinal: (p: Progress) => void, p: Progress): void {
+  try { onFinal(p) } catch (err) { console.error('[email] onFinal упал:', err) }
+}
+
 /** Ядро ретраев — чистое, транспорт инжектируется (тестируемо без Resend). */
 export async function deliverWithRetries(send: SendFn, onFinal: (p: Progress) => void): Promise<void> {
   let attempts = 0
   let lastError = ''
   for (;;) {
     attempts++
+    let r: { id?: string }
     try {
-      const r = await send()
-      onFinal({ status: 'SENT', attempts, resendId: r.id })
-      return
+      r = await send()
     } catch (e) {
-      lastError = (e as Error).message
+      lastError = e instanceof Error ? e.message : String(e)
       const delay = RETRY_DELAYS_MS[attempts - 1]
-      if (delay === undefined) { onFinal({ status: 'FAILED', attempts, lastError }); return }
+      if (delay === undefined) { safeFinal(onFinal, { status: 'FAILED', attempts, lastError }); return }
       await new Promise(res => setTimeout(res, delay))
+      continue
     }
+    // успех уведомляется вне try доставки: throw из onFinal не попадёт в retry-catch
+    safeFinal(onFinal, { status: 'SENT', attempts, resendId: r.id })
+    return
   }
 }
 

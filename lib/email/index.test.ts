@@ -33,4 +33,35 @@ describe('deliverWithRetries', () => {
     await done
     expect(events.at(-1)).toBe('SENT')
   })
+
+  it('reject не-Error (строкой) → lastError сохраняет причину', async () => {
+    const send = vi.fn().mockRejectedValue('boom')
+    let final: { lastError?: string } | undefined
+    const done = deliverWithRetries(send, m => { final = m })
+    await vi.advanceTimersByTimeAsync(RETRY_DELAYS_MS[0] + RETRY_DELAYS_MS[1] + RETRY_DELAYS_MS[2])
+    await done
+    expect(final?.lastError).toBe('boom')
+  })
+
+  it('onFinal кинул на успехе → НЕ ретраим (нет риска дубля письма)', async () => {
+    const spy = vi.spyOn(console, 'error').mockImplementation(() => {})
+    const send = vi.fn().mockResolvedValue({ id: 'r1' })
+    const onFinal = vi.fn(() => { throw new Error('db down') })
+    await deliverWithRetries(send, onFinal)
+    expect(send).toHaveBeenCalledTimes(1)
+    expect(onFinal).toHaveBeenCalledTimes(1)
+    expect(spy).toHaveBeenCalled()
+    spy.mockRestore()
+  })
+
+  it('onFinal кинул на FAILED → промис резолвится без unhandled rejection', async () => {
+    const spy = vi.spyOn(console, 'error').mockImplementation(() => {})
+    const send = vi.fn().mockRejectedValue(new Error('x'))
+    const onFinal = vi.fn(() => { throw new Error('db down') })
+    const done = deliverWithRetries(send, onFinal)
+    await vi.advanceTimersByTimeAsync(RETRY_DELAYS_MS[0] + RETRY_DELAYS_MS[1] + RETRY_DELAYS_MS[2])
+    await expect(done).resolves.toBeUndefined()
+    expect(spy).toHaveBeenCalled()
+    spy.mockRestore()
+  })
 })
