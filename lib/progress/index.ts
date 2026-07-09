@@ -1,0 +1,129 @@
+import { db } from '@/lib/db'
+import { getLesson } from '@/lib/content'
+import { scoreAnswers, isQuizPassed, nextQuestionIndex, QUIZ_TOTAL, type StoredAnswer } from './quiz-logic'
+import type { QuizResult } from '@/lib/generated/prisma/client'
+
+const COURSE = 'ai-basics'
+const DEFERRED_DAYS_MS = 7 * 24 * 60 * 60 * 1000 // LES-13
+
+/** LessonProgress создаётся при первом открытии урока (firstOpenedAt = default now). */
+export async function ensureProgress(userId: string, lessonId: string) {
+  return db.lessonProgress.upsert({
+    where: { userId_courseSlug_lessonId: { userId, courseSlug: COURSE, lessonId } },
+    update: {},
+    create: { userId, courseSlug: COURSE, lessonId },
+  })
+}
+
+/** LES-10: каждая новая попытка — новая строка; attempt = max+1 (гонка двух вкладок ловится @@unique). */
+export async function startAttempt(userId: string, lessonId: string): Promise<QuizResult> {
+  await ensureProgress(userId, lessonId)
+  for (let tryN = 0; tryN < 2; tryN++) {
+    const last = await db.quizResult.findFirst({ where: { userId, lessonId }, orderBy: { attempt: 'desc' } })
+    try {
+      return await db.quizResult.create({
+        data: { userId, courseSlug: COURSE, lessonId, attempt: (last?.attempt ?? 0) + 1, answers: [] },
+      })
+    } catch (e) {
+      const { isUniqueViolation } = await import('@/lib/db-errors')
+      if (!isUniqueViolation(e) || tryN === 1) throw e // вторая вкладка успела — перечитываем max и пробуем ещё раз
+    }
+  }
+  throw new Error('unreachable')
+}
+
+export type AnswerOutcome =
+  | { ok: true; questionIndex: number; chosen: number; correct: boolean; finished: boolean; score: number; passed: boolean }
+  | { ok: false; reason: 'not_found' | 'finished' | 'already_answered' | 'bad_option' }
+
+/** Ответ на вопрос активной попытки. Правильность считает СЕРВЕР по quiz.yaml (LES-07). */
+export async function recordAnswer(userId: string, lessonId: string, attemptId: string, questionIndex: number, chosen: number): Promise<AnswerOutcome> {
+  const attempt = await db.quizResult.findFirst({ where: { id: attemptId, userId, lessonId } })
+  if (!attempt) return { ok: false, reason: 'not_found' }
+  if (attempt.finishedAt) return { ok: false, reason: 'finished' }
+  const lesson = getLesson(lessonId)
+  const question = lesson?.quiz.questions[questionIndex]
+  if (!question || chosen < 0 || chosen >= question.options.length) return { ok: false, reason: 'bad_option' }
+
+  const answers = (attempt.answers as StoredAnswer[] | null) ?? []
+  if (nextQuestionIndex(answers) !== questionIndex) return { ok: false, reason: 'already_answered' } // отвечать можно только на текущий
+
+  const correct = chosen === question.correct
+  const newAnswers = [...answers, { questionIndex, chosen, correct }]
+  const finished = nextQuestionIndex(newAnswers) === null
+  const score = scoreAnswers(newAnswers)
+  const passed = isQuizPassed(score)
+
+  await db.quizResult.update({
+    where: { id: attempt.id },
+    data: { answers: newAnswers, score, total: QUIZ_TOTAL, passed, ...(finished ? { finishedAt: new Date() } : {}) },
+  })
+  if (finished && passed) await onQuizPassed(userId, lessonId) // LES-09: зачтённый остаётся зачтённым
+  return { ok: true, questionIndex, chosen, correct, finished, score, passed }
+}
+
+/** Фиксация зачёта квиза + пересчёт «пройден». quizPassedAt не перетирается при пересдачах —
+ *  условный updateMany с фильтром quizPassedAt: null сохраняет дату ПЕРВОГО зачёта (LES-09),
+ *  идемпотентно и без гонок (в отличие от безусловного update). */
+async function onQuizPassed(userId: string, lessonId: string) {
+  await db.lessonProgress.updateMany({
+    where: { userId, courseSlug: COURSE, lessonId, quizPassedAt: null },
+    data: { quizPassedAt: new Date() },
+  })
+  await recomputeCompletion(userId, lessonId)
+}
+
+/** LES-11: чекбокс практики; снятие → practiceDoneAt = null (completedAt НЕ откатывается — E16). */
+export async function setPractice(userId: string, lessonId: string, done: boolean) {
+  await ensureProgress(userId, lessonId)
+  await db.lessonProgress.update({
+    where: { userId_courseSlug_lessonId: { userId, courseSlug: COURSE, lessonId } },
+    data: { practiceDoneAt: done ? new Date() : null },
+  })
+  if (done) await recomputeCompletion(userId, lessonId)
+}
+
+/** D-004/LES-12/13: единственная точка, где урок становится «пройден».
+ *  completedAt ставится один раз (первое достижение) и не откатывается; deferred создаётся upsert'ом. */
+export async function recomputeCompletion(userId: string, lessonId: string) {
+  const p = await db.lessonProgress.findUnique({ where: { userId_courseSlug_lessonId: { userId, courseSlug: COURSE, lessonId } } })
+  if (!p || p.completedAt || !p.quizPassedAt || !p.practiceDoneAt) return
+  const completedAt = new Date()
+  await db.lessonProgress.update({
+    where: { userId_courseSlug_lessonId: { userId, courseSlug: COURSE, lessonId } },
+    data: { completedAt },
+  })
+  await db.deferredQuizState.upsert({ // LES-13
+    where: { userId_courseSlug_lessonId: { userId, courseSlug: COURSE, lessonId } },
+    update: {},
+    create: { userId, courseSlug: COURSE, lessonId, dueAt: new Date(completedAt.getTime() + DEFERRED_DAYS_MS) },
+  })
+}
+
+export type LessonState = {
+  quizPassed: boolean; practiceDone: boolean; completed: boolean
+  attemptsCount: number
+}
+
+export async function getLessonState(userId: string, lessonId: string): Promise<LessonState> {
+  const [p, attemptsCount] = await Promise.all([
+    db.lessonProgress.findUnique({ where: { userId_courseSlug_lessonId: { userId, courseSlug: COURSE, lessonId } } }),
+    db.quizResult.count({ where: { userId, lessonId } }),
+  ])
+  return {
+    quizPassed: !!p?.quizPassedAt,
+    practiceDone: !!p?.practiceDoneAt,
+    completed: !!p?.quizPassedAt && !!p?.practiceDoneAt, // отображение «пройден» — живое (E16)
+    attemptsCount,
+  }
+}
+
+/** Кабинет/админка: карта lessonId → состояние + счётчик пройденных. */
+export async function getCourseProgress(userId: string) {
+  const rows = await db.lessonProgress.findMany({ where: { userId, courseSlug: COURSE } })
+  const byLesson = new Map(rows.map(r => [r.lessonId, r]))
+  return {
+    byLesson,
+    completedCount: rows.filter(r => r.quizPassedAt && r.practiceDoneAt).length,
+  }
+}
