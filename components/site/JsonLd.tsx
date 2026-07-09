@@ -5,17 +5,27 @@ import type { Article } from '@/lib/content/articles'
 type Schema = Record<string, unknown>
 
 /**
- * JSON-LD (schema.org, SEO-04). `dangerouslySetInnerHTML` здесь безопасен:
- * данные для `data` собираются ТОЛЬКО из наших словарей (lib/i18n) и
- * валидированного контента (content/*.yaml, content/articles/*) билдерами
- * ниже — никогда из пользовательского ввода, поэтому инъекция через
- * JSON.stringify исключена.
+ * Сериализация для JSON-LD: JSON.stringify + `<` → <.
+ * <: </script> в данных контента (полудоверенный источник — course-factory)
+ * не должен прерывать тег; стандартная практика для JSON-LD. JSON.parse
+ * восстанавливает исходник без потерь.
+ */
+export function safeJsonLd(data: unknown): string {
+  return JSON.stringify(data).replace(/</g, '\\u003c')
+}
+
+/**
+ * JSON-LD (schema.org, SEO-04). Данные для `data` собираются билдерами ниже
+ * только из наших словарей (lib/i18n) и контента (content/*.yaml,
+ * content/articles/*) — не из пользовательского ввода. Но контент приходит
+ * от course-factory (полудоверенный источник), поэтому `<` экранируем
+ * всегда: title со </script> иначе прервал бы ld+json-тег → XSS.
  */
 export function JsonLd({ data }: { data: Schema }) {
   return (
     <script
       type="application/ld+json"
-      dangerouslySetInnerHTML={{ __html: JSON.stringify(data) }}
+      dangerouslySetInnerHTML={{ __html: safeJsonLd(data) }}
     />
   )
 }
