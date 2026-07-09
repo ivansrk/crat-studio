@@ -128,6 +128,14 @@ export default async function Cabinet() {
             <Link className="crat-button" href="/app/project">{t.project.cabinetCta}</Link>
           </div>
 
+          {/* Ф4 T5: ссылка на каталог тренажёров (TRN-01/06) — рядом с блоком мини-проекта. */}
+          <div className="crat-card cabinet-project">
+            <div>
+              <h2 className="crat-kicker">{t.trainers.catalogTitle}</h2>
+            </div>
+            <Link className="crat-button" href="/app/trainers">{t.trainers.open}</Link>
+          </div>
+
           {/* T7: блок сертификата — только при выданном VALID (CERT-01/05/06). */}
           {certificate && (
             <div className="crat-card cabinet-cert">
