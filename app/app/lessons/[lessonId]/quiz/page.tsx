@@ -55,7 +55,9 @@ export default async function QuizPage({ params, searchParams }: {
   }
 
   const qi = nextQuestionIndex(answers)
-  if (qi === null) redirect(`/app/lessons/${lessonId}/quiz?attempt=${attemptId}`) // рассинхрон: finish не записался — перерисуем
+  // Рассинхрон (answers полные, finish не записан) — недостижим при атомарном update recordAnswer;
+  // страховка от лупа: к уроку, а не redirect на себя же (ревью T5).
+  if (qi === null) redirect(`/app/lessons/${lessonId}`)
   const q = lesson.quiz.questions[qi]
 
   return (

@@ -1,7 +1,7 @@
 import { db } from '@/lib/db'
 import { getLesson } from '@/lib/content'
 import { isUniqueViolation } from '@/lib/db-errors'
-import { scoreAnswers, isQuizPassed, nextQuestionIndex, isReplay, QUIZ_TOTAL, type StoredAnswer } from './quiz-logic'
+import { scoreAnswers, isQuizPassed, nextQuestionIndex, isReplay, isValidChoice, QUIZ_TOTAL, type StoredAnswer } from './quiz-logic'
 import type { QuizResult } from '@/lib/generated/prisma/client'
 
 const COURSE = 'ai-basics' // MVP: один курс; мультикурс = прокинуть courseSlug через сигнатуры (схема уже courseSlug-aware)
@@ -61,7 +61,7 @@ export async function recordAnswer(userId: string, lessonId: string, attemptId: 
 
   if (attempt.finishedAt) return { ok: false, reason: 'finished' }
   const question = lesson.quiz.questions[questionIndex]
-  if (!question || chosen < 0 || chosen >= question.options.length) return { ok: false, reason: 'bad_option' }
+  if (!question || !isValidChoice(chosen, question.options.length)) return { ok: false, reason: 'bad_option' } // isValidChoice ловит и NaN (ревью T5)
   if (nextQuestionIndex(answers) !== questionIndex) return { ok: false, reason: 'already_answered' } // отвечать можно только на текущий
 
   const correct = chosen === question.correct

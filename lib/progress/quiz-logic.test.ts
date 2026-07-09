@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { scoreAnswers, isQuizPassed, nextQuestionIndex, isReplay, PASS_SCORE, QUIZ_TOTAL, type StoredAnswer } from './quiz-logic'
+import { scoreAnswers, isQuizPassed, nextQuestionIndex, isReplay, isValidChoice, PASS_SCORE, QUIZ_TOTAL, type StoredAnswer } from './quiz-logic'
 
 const a = (questionIndex: number, chosen: number, correct: boolean): StoredAnswer => ({ questionIndex, chosen, correct })
 
@@ -35,5 +35,16 @@ describe('quiz-logic', () => {
   it('isReplay: неотвеченный вопрос → null', () => {
     expect(isReplay([a(0, 1, true)], 1, 0)).toBeNull()
     expect(isReplay([], 0, 0)).toBeNull()
+  })
+  it('isValidChoice: NaN (Number("мусор") из формы) не проходит', () => {
+    expect(isValidChoice(NaN, 4)).toBe(false)
+  })
+  it('isValidChoice: вне диапазона не проходит', () => {
+    expect(isValidChoice(-1, 4)).toBe(false)
+    expect(isValidChoice(4, 4)).toBe(false)
+  })
+  it('isValidChoice: валидный индекс проходит', () => {
+    expect(isValidChoice(0, 4)).toBe(true)
+    expect(isValidChoice(3, 4)).toBe(true)
   })
 })
