@@ -7,8 +7,12 @@ import type { QuizResult } from '@/lib/generated/prisma/client'
 const COURSE = 'ai-basics' // MVP: один курс; мультикурс = прокинуть courseSlug через сигнатуры (схема уже courseSlug-aware)
 const DEFERRED_DAYS_MS = 7 * 24 * 60 * 60 * 1000 // LES-13
 
-/** LessonProgress создаётся при первом открытии урока (firstOpenedAt = default now). */
+/** LessonProgress создаётся при первом открытии урока (firstOpenedAt = default now).
+ *  Инвариант: строки прогресса существуют только для валидных уроков из course.yaml —
+ *  подделанный lessonId в POST не плодит мусор (startAttempt/setPractice тоже идут через ensureProgress).
+ *  Легитимно недостижимо (страница урока проверяет getLesson раньше) → throw, ловит error boundary. */
 export async function ensureProgress(userId: string, lessonId: string) {
+  if (!getLesson(lessonId)) throw new Error(`unknown lesson: ${lessonId}`)
   return db.lessonProgress.upsert({
     where: { userId_courseSlug_lessonId: { userId, courseSlug: COURSE, lessonId } },
     update: {},

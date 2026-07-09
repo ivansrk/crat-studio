@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { currentUser } from '@/lib/auth/current-user'
 import { hasCourseAccess } from '@/lib/progress/access'
 import { startAttempt, setPractice } from '@/lib/progress'
+import { getLesson } from '@/lib/content'
 import { db } from '@/lib/db'
 
 async function requireStudent() {
@@ -27,11 +28,15 @@ export async function togglePracticeAction(formData: FormData) {
   revalidatePath(`/app/lessons/${lessonId}`)
 }
 
-/** LES-14/CAB-02: личная миссия — редактируема из урока 1.1 и кабинета. */
+/** LES-14/CAB-02: личная миссия — редактируема из урока с mission_prompt и кабинета.
+ *  mission_prompt — контент-флаг, урок может быть любым → returnTo валидируется по форме,
+ *  а не по хардкоду 1.1 (против open redirect: только /app или существующий урок). */
 export async function saveMissionAction(formData: FormData) {
   const user = await requireStudent()
   const mission = String(formData.get('mission') ?? '').trim().slice(0, 2000)
   await db.user.update({ where: { id: user.id }, data: { mission: mission || null } })
   const returnTo = String(formData.get('returnTo') ?? '/app')
-  redirect(['/app', '/app/lessons/1.1'].includes(returnTo) ? returnTo : '/app') // белый список
+  const LESSONS = '/app/lessons/'
+  const ok = returnTo === '/app' || (returnTo.startsWith(LESSONS) && !!getLesson(returnTo.slice(LESSONS.length)))
+  redirect(ok ? returnTo : '/app')
 }

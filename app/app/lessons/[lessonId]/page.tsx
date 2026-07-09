@@ -63,23 +63,25 @@ export default async function LessonPage({ params }: { params: Promise<{ lessonI
 
       {state.completed && <p>🎉 {t.lesson.completed}</p>}
 
-      <p>
-        {next
-          ? <Link className="mdx-download" href={`/app/lessons/${next}`}>{t.lesson.nextLesson}</Link>
-          : t.lesson.courseDone}
-      </p>
-
+      {/* Миссия — ДО ссылки «Следующий урок» (рефлексия до выхода из урока).
+          mission_prompt — контент-флаг, урок может быть любым → returnTo из lessonId. */}
       {lesson.meta.mission_prompt && (
         <section>
           <h2>{t.lesson.missionTitle}</h2>
           <p>{t.lesson.missionHint}</p>
           <form action={saveMissionAction}>
-            <input type="hidden" name="returnTo" value="/app/lessons/1.1" />
+            <input type="hidden" name="returnTo" value={`/app/lessons/${lessonId}`} />
             <textarea name="mission" defaultValue={user.mission ?? ''} />
             <p><button className="mdx-download" type="submit">{t.lesson.save}</button></p>
           </form>
         </section>
       )}
+
+      <p>
+        {next
+          ? <Link className="mdx-download" href={`/app/lessons/${next}`}>{t.lesson.nextLesson}</Link>
+          : t.lesson.courseDone}
+      </p>
     </main>
   )
 }
