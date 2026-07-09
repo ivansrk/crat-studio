@@ -1,15 +1,16 @@
-import { createHash, randomBytes } from 'node:crypto'
 import { db } from '@/lib/db'
 import { limiters } from './rate-limit'
 import { isAdminEmail } from './current-user'
+import { newToken, hashToken } from './tokens'
 import { sendEmail } from '@/lib/email'
 import { renderEmail } from '@/lib/email/templates'
 import { t } from '@/lib/i18n'
 import type { PrismaClient } from '@/lib/generated/prisma/client'
 
 export const MAGIC_TTL_MS = 15 * 60 * 1000 // AUTH-03
-export const newToken = () => randomBytes(32).toString('hex')
-export const hashToken = (raw: string) => createHash('sha256').update(raw).digest('hex') // D-009
+// T4 (Ф7а): newToken/hashToken переехали в ./tokens — общий хелпер для magic-link и reset;
+// реэкспорт сохраняет существующие импорты (magic-link.test.ts) без изменений.
+export { newToken, hashToken }
 
 /** Выпускает новый magic-link и возвращает URL входа. Сырой токен живёт только в письме (D-028);
  *  вызывающие гарантируют существование пользователя. */

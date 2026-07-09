@@ -25,5 +25,10 @@ g.__rl ??= {
   magicLinkIp: new RateLimiter(10, 15 * 60 * 1000), // SEC-03: 10/15мин/IP — против перебора многих email
   loginEmail: new RateLimiter(10, 15 * 60 * 1000),  // AUTH-20: 10/15мин/email — перебор пароля
   loginIp: new RateLimiter(20, 15 * 60 * 1000),     // AUTH-20: 20/15мин/IP — перебор многих email
+  // Ф7а T4: отдельные лимитеры reset-флоу — те же параметры, что у magicLink/magicLinkIp
+  // (magic-link уходит целиком в Task 6, поэтому не переименовываем и не переиспользуем
+  // magicLink/magicLinkIp — они пока нужны живым /auth-роутам).
+  resetEmail: new RateLimiter(3, 15 * 60 * 1000),   // AUTH-08-аналог: 3/15мин/email
+  resetIp: new RateLimiter(10, 15 * 60 * 1000),     // SEC-03-аналог: 10/15мин/IP
 }
 export const limiters = g.__rl
