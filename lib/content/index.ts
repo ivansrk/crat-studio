@@ -21,3 +21,9 @@ export function assetBase(lesson: Lesson): string {
 export function contentErrors() {
   return getContent().issues.filter(i => i.level === 'error')
 }
+/** Следующий урок по course.yaml или null для последнего. */
+export function nextLessonId(lessonId: string): string | null {
+  const ids = getContent().course.modules.flatMap(m => m.lessons.map(l => l.id))
+  const i = ids.indexOf(lessonId)
+  return i >= 0 && i + 1 < ids.length ? ids[i + 1] : null
+}

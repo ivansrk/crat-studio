@@ -1,11 +1,13 @@
 import { redirect } from 'next/navigation'
+import Link from 'next/link'
 import { MDXRemote } from 'next-mdx-remote/rsc'
-import { getLesson, assetBase } from '@/lib/content'
+import { getLesson, assetBase, nextLessonId } from '@/lib/content'
 import { mdxComponents } from '@/components/mdx'
 import { Video } from '@/components/mdx/Video'
 import { currentUser } from '@/lib/auth/current-user'
 import { hasCourseAccess } from '@/lib/progress/access'
-import { ensureProgress } from '@/lib/progress'
+import { ensureProgress, getLessonState } from '@/lib/progress'
+import { startQuizAction, togglePracticeAction, saveMissionAction } from '@/app/actions/lesson'
 import { t } from '@/lib/i18n'
 
 export default async function LessonPage({ params }: { params: Promise<{ lessonId: string }> }) {
@@ -19,7 +21,9 @@ export default async function LessonPage({ params }: { params: Promise<{ lessonI
   const lesson = getLesson(lessonId)
   if (!lesson) return <main><p>{t.lesson.unavailable}</p></main>
   await ensureProgress(user.id, lessonId) // только для валидного урока — битые/несуществующие не создают LessonProgress
+  const state = await getLessonState(user.id, lessonId)
   const base = assetBase(lesson)
+  const next = nextLessonId(lessonId)
   return (
     <main>
       <h1>{lesson.meta.title}</h1>
@@ -28,7 +32,54 @@ export default async function LessonPage({ params }: { params: Promise<{ lessonI
         : <p className="mdx-trainer-stub">{t.lesson.videoSoon}</p>}
       <MDXRemote source={lesson.mdx} components={mdxComponents(base)} />
       {lesson.hasCheatsheet && <p><a className="mdx-download" href={`${base}/cheatsheet.pdf`} download>{t.lesson.downloadCheatsheet}</a></p>}
-      <p><button className="mdx-download" disabled>{t.lesson.finishLesson}</button></p>
+
+      {state.quizPassed ? (
+        <>
+          <p>{t.lesson.quizPassed}</p>
+          <form action={startQuizAction}>
+            <input type="hidden" name="lessonId" value={lessonId} />
+            <button className="mdx-download" type="submit">{t.lesson.retakeQuiz}</button>
+          </form>
+        </>
+      ) : (
+        <form action={startQuizAction}>
+          <input type="hidden" name="lessonId" value={lessonId} />
+          <button className="mdx-download" type="submit">{t.lesson.finishLesson}</button>
+        </form>
+      )}
+
+      <section>
+        <h2>{t.lesson.practiceTitle}</h2>
+        <MDXRemote source={lesson.practiceMd} components={mdxComponents(base)} />
+        <form action={togglePracticeAction}>
+          <input type="hidden" name="lessonId" value={lessonId} />
+          <label>
+            <input type="checkbox" name="done" defaultChecked={state.practiceDone} />
+            {' '}{t.lesson.practiceDone}
+          </label>
+          <p><button className="mdx-download" type="submit">{t.lesson.save}</button></p>
+        </form>
+      </section>
+
+      {state.completed && <p>🎉 {t.lesson.completed}</p>}
+
+      <p>
+        {next
+          ? <Link className="mdx-download" href={`/app/lessons/${next}`}>{t.lesson.nextLesson}</Link>
+          : t.lesson.courseDone}
+      </p>
+
+      {lesson.meta.mission_prompt && (
+        <section>
+          <h2>{t.lesson.missionTitle}</h2>
+          <p>{t.lesson.missionHint}</p>
+          <form action={saveMissionAction}>
+            <input type="hidden" name="returnTo" value="/app/lessons/1.1" />
+            <textarea name="mission" defaultValue={user.mission ?? ''} />
+            <p><button className="mdx-download" type="submit">{t.lesson.save}</button></p>
+          </form>
+        </section>
+      )}
     </main>
   )
 }

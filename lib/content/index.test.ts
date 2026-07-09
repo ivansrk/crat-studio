@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { getContent, contentErrors } from './index'
+import { getContent, contentErrors, nextLessonId } from './index'
 
 describe('контент репозитория', () => {
   it('12 уроков из content/ai-basics валидны', () => {
@@ -8,5 +8,16 @@ describe('контент репозитория', () => {
   })
   it('getContent кэширует результат на процесс', () => {
     expect(getContent()).toBe(getContent())
+  })
+})
+
+describe('nextLessonId', () => {
+  it('следующий урок из середины курса', () => {
+    expect(nextLessonId('1.1')).toBe('1.2')
+    expect(nextLessonId('1.3')).toBe('2.1') // переход через модуль
+  })
+  it('null для последнего урока (4.3) и для неизвестного id', () => {
+    expect(nextLessonId('4.3')).toBeNull()
+    expect(nextLessonId('9.9')).toBeNull()
   })
 })
