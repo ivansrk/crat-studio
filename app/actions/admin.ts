@@ -28,3 +28,14 @@ export async function resendEmailAction(formData: FormData) {
   if (result === 'unsupported_type') redirect('/admin/emails?resend=unsupported') // ревью T10: CERTIFICATE (Ф3) — не login-письмо
   if (result === 'sent') redirect('/admin/emails?resend=ok')
 }
+
+export async function gdprDeleteAction(formData: FormData) {
+  await requireAdmin()
+  const { gdprDeleteStudent } = await import('@/lib/admin/gdpr')
+  const result = await gdprDeleteStudent(String(formData.get('userId')), String(formData.get('confirmEmail')))
+  revalidatePath('/admin/students')
+  // Ревью: удаление НЕОБРАТИМО — молчаливый no-op при несовпадении email недопустим, админ должен
+  // увидеть явный результат в обоих случаях, а не гадать, сработала ли форма.
+  if (result === 'email_mismatch') redirect('/admin/students?gdpr=mismatch')
+  if (result === 'deleted') redirect('/admin/students?gdpr=deleted')
+}
