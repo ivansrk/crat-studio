@@ -46,7 +46,6 @@
   align-items: center;
   gap: .5rem;
   font: inherit;
-  font-size: var(--fs-small);
   color: var(--paper);
   background: var(--ink);
   border: 1px solid var(--line-soft);
@@ -66,7 +65,7 @@
 }
 .crat-button.primary {
   border-color: var(--neon);
-  box-shadow: 0 0 12px rgba(255, 75, 58, .25);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--neon) 25%, transparent);
 }
 .crat-button.primary:hover {
   box-shadow: var(--neon-glow);
@@ -110,7 +109,7 @@
   overflow: hidden;
   aspect-ratio: 16 / 9;
   border-radius: 14px;
-  background: radial-gradient(circle at 30% 20%, rgba(177, 18, 18, .35), transparent 60%), var(--bg-void);
+  background: radial-gradient(circle at 30% 20%, color-mix(in srgb, var(--red-blood) 35%, transparent), transparent 60%), var(--bg-void);
 }
 
 .crat-visual-frame.horizon {
@@ -128,7 +127,7 @@
 }
 
 .crat-visual-frame.spot-mint {
-  background: radial-gradient(circle at 68% 62%, rgba(127, 214, 180, .12), transparent 55%), var(--bg-void);
+  background: radial-gradient(circle at 68% 62%, color-mix(in srgb, var(--mint) 12%, transparent), transparent 55%), var(--bg-void);
 }
 
 .crat-visual-frame.neon-line::after {
