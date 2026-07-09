@@ -23,9 +23,15 @@ export default async function Unsubscribe({ params }: { params: Promise<{ token:
   return (
     <>
       <SiteHeader />
-      <main>
-        <h1>{email ? t.unsub.doneTitle : t.unsub.badTitle}</h1>
-        <p>{email ? t.unsub.doneBody : t.unsub.badBody}</p>
+      <main className="crat-page">
+        <section className="crat-section">
+          <div className="crat-shell">
+            <div className="crat-card accepted-card">
+              <h1 className="crat-display">{email ? t.unsub.doneTitle : t.unsub.badTitle}</h1>
+              <p className="crat-muted">{email ? t.unsub.doneBody : t.unsub.badBody}</p>
+            </div>
+          </div>
+        </section>
       </main>
       <SiteFooter />
     </>
