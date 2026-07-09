@@ -3,6 +3,7 @@ import path from 'node:path'
 import * as yaml from 'js-yaml'
 import type { CourseContent, CourseYaml, ContentIssue, Lesson, LessonMeta, Quiz } from './types'
 import { validateMdx } from './validate-mdx'
+import { isNonEmptyString, isPlainObject, readYaml, readFile } from './yaml-utils'
 import { animationIds } from '@/lib/design/animations/registry'
 
 export function loadCourse(courseDir: string): CourseContent {
@@ -106,7 +107,8 @@ function validateQuiz(q: Quiz, err: (m: string) => void) {
     if (!Array.isArray(list)) { err(`${name} должен быть списком`); continue }
     if (name === 'questions' && list.length !== 3) err(`в quiz.yaml не ровно 3 вопроса (${list.length})`)
     list.forEach((it, i) => {
-      if (!it.question?.trim() || !it.explanation?.trim()) err(`${name}[${i}]: пустой question/explanation`)
+      // не-строка (yaml `question: 123`) — ошибка контента, а не TypeError (правило 6)
+      if (!isNonEmptyString(it.question) || !isNonEmptyString(it.explanation)) err(`${name}[${i}]: пустой или нестроковый question/explanation`)
       if (!it.options || it.options.length < 2 || it.options.length > 4) err(`${name}[${i}]: вариантов должно быть 2–4`)
       else if (!Number.isInteger(it.correct) || it.correct < 0 || it.correct >= it.options.length) err(`${name}[${i}]: correct вне диапазона`)
     })
@@ -114,24 +116,3 @@ function validateQuiz(q: Quiz, err: (m: string) => void) {
 }
 
 type QuizQuestionList = Quiz['questions'] | undefined
-
-function isPlainObject(v: unknown): v is Record<string, unknown> {
-  return v != null && typeof v === 'object' && !Array.isArray(v)
-}
-
-function readYaml<T>(p: string, err: (m: string) => void): T | null {
-  const raw = readFile(p, err)
-  if (raw === null) return null
-  let parsed: unknown
-  // loadAll: пустой файл / файл из одних комментариев даёт [], а не исключение (в отличие от load в js-yaml v5)
-  try { parsed = yaml.loadAll(raw)[0] } catch (e) { err(`${path.basename(p)} не парсится: ${(e as Error).message}`); return null }
-  if (!isPlainObject(parsed)) {
-    err(`${path.basename(p)} пуст или не является объектом`)
-    return null
-  }
-  return parsed as T
-}
-function readFile(p: string, err: (m: string) => void): string | null {
-  if (!fs.existsSync(p)) { err(`отсутствует обязательный файл ${path.basename(p)}`); return null }
-  return fs.readFileSync(p, 'utf8')
-}

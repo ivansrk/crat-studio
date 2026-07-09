@@ -74,6 +74,13 @@ describe('loadCourse', () => {
     expect(msgs).toMatch(/cheatsheet\.pdf отсутствует/)
     expect(c.lessons.has('1.2')).toBe(false)
   })
+  it('question/explanation — числа в yaml — error-issue, БЕЗ исключения', () => {
+    const c = loadCourse(fx('quiz-nonstring'))
+    const msgs = c.issues.filter(i => i.level === 'error').map(i => i.message).join('\n')
+    expect(msgs).toMatch(/questions\[0\].*question\/explanation/)
+    expect(msgs).toMatch(/questions\[1\].*question\/explanation/)
+    expect(c.lessons.has('1.1')).toBe(false)
+  })
   it('вопрос без correct — error «correct вне диапазона», урок не в lessons', () => {
     const c = loadCourse(fx('bad-lessons'))
     const msgs = c.issues.filter(i => i.level === 'error').map(i => i.message).join('\n')

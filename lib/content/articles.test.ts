@@ -43,6 +43,14 @@ describe('loadArticles', () => {
     expect(articles).toHaveLength(0)
   })
 
+  it('title/description — числа в yaml (без кавычек) — error-issue, БЕЗ исключения', () => {
+    const { articles, issues } = loadArticles(fx('articles-nonstring-meta'))
+    const msgs = issues.filter(i => i.level === 'error').map(i => i.message).join('\n')
+    expect(msgs).toMatch(/title/)
+    expect(msgs).toMatch(/description/)
+    expect(articles).toHaveLength(0)
+  })
+
   it('несуществующий каталог content/articles — пусто, без ошибок (раздел опционален)', () => {
     const { articles, issues } = loadArticles(fx('articles-does-not-exist'))
     expect(articles).toHaveLength(0)
@@ -64,5 +72,12 @@ describe('publishedArticles', () => {
       mk('new', '2026-05-01'),
     ])
     expect(result.map(a => a.meta.slug)).toEqual(['new', 'old'])
+  })
+
+  it('тай-брейк при равных датах — slug по возрастанию, независимо от порядка входа', () => {
+    const a = mk('alpha', '2026-05-01')
+    const b = mk('beta', '2026-05-01')
+    expect(publishedArticles([b, a]).map(x => x.meta.slug)).toEqual(['alpha', 'beta'])
+    expect(publishedArticles([a, b]).map(x => x.meta.slug)).toEqual(['alpha', 'beta'])
   })
 })

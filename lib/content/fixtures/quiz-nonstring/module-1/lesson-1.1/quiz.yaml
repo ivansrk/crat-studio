@@ -1,0 +1,13 @@
+questions:
+  - question: 12345
+    options: ["а", "б"]
+    correct: 0
+    explanation: "пояснение"
+  - question: "Нормальный вопрос?"
+    options: ["а", "б"]
+    correct: 0
+    explanation: 999
+  - question: "Ещё вопрос?"
+    options: ["а", "б"]
+    correct: 0
+    explanation: "пояснение"

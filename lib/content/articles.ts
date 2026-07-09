@@ -1,7 +1,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
-import * as yaml from 'js-yaml'
 import { validateMdx } from './validate-mdx'
+import { isNonEmptyString, readYaml, readFile } from './yaml-utils'
 import { animationIds } from '@/lib/design/animations/registry'
 
 export type ArticleMeta = {
@@ -35,8 +35,9 @@ export function loadArticles(dir: string): { articles: Article[]; issues: Articl
 
     if (meta) {
       if (meta.slug !== slug) err(`slug "${meta.slug}" ≠ каталогу "${slug}"`)
-      if (!meta.title?.trim()) err('title пуст')
-      if (!meta.description?.trim()) err('description пуст')
+      // не-строка (yaml `title: 12345`) — ошибка контента, а не TypeError (правило 6)
+      if (!isNonEmptyString(meta.title)) err('title пуст или не строка')
+      if (!isNonEmptyString(meta.description)) err('description пуст или не строка')
       if (!meta.date || Number.isNaN(Date.parse(String(meta.date)))) err(`date некорректна: "${meta.date}"`)
     }
     if (mdx !== null) {
@@ -55,39 +56,16 @@ export function loadArticles(dir: string): { articles: Article[]; issues: Articl
   return { articles, issues }
 }
 
-/** Опубликованные статьи (без draft), отсортированные по дате по убыванию (ART-02). */
+/**
+ * Опубликованные статьи (без draft), по дате по убыванию (ART-02).
+ * Тай-брейк при равных датах — slug asc: порядок readdir не гарантирован,
+ * а список публично виден в /articles и sitemap.
+ */
 export function publishedArticles(articles: Article[]): Article[] {
   return articles
     .filter(a => !a.meta.draft)
     .slice()
-    .sort((a, b) => Date.parse(b.meta.date) - Date.parse(a.meta.date))
-}
-
-function isPlainObject(v: unknown): v is Record<string, unknown> {
-  return v != null && typeof v === 'object' && !Array.isArray(v)
-}
-
-function readYaml<T>(p: string, err: (m: string) => void): T | null {
-  const raw = readFile(p, err)
-  if (raw === null) return null
-  let parsed: unknown
-  try {
-    parsed = yaml.loadAll(raw)[0]
-  } catch (e) {
-    err(`${path.basename(p)} не парсится: ${(e as Error).message}`)
-    return null
-  }
-  if (!isPlainObject(parsed)) {
-    err(`${path.basename(p)} пуст или не является объектом`)
-    return null
-  }
-  return parsed as T
-}
-
-function readFile(p: string, err: (m: string) => void): string | null {
-  if (!fs.existsSync(p)) {
-    err(`отсутствует обязательный файл ${path.basename(p)}`)
-    return null
-  }
-  return fs.readFileSync(p, 'utf8')
+    .sort((a, b) =>
+      Date.parse(b.meta.date) - Date.parse(a.meta.date) || a.meta.slug.localeCompare(b.meta.slug),
+    )
 }

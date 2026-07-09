@@ -1,0 +1,8 @@
+slug: quiz-nonstring
+title: "Курс с quiz.yaml, где question — число, а не строка"
+modules:
+  - id: 1
+    title: "Модуль 1"
+    lessons:
+      - id: "1.1"
+        title: "Урок 1.1"
