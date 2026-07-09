@@ -7,6 +7,7 @@ import { formatDate } from '@/lib/i18n/format-date'
 import { t } from '@/lib/i18n'
 import { SiteHeader } from '@/components/site/SiteHeader'
 import { SiteFooter } from '@/components/site/SiteFooter'
+import { JsonLd, articleSchema } from '@/components/site/JsonLd'
 
 type Props = { params: Promise<{ slug: string }> }
 
@@ -37,6 +38,7 @@ export default async function ArticlePage({ params }: Props) {
 
   return (
     <>
+      <JsonLd data={articleSchema(article)} />
       <SiteHeader />
       <main>
         <p className="crat-kicker">{t.articles.kicker} · {formatDate(new Date(article.meta.date))}</p>

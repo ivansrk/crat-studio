@@ -7,6 +7,7 @@ import { HeroVisual } from '@/components/site/HeroVisual'
 import { SectionLabel } from '@/components/site/SectionLabel'
 import { DirectionCard } from '@/components/site/DirectionCard'
 import { TeamCard } from '@/components/site/TeamCard'
+import { JsonLd, organizationSchema } from '@/components/site/JsonLd'
 
 /**
  * Главная — редакционный монтаж CRAT (SITE-01/07/08/09, бриф §7).
@@ -22,6 +23,7 @@ export default function Home() {
 
   return (
     <>
+      <JsonLd data={organizationSchema()} />
       <SiteHeader />
       <main className="crat-home">
         {/* 1. Hero (бриф §7.2) */}

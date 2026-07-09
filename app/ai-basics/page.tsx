@@ -7,6 +7,7 @@ import { t } from '@/lib/i18n'
 import { SiteHeader } from '@/components/site/SiteHeader'
 import { SiteFooter } from '@/components/site/SiteFooter'
 import { SectionLabel } from '@/components/site/SectionLabel'
+import { JsonLd, courseSchema } from '@/components/site/JsonLd'
 
 export const metadata: Metadata = {
   title: t.seo.landingTitle,
@@ -28,6 +29,7 @@ export default async function Landing({ searchParams }: { searchParams: Promise<
 
   return (
     <>
+      <JsonLd data={courseSchema(course)} />
       <SiteHeader />
       <main className="crat-page">
         {/* Hero (бриф §8) */}
