@@ -21,6 +21,10 @@ export function assetBase(lesson: Lesson): string {
 export function contentErrors() {
   return getContent().issues.filter(i => i.level === 'error')
 }
+/** Общее число уроков курса по course.yaml — каноничный знаменатель «N/12» (D-029). */
+export function lessonCount(): number {
+  return getContent().course.modules.reduce((n, m) => n + m.lessons.length, 0)
+}
 /** Следующий урок по course.yaml или null для последнего. */
 export function nextLessonId(lessonId: string): string | null {
   const ids = getContent().course.modules.flatMap(m => m.lessons.map(l => l.id))

@@ -1,14 +1,12 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
-import { getContent } from '@/lib/content'
+import { getContent, lessonCount } from '@/lib/content'
 import { currentUser } from '@/lib/auth/current-user'
 import { hasCourseAccess } from '@/lib/progress/access'
 import { getCourseProgress } from '@/lib/progress'
 import { logoutAction } from '@/app/actions/logout'
 import { saveMissionAction } from '@/app/actions/lesson'
 import { t } from '@/lib/i18n'
-
-const TOTAL_LESSONS = 12 // D-029: каноничный счётчик N/12 (живое определение — «пройден» = quizPassedAt && practiceDoneAt)
 
 export default async function Cabinet() {
   // currentUser не null после layout-гейта (app/app/layout.tsx), но TS этого не знает —
@@ -28,7 +26,8 @@ export default async function Cabinet() {
 
   const { course } = getContent()
   const { byLesson, completedCount } = await getCourseProgress(user.id)
-  const pct = Math.min(100, (completedCount / TOTAL_LESSONS) * 100)
+  const total = lessonCount() // знаменатель «N/12» из course.yaml, не хардкод (ревью T6)
+  const pct = Math.min(100, (completedCount / total) * 100)
 
   return (
     <main>
@@ -38,7 +37,7 @@ export default async function Cabinet() {
         <div className="progress-track">
           <span className="progress-figure" style={{ left: `${pct}%` }} aria-hidden>🚶</span>
         </div>
-        <p>{completedCount}/{TOTAL_LESSONS} · {t.cabinet.progressLabel}</p>
+        <p>{completedCount}/{total} · {t.cabinet.progressLabel}</p>
       </section>
 
       <section>

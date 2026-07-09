@@ -4,10 +4,12 @@
   height: 2.2rem;
   border-bottom: 2px solid color-mix(in srgb, var(--paper) 30%, transparent);
   margin: 1rem 0 2rem;
+  padding: 0 .9rem; /* запас под половину фигурки на краях 0%/100% (ревью T6) */
 }
 .progress-figure {
   position: absolute;
   bottom: 0;
   transition: left .6s ease;
   font-size: 1.6rem;
+  transform: translateX(-50%); /* центр фигурки на позиции left — внутри трека и на 0%, и на 100% */
 }
