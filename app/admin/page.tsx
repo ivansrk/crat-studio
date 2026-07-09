@@ -10,7 +10,7 @@ export default async function Registrations({ searchParams }: { searchParams: Pr
     <main className="admin-wide">
       <h1>{t.admin.registrations}</h1>
       {grant === 'email_failed' && <p role="alert" className="form-alert">{t.admin.emailFailed}</p>}
-      {grant === 'already' && <p>{t.admin.granted}</p>}
+      {grant === 'already' && <p className="crat-muted">{t.admin.granted}</p>}
       {regs.length === 0 ? <p>{t.admin.noData}</p> : (
         <table className="admin-table">
           <thead>
@@ -34,7 +34,7 @@ export default async function Registrations({ searchParams }: { searchParams: Pr
               <td>{r.status !== 'ENROLLED' && (
                 <form action={grantAccessAction}>
                   <input type="hidden" name="registrationId" value={r.id} />
-                  <button className="mdx-download" type="submit">{t.admin.grant}</button>
+                  <button className="crat-button compact" type="submit">{t.admin.grant}</button>
                 </form>
               )}</td>
             </tr>

@@ -12,7 +12,7 @@ export default async function Emails({ searchParams }: { searchParams: Promise<{
   return (
     <main className="admin-wide">
       <h1>{t.admin.emails}</h1>
-      {resend === 'ok' && <p>{t.admin.resent}</p>}
+      {resend === 'ok' && <p className="crat-muted">{t.admin.resent}</p>}
       {resend === 'user_gone' && <p role="alert" className="form-alert">{t.admin.emailUserGone}</p>}
       {resend === 'unsupported' && <p role="alert" className="form-alert">{t.admin.emailUnsupported}</p>}
       {logs.length === 0 ? <p>{t.admin.noData}</p> : (
@@ -43,7 +43,7 @@ export default async function Emails({ searchParams }: { searchParams: Promise<{
                 <td>
                   <form action={resendEmailAction}>
                     <input type="hidden" name="emailLogId" value={log.id} />
-                    <button className="mdx-download" type="submit">{t.admin.resend}</button>
+                    <button className="crat-button compact" type="submit">{t.admin.resend}</button>
                   </form>
                 </td>
               </tr>

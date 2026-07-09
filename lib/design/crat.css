@@ -73,6 +73,17 @@
 .crat-button.secondary {
   background: transparent;
 }
+.crat-button.compact {
+  padding: .55rem 1.1rem;
+}
+.crat-button.danger {
+  border-color: var(--red-blood);
+  color: var(--red-blood);
+}
+.crat-button.danger:hover {
+  border-color: var(--red-blood);
+  box-shadow: 0 0 14px color-mix(in srgb, var(--red-blood) 55%, transparent);
+}
 
 /* ---------- card / grid ---------- */
 

@@ -8,7 +8,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   if (!user || !isAdminEmail(user.email)) notFound() // ADM-01 + AUTH-10 (по env, на каждый запрос)
   return (
     <>
-      <nav className="admin-nav">
+      <nav className="admin-nav crat-nav">
         <Link href="/admin">{t.admin.registrations}</Link>
         <Link href="/admin/students">{t.admin.students}</Link>
         <Link href="/admin/emails">{t.admin.emails}</Link>

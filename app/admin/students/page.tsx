@@ -10,11 +10,11 @@ export default async function Students({ searchParams }: { searchParams: Promise
   return (
     <main className="admin-wide">
       <h1>{t.admin.students}</h1>
-      {gdpr === 'deleted' && <p>{t.admin.gdprDone}</p>}
+      {gdpr === 'deleted' && <p className="crat-muted">{t.admin.gdprDone}</p>}
       {gdpr === 'mismatch' && <p role="alert" className="form-alert">{t.admin.gdprMismatch}</p>}
       {users.length === 0 ? <p>{t.admin.noData}</p> : (
         <>
-          <p><a className="mdx-download" href="/admin/export/csv">{t.admin.exportCsv}</a></p>
+          <p><a className="crat-button compact" href="/admin/export/csv">{t.admin.exportCsv}</a></p>
           <table className="admin-table">
             <thead>
             <tr>
@@ -31,12 +31,12 @@ export default async function Students({ searchParams }: { searchParams: Promise
                 <td>{u.firstName} {u.lastName}</td>
                 <td>{u.email}</td>
                 <td>{u.enrollments[0] ? formatDate(u.enrollments[0].createdAt) : ''}</td>
-                <td><a className="mdx-download" href={`/admin/students/${u.id}`}>{t.admin.progress}</a></td>
+                <td><a className="crat-button compact" href={`/admin/students/${u.id}`}>{t.admin.progress}</a></td>
                 <td>
                   <form action={gdprDeleteAction}>
                     <input type="hidden" name="userId" value={u.id} />
                     <input name="confirmEmail" placeholder={t.admin.gdprConfirm} required />
-                    <button className="mdx-download form-alert" type="submit">{t.admin.gdprDelete}</button>
+                    <button className="crat-button compact danger" type="submit">{t.admin.gdprDelete}</button>
                   </form>
                 </td>
               </tr>

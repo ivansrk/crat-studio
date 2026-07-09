@@ -1,5 +1,54 @@
-.admin-nav { display:flex; gap:1.5rem; padding:1rem; }
-.admin-table { width:100%; border-collapse:collapse; }
-.admin-table td { border-top:1px solid color-mix(in srgb, var(--paper) 15%, transparent); padding:.6rem .8rem; }
-.admin-table th { text-align:left; padding:.6rem .8rem; }
-.admin-wide { max-width: 72rem; }
+/*
+ * Ф5-дизайн — админка в системе CRAT (docs/design-brief.md §10).
+ * Не арт-объект: тёмный строгий стиль, крупный кегль, аккуратные таблицы.
+ * Красный — только для действий/статусов. Функциональность не трогаем — только визуальный слой.
+ */
+
+.admin-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.75rem;
+  padding: 1.25rem clamp(1.25rem, 4vw, 2.5rem);
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.admin-wide {
+  max-width: 72rem;
+}
+
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-block: 1rem 2rem;
+}
+
+.admin-table thead th {
+  text-align: left;
+  padding: .7rem .9rem;
+  font-family: var(--font-mono), monospace;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  font-size: var(--fs-small);
+  color: var(--paper-muted);
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.admin-table td {
+  padding: .8rem .9rem;
+  border-top: 1px solid var(--line-soft);
+}
+
+.admin-table tbody tr {
+  transition: background-color .2s ease;
+}
+
+.admin-table tbody tr:hover {
+  background: color-mix(in srgb, var(--paper) 3%, transparent);
+}
+
+.admin-table form {
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: .6rem;
+}
