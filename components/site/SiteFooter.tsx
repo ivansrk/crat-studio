@@ -16,6 +16,7 @@ export function SiteFooter() {
           <Link href="/#automation">{t.footer.navAutomation}</Link>
           <Link href="/#studio">{t.footer.navStudio}</Link>
           <Link href="/#team">{t.footer.navTeam}</Link>
+          <Link href="/articles">{t.footer.navArticles}</Link>
         </nav>
         <a className="crat-muted site-footer-email" href={`mailto:${t.footer.contactEmail}`}>{t.footer.contactEmail}</a>
       </div>

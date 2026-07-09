@@ -22,6 +22,7 @@ export async function SiteHeader() {
           <Link href="/#automation">{t.footer.navAutomation}</Link>
           <Link href="/#studio">{t.footer.navStudio}</Link>
           <Link href="/#team">{t.footer.navTeam}</Link>
+          <Link href="/articles">{t.footer.navArticles}</Link>
           {user
             ? <Link href="/app">{t.home.toCabinet}</Link>
             : <Link href="/login">{t.footer.login}</Link>}

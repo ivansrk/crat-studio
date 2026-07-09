@@ -25,12 +25,13 @@ describe('nextLessonId', () => {
   })
 })
 
-describe('статьи (content/articles — раздел опционален, пока не заведён)', () => {
-  it('getArticles() — пусто, без ошибок, пока content/articles не существует', () => {
-    expect(getArticles()).toEqual([])
+describe('статьи репозитория валидны (content/articles, Ф6 T2 — 2 заглушки)', () => {
+  it('2 статьи валидны, без ошибок', () => {
+    expect(getArticles().length).toBe(2)
     expect(articleIssues()).toEqual([])
   })
-  it('getArticle(slug) — null для отсутствующего раздела', () => {
+  it('getArticle(slug) — статья по существующему slug, null для мусора', () => {
+    expect(getArticle('kak-nachat-s-ii')?.meta.title).toBe('Как начать пользоваться нейросетями: первые три шага')
     expect(getArticle('nope')).toBeNull()
   })
 })
