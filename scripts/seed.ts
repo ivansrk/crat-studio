@@ -75,11 +75,106 @@ async function seedF1() {
   }
 }
 
+const COURSE = 'ai-basics'
+const DEFERRED_DAYS_MS = 7 * 24 * 60 * 60 * 1000 // LES-13, совпадает с lib/progress/index.ts
+
+/** Отклонение от текста плана (Task 8): в плане брошенная попытка указана для урока «1.4»,
+ *  но course.yaml определяет только 1.1–1.3 в модуле 1 (12 уроков = 3×4 модуля). Использован
+ *  «2.1» — первый урок следующего модуля с реальным content/quiz.yaml, чтобы страница урока
+ *  открывалась без ошибки getLesson(). Лекция без проверки порядка прохождения (LES-01) — блокировки нет. */
+async function seedF2() {
+  const student = await db.user.update({
+    where: { email: SEED('student') },
+    data: { mission: 'Хочу уверенно использовать ИИ в работе с документами' },
+  })
+  const now = new Date()
+  const dueAt = new Date(now.getTime() + DEFERRED_DAYS_MS)
+
+  /** Уроки 1.1/1.2: пройдены целиком — попытка 1 провалена, попытка 2 зачтена, практика отмечена.
+   *  answers/correct взяты из реальных quiz.yaml (correct = [1,1,1] в обоих уроках). */
+  for (const lessonId of ['1.1', '1.2']) {
+    await db.lessonProgress.upsert({
+      where: { userId_courseSlug_lessonId: { userId: student.id, courseSlug: COURSE, lessonId } },
+      update: {},
+      create: { userId: student.id, courseSlug: COURSE, lessonId, quizPassedAt: now, practiceDoneAt: now, completedAt: now },
+    })
+    await db.quizResult.upsert({
+      where: { userId_lessonId_attempt: { userId: student.id, lessonId, attempt: 1 } },
+      update: {},
+      create: {
+        userId: student.id, courseSlug: COURSE, lessonId, attempt: 1,
+        answers: [
+          { questionIndex: 0, chosen: 1, correct: true },
+          { questionIndex: 1, chosen: 0, correct: false },
+          { questionIndex: 2, chosen: 0, correct: false },
+        ],
+        score: 1, total: 3, passed: false, finishedAt: now,
+      },
+    })
+    await db.quizResult.upsert({
+      where: { userId_lessonId_attempt: { userId: student.id, lessonId, attempt: 2 } },
+      update: {},
+      create: {
+        userId: student.id, courseSlug: COURSE, lessonId, attempt: 2,
+        answers: [
+          { questionIndex: 0, chosen: 1, correct: true },
+          { questionIndex: 1, chosen: 1, correct: true },
+          { questionIndex: 2, chosen: 1, correct: true },
+        ],
+        score: 3, total: 3, passed: true, finishedAt: now,
+      },
+    })
+    await db.deferredQuizState.upsert({
+      where: { userId_courseSlug_lessonId: { userId: student.id, courseSlug: COURSE, lessonId } },
+      update: {},
+      create: { userId: student.id, courseSlug: COURSE, lessonId, dueAt },
+    })
+  }
+
+  // Урок 1.3: квиз зачтён (correct = [1,0,1]), практика — нет, урок «в процессе».
+  await db.lessonProgress.upsert({
+    where: { userId_courseSlug_lessonId: { userId: student.id, courseSlug: COURSE, lessonId: '1.3' } },
+    update: {},
+    create: { userId: student.id, courseSlug: COURSE, lessonId: '1.3', quizPassedAt: now },
+  })
+  await db.quizResult.upsert({
+    where: { userId_lessonId_attempt: { userId: student.id, lessonId: '1.3', attempt: 1 } },
+    update: {},
+    create: {
+      userId: student.id, courseSlug: COURSE, lessonId: '1.3', attempt: 1,
+      answers: [
+        { questionIndex: 0, chosen: 1, correct: true },
+        { questionIndex: 1, chosen: 0, correct: true },
+        { questionIndex: 2, chosen: 1, correct: true },
+      ],
+      score: 3, total: 3, passed: true, finishedAt: now,
+    },
+  })
+
+  // Урок 2.1: брошенная попытка — отвечен только первый вопрос, попытка не завершена.
+  await db.lessonProgress.upsert({
+    where: { userId_courseSlug_lessonId: { userId: student.id, courseSlug: COURSE, lessonId: '2.1' } },
+    update: {},
+    create: { userId: student.id, courseSlug: COURSE, lessonId: '2.1' },
+  })
+  await db.quizResult.upsert({
+    where: { userId_lessonId_attempt: { userId: student.id, lessonId: '2.1', attempt: 1 } },
+    update: {},
+    create: {
+      userId: student.id, courseSlug: COURSE, lessonId: '2.1', attempt: 1,
+      answers: [{ questionIndex: 0, chosen: 1, correct: true }],
+      score: 1, total: 3, passed: false, finishedAt: null,
+    },
+  })
+}
+
 async function main() {
   const admins = await syncAdmins()
   console.log(`[seed v0] админы синхронизированы: ${admins.join(', ') || '(ADMIN_EMAILS пуст)'}`)
   await seedF1()
   console.log('[seed v1] заявки/студент/ссылки готовы')
+  await seedF2()
+  console.log('[seed v2] прогресс/попытки/брошенный квиз готовы')
 }
 
 main()
