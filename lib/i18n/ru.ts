@@ -77,5 +77,10 @@ export const ru = {
     statusEnrolled: 'зачислен',
     noData: 'Пока пусто',
     emailFailed: 'Доступ выдан, но письмо не удалось создать. Попросите студента запросить ссылку на странице входа — или выдайте доступ повторно позже.',
+    colName: 'Имя',
+    colEmail: 'Почта',
+    colStatus: 'Статус',
+    colActions: 'Действия',
+    colEnrolledAt: 'Зачислен',
   },
 } as const

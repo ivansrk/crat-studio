@@ -10,8 +10,17 @@ export default async function Registrations({ searchParams }: { searchParams: Pr
     <main className="admin-wide">
       <h1>{t.admin.registrations}</h1>
       {grant === 'email_failed' && <p role="alert" className="form-alert">{t.admin.emailFailed}</p>}
+      {grant === 'already' && <p>{t.admin.granted}</p>}
       {regs.length === 0 ? <p>{t.admin.noData}</p> : (
         <table className="admin-table">
+          <thead>
+          <tr>
+            <th>{t.admin.colName}</th>
+            <th>{t.admin.colEmail}</th>
+            <th>{t.admin.colStatus}</th>
+            <th>{t.admin.colActions}</th>
+          </tr>
+          </thead>
           <tbody>
           {regs.map(r => (
             <tr key={r.id}>
