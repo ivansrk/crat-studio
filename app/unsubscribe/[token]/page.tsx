@@ -2,6 +2,8 @@ import { readUnsubToken } from '@/lib/email/unsubscribe-token'
 import { recordUnsubscribe } from '@/lib/registration/consents'
 import { sessionSecret } from '@/lib/auth/secret'
 import { t } from '@/lib/i18n'
+import { SiteHeader } from '@/components/site/SiteHeader'
+import { SiteFooter } from '@/components/site/SiteFooter'
 
 // GET-с-побочным-эффектом (MAIL-06): переход из письма — по природе ссылки это GET, форму
 // в письме не поставить. force-dynamic не даёт Next закэшировать/статически сгенерировать
@@ -19,9 +21,13 @@ export default async function Unsubscribe({ params }: { params: Promise<{ token:
   const email = readUnsubToken(token, sessionSecret())
   if (email) await recordUnsubscribe(email)
   return (
-    <main>
-      <h1>{email ? t.unsub.doneTitle : t.unsub.badTitle}</h1>
-      <p>{email ? t.unsub.doneBody : t.unsub.badBody}</p>
-    </main>
+    <>
+      <SiteHeader />
+      <main>
+        <h1>{email ? t.unsub.doneTitle : t.unsub.badTitle}</h1>
+        <p>{email ? t.unsub.doneBody : t.unsub.badBody}</p>
+      </main>
+      <SiteFooter />
+    </>
   )
 }
