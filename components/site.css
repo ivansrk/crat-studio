@@ -1,0 +1,6 @@
+.signup-form { display: grid; gap: 1rem; margin-top: 2rem; }
+.signup-form label { display: grid; gap: .35rem; }
+.signup-form label.check { grid-template-columns: auto 1fr; align-items: start; gap: .6rem; }
+.signup-form input:not([type=checkbox]) { background: var(--ink); color: var(--paper); border: 1px solid color-mix(in srgb, var(--paper) 25%, transparent); border-radius: 8px; padding: .8rem 1rem; font-size: var(--fs-base); }
+.signup-form input[type=checkbox] { width: 1.3rem; height: 1.3rem; margin-top: .25rem; }
+.form-alert { color: var(--neon); }

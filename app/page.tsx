@@ -1,21 +1,21 @@
 import Link from 'next/link'
 import { getContent } from '@/lib/content'
+import { currentUser } from '@/lib/auth/current-user'
 import { t } from '@/lib/i18n'
 
-export default function Home() {
+export default async function Home() {
+  const user = await currentUser()
   const { course } = getContent()
   return (
     <main>
-      <h1>{t.site.title}</h1>
-      <h2>{course.title}</h2>
-      {course.modules.map(m => (
-        <section key={m.id}>
-          <h3>{m.title}</h3>
-          <ul>{m.lessons.map(l => (
-            <li key={l.id}><Link href={`/app/lessons/${l.id}`}>{l.id} · {l.title}</Link></li>
-          ))}</ul>
-        </section>
-      ))}
+      <h1 className="anim-neon-pulse">{t.home.heroTitle}</h1>
+      <p>{t.home.heroSubtitle}</p>
+      {user && <p><Link className="mdx-download" href="/app">{t.home.toCabinet}</Link></p>}
+      <h2>{t.home.coursesTitle}</h2>
+      <section>
+        <h3>{course.title}</h3>
+        <p><Link className="mdx-download" href="/ai-basics">{t.home.courseCta}</Link></p>
+      </section>
     </main>
   )
 }
