@@ -73,6 +73,216 @@
   }
 }
 
+/* ---------- главная — редакционный монтаж (Ф5 Task 4, бриф §7) ---------- */
+
+main.crat-home {
+  max-width: none;
+  padding: 0;
+}
+
+.section-label {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.section-intro {
+  max-width: var(--maxw-text);
+  margin-top: .75rem;
+}
+
+/* hero */
+
+.hero-grid {
+  display: grid;
+  grid-template-columns: 55fr 45fr;
+  gap: clamp(2rem, 5vw, 4rem);
+  align-items: center;
+}
+@media (max-width: 860px) {
+  .hero-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.hero-copy {
+  display: grid;
+  gap: 1.1rem;
+}
+
+.hero-subtitle {
+  max-width: 34rem;
+  font-size: 1.1rem;
+}
+
+.hero-cta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-top: .5rem;
+}
+
+.hero-visual {
+  display: flex;
+  align-items: flex-end;
+  padding: 1.25rem;
+}
+
+.hero-visual-mark {
+  position: relative;
+  z-index: 1;
+}
+
+/* три направления */
+
+.direction-grid {
+  margin-top: 2rem;
+}
+
+.direction-card {
+  display: grid;
+  gap: .6rem;
+  align-content: start;
+}
+
+.direction-card-num {
+  font-family: var(--font-mono), monospace;
+  color: var(--paper-muted);
+  font-size: var(--fs-small);
+}
+
+/* курс в фокусе */
+
+.course-card {
+  display: grid;
+  gap: 1.25rem;
+  justify-items: start;
+}
+
+.course-facts {
+  font-family: var(--font-mono), monospace;
+  font-size: var(--fs-small);
+}
+
+/* автоматизации */
+
+.automation-card p {
+  margin: 0;
+}
+
+/* студия — асимметричная сетка CSS-кадров (бриф §7.6) */
+
+.studio-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-template-rows: repeat(2, minmax(160px, auto));
+  grid-template-areas:
+    'a a b c'
+    'a a d d';
+  gap: 1.25rem;
+  margin-top: 2rem;
+}
+.studio-grid .crat-visual-frame {
+  aspect-ratio: auto;
+  height: 100%;
+  min-height: 160px;
+}
+.studio-frame-a { grid-area: a; }
+.studio-frame-b { grid-area: b; }
+.studio-frame-c { grid-area: c; }
+.studio-frame-d { grid-area: d; }
+
+@media (max-width: 760px) {
+  .studio-grid {
+    grid-template-columns: 1fr;
+    grid-template-areas: none;
+  }
+  .studio-grid .crat-visual-frame {
+    aspect-ratio: 16 / 9;
+    height: auto;
+  }
+}
+
+/* как мы работаем */
+
+.process-grid {
+  margin-top: 2rem;
+}
+
+.process-card {
+  display: grid;
+  gap: .75rem;
+  align-content: start;
+}
+
+.process-num {
+  color: var(--paper-muted);
+}
+
+.process-card p {
+  margin: 0;
+}
+
+/* команда */
+
+.team-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5rem;
+  margin-top: 2rem;
+}
+@media (max-width: 700px) {
+  .team-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.team-card {
+  display: grid;
+  gap: .75rem;
+  align-content: start;
+}
+
+.team-card-frame {
+  aspect-ratio: 21 / 9;
+  display: flex;
+  align-items: flex-end;
+  padding: 1rem;
+}
+
+.team-card-role {
+  margin: -.4rem 0 0;
+}
+
+.team-card-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .6rem .9rem;
+}
+
+/* опыт */
+
+.exp-facts {
+  list-style: none;
+  margin: 2rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: 1rem;
+}
+
+.exp-fact {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  font-family: var(--font-mono), monospace;
+  font-size: var(--fs-small);
+  color: var(--paper-muted);
+}
+.exp-fact .crat-red-line {
+  flex: none;
+}
+
 .signup-form { display: grid; gap: 1rem; margin-top: 2rem; }
 .signup-form label { display: grid; gap: .35rem; }
 .signup-form label.check { grid-template-columns: auto 1fr; align-items: start; gap: .6rem; }

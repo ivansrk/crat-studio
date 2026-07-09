@@ -11,7 +11,7 @@ export function SiteFooter() {
           <p className="crat-muted">{t.footer.tagline}</p>
           <p className="crat-muted">{t.footer.directions}</p>
         </div>
-        <nav className="crat-nav site-nav" aria-label={t.home.brand}>
+        <nav className="crat-nav site-nav" aria-label={t.footer.navAria}>
           <Link href="/#course">{t.footer.navCourses}</Link>
           <Link href="/#automation">{t.footer.navAutomation}</Link>
           <Link href="/#studio">{t.footer.navStudio}</Link>

@@ -17,7 +17,7 @@ export async function SiteHeader() {
           <span className="site-brand-name">{t.home.brand}</span>
           <span className="crat-kicker">{t.header.sub}</span>
         </Link>
-        <nav className="crat-nav site-nav" aria-label={t.home.brand}>
+        <nav className="crat-nav site-nav" aria-label={t.header.navAria}>
           <Link href="/#course">{t.footer.navCourses}</Link>
           <Link href="/#automation">{t.footer.navAutomation}</Link>
           <Link href="/#studio">{t.footer.navStudio}</Link>
