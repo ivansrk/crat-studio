@@ -1,6 +1,7 @@
 import { db } from '@/lib/db'
 import { getLesson } from '@/lib/content'
-import { scoreAnswers, isQuizPassed, nextQuestionIndex, QUIZ_TOTAL, type StoredAnswer } from './quiz-logic'
+import { isUniqueViolation } from '@/lib/db-errors'
+import { scoreAnswers, isQuizPassed, nextQuestionIndex, isReplay, QUIZ_TOTAL, type StoredAnswer } from './quiz-logic'
 import type { QuizResult } from '@/lib/generated/prisma/client'
 
 const COURSE = 'ai-basics'
@@ -25,7 +26,6 @@ export async function startAttempt(userId: string, lessonId: string): Promise<Qu
         data: { userId, courseSlug: COURSE, lessonId, attempt: (last?.attempt ?? 0) + 1, answers: [] },
       })
     } catch (e) {
-      const { isUniqueViolation } = await import('@/lib/db-errors')
       if (!isUniqueViolation(e) || tryN === 1) throw e // вторая вкладка успела — перечитываем max и пробуем ещё раз
     }
   }
@@ -40,12 +40,23 @@ export type AnswerOutcome =
 export async function recordAnswer(userId: string, lessonId: string, attemptId: string, questionIndex: number, chosen: number): Promise<AnswerOutcome> {
   const attempt = await db.quizResult.findFirst({ where: { id: attemptId, userId, lessonId } })
   if (!attempt) return { ok: false, reason: 'not_found' }
+  const answers = (attempt.answers as StoredAnswer[] | null) ?? []
+
+  // Двойной клик по варианту (ревью T2): повтор того же (questionIndex, chosen) — идемпотентный ok
+  // с СОХРАНЁННЫМ результатом, без записи в БД; студент не вылетает из квиза.
+  const replay = isReplay(answers, questionIndex, chosen)
+  if (replay) {
+    return {
+      ok: true, questionIndex, chosen, correct: replay.correct,
+      finished: !!attempt.finishedAt || nextQuestionIndex(answers) === null,
+      score: attempt.score, passed: attempt.passed,
+    }
+  }
+
   if (attempt.finishedAt) return { ok: false, reason: 'finished' }
   const lesson = getLesson(lessonId)
   const question = lesson?.quiz.questions[questionIndex]
   if (!question || chosen < 0 || chosen >= question.options.length) return { ok: false, reason: 'bad_option' }
-
-  const answers = (attempt.answers as StoredAnswer[] | null) ?? []
   if (nextQuestionIndex(answers) !== questionIndex) return { ok: false, reason: 'already_answered' } // отвечать можно только на текущий
 
   const correct = chosen === question.correct

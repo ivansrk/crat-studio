@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { scoreAnswers, isQuizPassed, nextQuestionIndex, PASS_SCORE, QUIZ_TOTAL, type StoredAnswer } from './quiz-logic'
+import { scoreAnswers, isQuizPassed, nextQuestionIndex, isReplay, PASS_SCORE, QUIZ_TOTAL, type StoredAnswer } from './quiz-logic'
 
 const a = (questionIndex: number, chosen: number, correct: boolean): StoredAnswer => ({ questionIndex, chosen, correct })
 
@@ -23,5 +23,17 @@ describe('quiz-logic', () => {
   it('nextQuestionIndex терпит дыры/дубли (битые answers из базы): идёт по возрастанию', () => {
     expect(nextQuestionIndex([a(1, 0, true)])).toBe(0)
     expect(nextQuestionIndex([a(0, 1, true), a(0, 2, false)])).toBe(1)
+  })
+  it('isReplay: повтор того же chosen → сохранённая запись (двойной клик)', () => {
+    const saved = a(0, 1, true)
+    expect(isReplay([saved, a(1, 0, false)], 0, 1)).toBe(saved)
+    expect(isReplay([saved], 0, 1)).toBe(saved)
+  })
+  it('isReplay: другой chosen на уже отвеченный вопрос → null (реальный out-of-order)', () => {
+    expect(isReplay([a(0, 1, true)], 0, 2)).toBeNull()
+  })
+  it('isReplay: неотвеченный вопрос → null', () => {
+    expect(isReplay([a(0, 1, true)], 1, 0)).toBeNull()
+    expect(isReplay([], 0, 0)).toBeNull()
   })
 })

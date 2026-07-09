@@ -12,6 +12,13 @@ export const scoreAnswers = (answers: StoredAnswer[]): number => {
 
 export const isQuizPassed = (score: number): boolean => score >= PASS_SCORE
 
+/** Идемпотентный повтор ответа (двойной клик, ревью T2): вопрос уже отвечен ТЕМ ЖЕ chosen →
+ *  сохранённая запись; иначе null (реальный out-of-order). Первый ответ побеждает (как в scoreAnswers). */
+export function isReplay(answers: StoredAnswer[], questionIndex: number, chosen: number): StoredAnswer | null {
+  const saved = answers.find(a => a.questionIndex === questionIndex)
+  return saved && saved.chosen === chosen ? saved : null
+}
+
 /** Первый вопрос без ответа (0..2) или null, если отвечены все. Дубли ответа на вопрос игнорируются (первый побеждает). */
 export function nextQuestionIndex(answers: StoredAnswer[]): number | null {
   const answered = new Set(answers.map(a => a.questionIndex))
