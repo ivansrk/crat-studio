@@ -5,10 +5,21 @@ import { isAdminEmail } from './current-user'
 import { sendEmail } from '@/lib/email'
 import { renderEmail } from '@/lib/email/templates'
 import { t } from '@/lib/i18n'
+import type { PrismaClient } from '@/lib/generated/prisma/client'
 
 export const MAGIC_TTL_MS = 15 * 60 * 1000 // AUTH-03
 export const newToken = () => randomBytes(32).toString('hex')
 export const hashToken = (raw: string) => createHash('sha256').update(raw).digest('hex') // D-009
+
+/** Выпускает новый magic-link и возвращает URL входа. Сырой токен живёт только в письме (D-028);
+ *  вызывающие гарантируют существование пользователя. */
+export async function mintLoginUrl(email: string, client: Pick<PrismaClient, 'magicLink' | 'user'> = db): Promise<string> {
+  const user = await client.user.findUnique({ where: { email } })
+  if (!user) throw new Error('user not found')
+  const raw = newToken()
+  await client.magicLink.create({ data: { tokenHash: hashToken(raw), email, userId: user.id, expiresAt: new Date(Date.now() + MAGIC_TTL_MS) } })
+  return `${process.env.APP_URL}/auth/${raw}`
+}
 
 /** AUTH-02: наружу ВСЕГДА один ответ; письмо уходит только существующему пользователю. */
 export async function requestMagicLink(rawEmail: string): Promise<void> {
@@ -16,13 +27,11 @@ export async function requestMagicLink(rawEmail: string): Promise<void> {
   if (!email || !limiters.magicLink.allow(`ml:${email}`)) return // AUTH-08: молча (ответ одинаковый)
   const user = await db.user.findUnique({ where: { email } })
   if (!user) return                                              // SEC-06: не раскрываем
-  const raw = newToken()
-  await db.magicLink.create({ data: { tokenHash: hashToken(raw), email, userId: user.id, expiresAt: new Date(Date.now() + MAGIC_TTL_MS) } })
-  const url = `${process.env.APP_URL}/auth/${raw}`
+  const url = await mintLoginUrl(email)
   await sendEmail({
     to: email, userId: user.id, type: 'MAGIC_LINK', subject: t.email.magicLinkSubject,
     html: renderEmail({ body: t.email.magicLinkBody, buttonText: t.email.magicLinkButton, buttonUrl: url }),
-    payload: { url }, // для ручной переотправки; ссылка та же, пока жива (ADM-08)
+    payload: {}, // D-028: сырой URL в email_log не храним; переотправка (ADM-08) выпустит новый токен
   })
 }
 
