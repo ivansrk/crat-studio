@@ -1,5 +1,6 @@
 import { db } from '@/lib/db'
 import { appendConsent } from './consents'
+import { isUniqueViolation } from '@/lib/db-errors'
 
 export type RegistrationInput = {
   firstName: string; lastName: string; email: string
@@ -17,11 +18,6 @@ export function normalizeRegistration(i: RegistrationInput): RegistrationInput |
   if (!firstName || !lastName || !EMAIL_RE.test(email) || !i.dataConsent) return null
   const opt = (v: string | null) => (v?.trim() ? v.trim() : null)
   return { firstName, lastName, email, phone: opt(i.phone), telegram: opt(i.telegram), dataConsent: true, newsletterConsent: !!i.newsletterConsent }
-}
-
-/** Уникальный индекс нарушен (Prisma P2002) — например, гонка двух create по одному email. */
-export function isUniqueViolation(e: unknown): boolean {
-  return typeof e === 'object' && e !== null && (e as { code?: unknown }).code === 'P2002'
 }
 
 /** F1: создаёт/обновляет заявку + пишет согласия. Возвращает 'accepted' всегда (экран один и тот же). */

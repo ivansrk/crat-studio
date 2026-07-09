@@ -2,6 +2,7 @@
 @import '../lib/design/animations/animations.css';
 @import '../components/mdx/mdx.css';
 @import '../components/site.css';
+@import '../components/admin.css';
 
 * { box-sizing: border-box; }
 html { font-size: var(--fs-base); }
