@@ -67,6 +67,10 @@
 }
 
 .site-footer-email {
+  display: inline-block;
+  /* тач-таргет ≥44px, тот же приём, что у .crat-nav a (Ф5-полировка). */
+  padding-block: .7rem;
+  margin-block: -.7rem;
   text-decoration: none;
 }
 
@@ -79,6 +83,26 @@
   .site-nav {
     width: 100%;
   }
+}
+
+/* ---------- /articles — карточка-ссылка (Ф5-полировка) ----------
+   Раньше заголовок был <Link><h2>, что давало браузерный дефолт (красное
+   подчёркивание всегда, не по системе .reveal-line) — вся карточка теперь
+   ссылка, как .trainer-card, с ховер-подчёркиванием заголовка. */
+.article-card {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+}
+.article-card h2 {
+  text-decoration-color: var(--line-red);
+  text-underline-offset: .25em;
+  transition: text-decoration-color .3s ease;
+}
+.article-card:hover h2,
+.article-card:focus-visible h2 {
+  text-decoration: underline;
+  text-decoration-color: var(--neon);
 }
 
 /* ---------- главная — редакционный монтаж (Ф5 Task 4, бриф §7) ---------- */

@@ -190,7 +190,12 @@
 /* ---------- nav links ---------- */
 
 .crat-nav a {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  /* тач-таргет ≥44px (аудитория без техподготовки) — паддинг вместо крупного шрифта,
+     чтобы не раздувать шапку визуально (ревью Ф5-полировка). */
+  padding-block: .7rem;
+  margin-block: -.7rem;
   text-decoration: none;
   color: var(--paper);
   font-size: var(--fs-small);
@@ -203,6 +208,57 @@
 .crat-nav a:hover,
 .crat-nav a:focus-visible {
   background-size: 100% 2px;
+}
+
+/* ---------- form controls: чекбоксы/радио в системе CRAT (Ф5-полировка) ----------
+   Нативный OS-дефолт (белый квадрат/кружок) не вписывается в чёрно-красную
+   палитру — единый тёмный стиль везде, где встречается checkbox/radio. */
+input[type='checkbox'],
+input[type='radio'] {
+  appearance: none;
+  -webkit-appearance: none;
+  position: relative;
+  width: 1.4rem;
+  height: 1.4rem;
+  flex: none;
+  background: var(--ink);
+  border: 1px solid var(--line-soft);
+  cursor: pointer;
+  transition: border-color .3s ease, background-color .3s ease;
+}
+input[type='checkbox'] { border-radius: 5px; }
+input[type='radio'] { border-radius: 50%; }
+input[type='checkbox']:hover,
+input[type='radio']:hover {
+  border-color: var(--line-red);
+}
+input[type='checkbox']:checked,
+input[type='radio']:checked {
+  background: var(--neon);
+  border-color: var(--neon);
+}
+input[type='checkbox']:checked::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 44%;
+  width: .3rem;
+  height: .6rem;
+  border: solid var(--ink);
+  border-width: 0 2px 2px 0;
+  transform: translate(-50%, -50%) rotate(45deg);
+}
+input[type='radio']:checked::after {
+  content: '';
+  position: absolute;
+  inset: 4px;
+  border-radius: 50%;
+  background: var(--ink);
+}
+input[type='checkbox']:focus-visible,
+input[type='radio']:focus-visible {
+  outline: 2px solid var(--neon);
+  outline-offset: 2px;
 }
 
 /* ---------- animations (CSS-only, бриф §6) ---------- */

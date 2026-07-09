@@ -34,13 +34,11 @@ export default function ArticlesPage() {
             ) : (
               <div className="crat-grid">
                 {articles.map(a => (
-                  <article key={a.meta.slug} className="crat-card">
-                    <Link href={`/articles/${a.meta.slug}`}>
-                      <h2>{a.meta.title}</h2>
-                    </Link>
+                  <Link key={a.meta.slug} href={`/articles/${a.meta.slug}`} className="crat-card article-card">
+                    <h2>{a.meta.title}</h2>
                     <p className="crat-muted">{a.meta.description}</p>
                     <p className="crat-kicker">{formatDate(new Date(a.meta.date))}</p>
-                  </article>
+                  </Link>
                 ))}
               </div>
             )}
