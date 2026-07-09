@@ -27,6 +27,7 @@ export async function resendEmailAction(formData: FormData) {
   if (result === 'user_gone') redirect('/admin/emails?resend=user_gone') // GDPR-удалённый адресат (D-028)
   if (result === 'unsupported_type') redirect('/admin/emails?resend=unsupported')
   if (result === 'cert_gone') redirect('/admin/emails?resend=cert_gone') // CERT-05: сертификат отозван/не найден
+  if (result === 'send_failed') redirect('/admin/emails?resend=send_failed') // рендер PDF/письма упал (ревью T3)
   if (result === 'sent') redirect('/admin/emails?resend=ok')
 }
 

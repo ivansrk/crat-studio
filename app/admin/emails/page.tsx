@@ -16,6 +16,7 @@ export default async function Emails({ searchParams }: { searchParams: Promise<{
       {resend === 'user_gone' && <p role="alert" className="form-alert">{t.admin.emailUserGone}</p>}
       {resend === 'unsupported' && <p role="alert" className="form-alert">{t.admin.emailUnsupported}</p>}
       {resend === 'cert_gone' && <p role="alert" className="form-alert">{t.admin.emailCertGone}</p>}
+      {resend === 'send_failed' && <p role="alert" className="form-alert">{t.admin.emailSendFailed}</p>}
       {logs.length === 0 ? <p>{t.admin.noData}</p> : (
         <table className="admin-table">
           <thead>

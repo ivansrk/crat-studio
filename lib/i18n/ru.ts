@@ -241,6 +241,7 @@ export const ru = {
     emailUserGone: 'Пользователь удалён — письмо не переотправить',
     emailUnsupported: 'Этот тип письма пока нельзя переотправить',
     emailCertGone: 'Сертификат отозван или не найден — переотправка невозможна',
+    emailSendFailed: 'Не удалось сформировать письмо — попробуйте ещё раз',
     emailType: { MAGIC_LINK: 'ссылка входа', ACCESS_GRANTED: 'доступ выдан', CERTIFICATE: 'сертификат' },
     emailStatus: { SENT: 'отправлено', FAILED: 'ошибка' },
     colName: 'Имя',

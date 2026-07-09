@@ -14,7 +14,7 @@ export function isStaleQueued(log: Pick<EmailLog, 'status' | 'createdAt'>, now: 
   return log.status === 'QUEUED' && now.getTime() - log.createdAt.getTime() > STALE_QUEUED_MS
 }
 
-export type ResendResult = 'sent' | 'not_found' | 'user_gone' | 'unsupported_type' | 'cert_gone'
+export type ResendResult = 'sent' | 'not_found' | 'user_gone' | 'unsupported_type' | 'cert_gone' | 'send_failed'
 
 /** ADM-08: переотправка = НОВАЯ запись в email_log (MAIL-05) с НОВЫМ токеном (D-028) —
  *  сырых токенов в payload не храним, свежая ссылка полезнее истёкшей. */
@@ -25,10 +25,18 @@ export async function resendFromLog(emailLogId: string): Promise<ResendResult> {
     // Свой сценарий (не login-ссылка): ищем актуальный VALID-сертификат владельца — номер в исходном
     // письме мог быть отозван (D-010), переотправлять отозванный номер нельзя.
     const userId = log.userId
-    const cert = userId ? await db.certificate.findFirst({ where: { userId, status: 'VALID' } }) : null
+    const cert = userId
+      ? await db.certificate.findFirst({ where: { userId, courseSlug: 'ai-basics', status: 'VALID' } })
+      : null
     if (!cert || !userId) return 'cert_gone'
-    const { sendCertificateEmail } = await import('@/lib/cert')
-    await sendCertificateEmail(userId, cert.number)
+    try {
+      const { sendCertificateEmail } = await import('@/lib/cert')
+      await sendCertificateEmail(userId, cert.number)
+    } catch (e) {
+      // Playwright/рендер может упасть — админ должен увидеть баннер, а не 500 (ревью T3)
+      console.error('[cert] переотправка не удалась:', e)
+      return 'send_failed'
+    }
     return 'sent'
   }
   // Исчерпывающий switch по типу: будущие типы НЕ переотправлять молча login-ссылкой.

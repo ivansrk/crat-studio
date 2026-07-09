@@ -19,6 +19,8 @@ export async function isEligible(userId: string): Promise<boolean> {
   ])
   const all = getContent().course.modules.flatMap(m => m.lessons.map(l => l.id))
   const passed = all.filter(id => isLessonPassed(byLesson.get(id))).length
+  // Инвариант: после APPROVED новые попытки не создаются (PROJ-06, enforced в lib/project) —
+  // current всегда остаётся APPROVED.
   return passed === lessonCount() && current?.status === 'APPROVED'
 }
 
@@ -32,6 +34,11 @@ export async function checkAndIssueCertificate(userId: string): Promise<'issued'
 
   let issuedNumber: string | null = null
   await db.$transaction(async tx => {
+    // advisory xact-lock: E12 — конкурентные триггеры одного студента сериализуются;
+    // снимается автоматически на commit/rollback. Без него два одновременных вызова оба
+    // видят existing=null (единственная блокировка — FOR UPDATE счётчика — стоит позже)
+    // и выдают два сертификата. После ожидания lock'а existing-check видит коммит первой транзакции.
+    await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${userId}))`
     const existing = await tx.certificate.findFirst({ where: { userId, courseSlug: COURSE, status: 'VALID' } })
     if (existing) return // E12: второй триггер выходит без действия
     const number = await nextCertNumber(tx)
