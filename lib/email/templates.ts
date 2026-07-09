@@ -1,5 +1,12 @@
 import { t } from '@/lib/i18n'
 
+/** Подстановка {{key}} в шаблон письма. Нужна для WELCOME (T5, AUTH-15): пароль — секрет,
+ *  который живёт только в html-теле письма, поэтому рендерится отдельно от body-строки
+ *  из ru.ts, а не хранится где-либо готовым текстом. */
+export function fillPlaceholders(template: string, values: Record<string, string>): string {
+  return Object.entries(values).reduce((acc, [key, val]) => acc.split(`{{${key}}}`).join(val), template)
+}
+
 export function renderEmail(opts: { body: string; buttonText?: string; buttonUrl?: string; unsubscribeUrl?: string }): string {
   const btn = opts.buttonUrl && opts.buttonText
     ? `<p style="margin:28px 0"><a href="${opts.buttonUrl}" style="background:#FF4B3A;color:#F2E9DC;padding:14px 28px;border-radius:8px;text-decoration:none;font-size:18px">${opts.buttonText}</a></p>`

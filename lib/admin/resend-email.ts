@@ -2,6 +2,8 @@ import { db } from '@/lib/db'
 import { sendEmail } from '@/lib/email'
 import { renderEmail } from '@/lib/email/templates'
 import { mintLoginUrl } from '@/lib/auth/magic-link' // хелпер из T8-фикса D-028
+import { mintResetToken } from '@/lib/auth/reset' // T5: переотправка WELCOME — пароль невоспроизводим (только хэш)
+import { ResetTokenPurpose } from '@/lib/generated/prisma/client'
 import { t } from '@/lib/i18n'
 import type { EmailLog } from '@/lib/generated/prisma/client'
 
@@ -37,6 +39,21 @@ export async function resendFromLog(emailLogId: string): Promise<ResendResult> {
       console.error('[cert] переотправка не удалась:', e)
       return 'send_failed'
     }
+    return 'sent'
+  }
+  if (log.type === 'WELCOME') {
+    // Пароль воспроизвести нельзя (хранится только хэш, D-032/AUTH-14) — переотправка WELCOME
+    // всегда ведёт на reset-ссылку «задать пароль», а не повторяет исходное письмо с секретом.
+    // Полезнее unsupported: студент потерял письмо → админ жмёт «переотправить» → студент получает
+    // рабочую ссылку и сам задаёт новый пароль.
+    const user = await db.user.findUnique({ where: { email: log.toEmail } })
+    if (!user) return 'user_gone' // GDPR-удалённый адресат
+    const { url } = await mintResetToken(log.toEmail, ResetTokenPurpose.PASSWORD_RESET)
+    await sendEmail({
+      to: log.toEmail, userId: user.id, type: 'WELCOME', subject: t.email.welcomeSubject,
+      html: renderEmail({ body: t.email.welcomeBodyExisting, buttonText: t.email.welcomeButtonExisting, buttonUrl: url }),
+      payload: {}, // D-028: reset-url в payload не храним
+    })
     return 'sent'
   }
   // Исчерпывающий switch по типу: будущие типы НЕ переотправлять молча login-ссылкой.

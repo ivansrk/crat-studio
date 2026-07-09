@@ -1,36 +1,49 @@
 import { db } from '@/lib/db'
 import { sendEmail } from '@/lib/email'
-import { renderEmail } from '@/lib/email/templates'
-import { mintLoginUrl } from '@/lib/auth/magic-link'
+import { renderEmail, fillPlaceholders } from '@/lib/email/templates'
+import { createUserWithPassword } from '@/lib/auth/provision'
+import { mintResetToken } from '@/lib/auth/reset'
+import { ResetTokenPurpose } from '@/lib/generated/prisma/client'
 import { isUniqueViolation } from '@/lib/db-errors'
 import { t } from '@/lib/i18n'
 
-export type GrantResult = 'granted' | 'granted_email_failed' | 'already' | 'not_found'
+export type GrantResult =
+  | { status: 'granted'; plainPassword: string | null; email: string }
+  | { status: 'granted_email_failed'; plainPassword: string | null; email: string }
+  | { status: 'already' }
+  | { status: 'not_found' }
 
-/** ADM-03/04: выдаёт доступ по заявке — одна транзакция, письмо шлётся после её успеха. */
+/** ADM-03/04: выдаёт доступ по заявке — одна транзакция, письмо шлётся после её успеха.
+ *  T5 (AUTH-15/F11): вместо upsert без пароля — createUserWithPassword (идемпотентно:
+ *  повторная выдача НЕ перевыпускает пароль действующего юзера, REG-14). */
 export async function grantAccess(registrationId: string, adminUserId: string): Promise<GrantResult> {
   const reg = await db.registration.findUnique({ where: { id: registrationId } })
-  if (!reg) return 'not_found'
+  if (!reg) return { status: 'not_found' }
 
   let user: { id: string; email: string }
+  let plainPassword: string | null
   let url: string
   try {
     const result = await db.$transaction(async tx => {
-      const user = await tx.user.upsert({
-        where: { email: reg.email },
-        update: {},
-        create: { email: reg.email, firstName: reg.firstName, lastName: reg.lastName, phone: reg.phone, telegram: reg.telegram },
-      })
-      await tx.consent.updateMany({ where: { email: reg.email, userId: null }, data: { userId: user.id } }) // F2: consents получают userId
-      await tx.enrollment.create({ data: { userId: user.id, grantedById: adminUserId } }) // бросит P2002 при дубле (ADM-04)
+      const provisioned = await createUserWithPassword(
+        { email: reg.email, firstName: reg.firstName, lastName: reg.lastName, phone: reg.phone, telegram: reg.telegram },
+        tx,
+      )
+      await tx.consent.updateMany({ where: { email: reg.email, userId: null }, data: { userId: provisioned.user.id } }) // F2: consents получают userId
+      await tx.enrollment.create({ data: { userId: provisioned.user.id, grantedById: adminUserId } }) // бросит P2002 при дубле (ADM-04)
       await tx.registration.update({ where: { id: reg.id }, data: { status: 'ENROLLED', alreadyEnrolled: true } })
-      const url = await mintLoginUrl(reg.email, tx) // D-028: готовый хелпер T8 вместо ручного newToken/hashToken/magicLink.create
-      return { user, url }
+      // Пароль не перевыпущен (юзер уже был с паролем) → письмо ведёт не на показ пароля, а на
+      // reset-ссылку «задать пароль» (D-028: готовый хелпер T4 вместо ручного newToken/hashToken).
+      const url = provisioned.plainPassword === null
+        ? (await mintResetToken(reg.email, ResetTokenPurpose.PASSWORD_RESET, tx)).url
+        : `${process.env.APP_URL}/login`
+      return { user: provisioned.user, plainPassword: provisioned.plainPassword, url }
     })
     user = result.user
+    plainPassword = result.plainPassword
     url = result.url
   } catch (e) {
-    if (isUniqueViolation(e)) return 'already' // unique(userId, courseSlug) — ADM-04, письмо НЕ шлём
+    if (isUniqueViolation(e)) return { status: 'already' } // unique(userId, courseSlug) — ADM-04, письмо НЕ шлём
     throw e
   }
 
@@ -39,13 +52,18 @@ export async function grantAccess(registrationId: string, adminUserId: string): 
   // записи, доставка fire-and-forget. Сбои доставки асинхронны и видны как FAILED в email_log (D-013),
   // кнопка переотправки — раздел «Письма» (T10).
   try {
+    const html = plainPassword !== null
+      ? renderEmail({
+          body: fillPlaceholders(t.email.welcomeBody, { email: user.email, password: plainPassword }),
+          buttonText: t.email.welcomeButton, buttonUrl: url,
+        })
+      : renderEmail({ body: t.email.welcomeBodyExisting, buttonText: t.email.welcomeButtonExisting, buttonUrl: url })
     await sendEmail({
-      to: user.email, userId: user.id, type: 'ACCESS_GRANTED', subject: t.email.accessSubject,
-      html: renderEmail({ body: t.email.accessBody, buttonText: t.email.magicLinkButton, buttonUrl: url }),
-      payload: {}, // D-028: сырых токенов в email_log не храним
+      to: user.email, userId: user.id, type: 'WELCOME', subject: t.email.welcomeSubject, html,
+      payload: {}, // D-028: ни пароль, ни reset-url в email_log не попадают
     })
   } catch {
-    return 'granted_email_failed'
+    return { status: 'granted_email_failed', plainPassword, email: user.email }
   }
-  return 'granted'
+  return { status: 'granted', plainPassword, email: user.email }
 }

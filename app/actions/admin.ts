@@ -10,13 +10,21 @@ async function requireAdmin() {
   return user
 }
 
-export async function grantAccessAction(formData: FormData) {
+// T5 (AUTH-15): состояние useActionState вместо redirect — пароль должен показаться на экране
+// РОВНО один раз и не пережить перезагрузку/навигацию (нельзя положить в query-string/cookie/БД).
+// GrantForm.tsx (client) держит это состояние только в памяти React.
+export type GrantActionState =
+  | { status: 'idle' }
+  | { status: 'granted'; plainPassword: string | null; email: string }
+  | { status: 'granted_email_failed'; plainPassword: string | null; email: string }
+  | { status: 'already' }
+
+export async function grantAccessAction(_prevState: GrantActionState, formData: FormData): Promise<GrantActionState> {
   const admin = await requireAdmin()
   const result = await grantAccess(String(formData.get('registrationId')), admin.id)
   revalidatePath('/admin')
-  // Нота ревью T4/T9: доступ выдан, но запись письма не создалась — отдельный баннер, а не тишина.
-  if (result === 'granted_email_failed') redirect('/admin?grant=email_failed')
-  if (result === 'already') redirect('/admin?grant=already') // ADM-04: объясняем, почему письма не будет
+  if (result.status === 'not_found') return { status: 'idle' }
+  return result
 }
 
 export async function resendEmailAction(formData: FormData) {
