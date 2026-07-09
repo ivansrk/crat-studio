@@ -284,3 +284,148 @@ model TrainerUsage {
 **Номер сертификата без гонок.** Выдача — одна транзакция: `SELECT … FOR UPDATE` строки `CertificateCounter` за текущий год (Warsaw), `counter+1`, формирование `CRAT-{год}-{counter:4}`, вставка Certificate. Два одновременных триггера выдачи получат разные номера; повторная выдача исключается уникальностью «один VALID сертификат на (userId, courseSlug)» — проверяется в той же транзакции.
 
 **QuizResult.answers как Json.** Ответы пишутся по мере прохождения (после каждого вопроса — LES-07), поэтому брошенный квиз сохраняет частичные ответы для аналитики, но попытка без `finishedAt` нигде не учитывается.
+
+---
+
+## Пакет Ф7 — изменения модели данных (D-031…D-037, 2026-07-10)
+
+> Спецификация схемы. Prisma-код и миграции пишутся исполнителями (docs/superpowers/plans/2026-07-10-f7*.md), НЕ этим документом. На проде уже есть данные — все изменения проектируются как аддитивные и безопасные (см. «Миграционные заметки»).
+
+## 1. Пароли вместо magic link (Ф7а, D-031/D-032/D-034)
+
+**User — новые поля:**
+```prisma
+model User {
+  // ...существующие поля...
+  passwordHash String? // bcryptjs-хэш (AUTH-14, D-032); null у существующих юзеров до первой установки (AUTH-19, D-034)
+  whatsapp     String? // мессенджер whatsapp (REG-10); telegram уже есть
+  // Resend Broadcasts (CRM-04): id контакта в Audience для точечного удаления/пометки
+  resendContactId String?
+}
+```
+
+**MagicLink → переименовать в `PasswordResetToken`** (D-031). Структура не меняется, меняется СМЫСЛ: теперь это одноразовый токен установки/восстановления пароля и подтверждения регистрации, а не вход. `expiresAt = createdAt + 60 мин` (AUTH-03). Поле `userId` остаётся (null для токенов подтверждения регистрации, когда User ещё не создан). Дополнительно — назначение токена (вход по ссылке отменён, но токен теперь обслуживает reset И double opt-in):
+```prisma
+enum ResetTokenPurpose {
+  PASSWORD_RESET // AUTH-16/17 и разовая «задайте пароль» (D-034)
+  OPT_IN         // подтверждение регистрации / double opt-in (REG-12/13)
+}
+model PasswordResetToken { // бывш. MagicLink; @@map("magic_links") можно сохранить или мигрировать имя
+  id        String   @id @default(cuid())
+  tokenHash String   @unique // SHA-256, D-009
+  email     String
+  userId    String?
+  purpose   ResetTokenPurpose @default(PASSWORD_RESET)
+  expiresAt DateTime // +60 мин
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+  @@index([email, createdAt]) // rate-limit 3/15мин (AUTH-08)
+}
+```
+*Альтернатива (минимально-инвазивная):* оставить имя модели `MagicLink`, только добавить `purpose` и обновить комментарии/TTL. Переименование чище семантически, но требует переписать все импорты — [РЕШЕНИЕ АВТОРА: рекомендую переименовать; строки magic_links эфемерны (≤15 мин), потерять их при миграции безопасно].
+
+**EmailType — новые значения:**
+```prisma
+enum EmailType {
+  MAGIC_LINK      // [ОТМЕНЁН как способ входа; значение оставить для истории email_log]
+  ACCESS_GRANTED
+  CERTIFICATE
+  WELCOME         // AUTH-15: пароль + ссылка на курс при создании учётки
+  PASSWORD_RESET  // AUTH-16
+  DOUBLE_OPT_IN   // REG-11/12
+  CONSULTATION    // CONS-03: уведомление админам
+}
+```
+
+## 2. Инвайты и double opt-in (Ф7б, D-035)
+
+**InviteLink:**
+```prisma
+model InviteLink {
+  id            String   @id @default(cuid())
+  token         String   @unique // сырой токен в URL /invite/{token}; ссылка сама доступа не даёт
+  courseSlug    String   // на какой курс (MC)
+  sourceLabel   String   // → Enrollment.source (INV-01)
+  active         Boolean  @default(true) // отзыв: active=false (INV-02)
+  maxRegistrations Int?   // лимит регистраций, null = без лимита (INV-01/05)
+  registrationsCount Int  @default(0)    // подтверждённые регистрации (INV-05)
+  expiresAt      DateTime? // необязательный срок (INV-01/04)
+  createdById    String?   // админ-создатель (без FK — как Enrollment.grantedById)
+  createdAt      DateTime @default(now())
+  @@index([token])
+}
+```
+
+**Registration — новые поля (double opt-in, инвайт-привязка):**
+```prisma
+model Registration {
+  // ...существующие поля...
+  whatsapp     String?  // REG-10
+  inviteLinkId String?  // если пришла по инвайту (REG-13 → авто-enroll)
+  wantsNewsletter Boolean @default(false) // чекбокс на форме; действующим согласие станет после подтверждения (REG-12)
+  confirmedAt  DateTime? // double opt-in подтверждён (REG-13); null = ожидает (REG-15)
+}
+enum RegistrationStatus {
+  NEW
+  RESUBMITTED
+  PENDING_OPT_IN // отправлена, ждёт подтверждения email (REG-11)
+  CONFIRMED      // email подтверждён, публичная заявка ждёт ручной выдачи (REG-13 публичный путь)
+  ENROLLED       // выдан доступ (авто по инвайту или вручную)
+}
+```
+
+**Consent — статус «ожидает подтверждения» для double opt-in.** Действующее согласие по-прежнему = последняя запись (email, type) с `granted=true` (D-014). До подтверждения double opt-in согласие НЕ должно считаться действующим. Два варианта:
+- (рекомендуется) не писать `Consent` до подтверждения; на форме сохранять намерение в `Registration.wantsNewsletter` + `dataConsent` подразумевается фактом отправки; при подтверждении (REG-13) писать реальные `Consent`-записи `source=REGISTRATION_FORM`. Это сохраняет инвариант «Consent = действующее согласие» без нового статуса.
+- (альтернатива) добавить `ConsentSource.DOUBLE_OPT_IN` и писать pending-запись — усложняет правило «последняя запись». Отвергнуто.
+
+Добавить в `ConsentSource`: `DOUBLE_OPT_IN` НЕ нужен при рекомендованном варианте; при желании фиксировать источник — можно (не блокирует).
+
+## 3. Клиентская база / Resend (Ф7б)
+
+CRM-раздел читает существующие `User`/`Consent`/`Enrollment` (новых таблиц не требует, кроме `User.resendContactId` выше). «Последний курс» = `Enrollment` с максимальным `createdAt`. Статус подписки = D-014.
+
+## 4. Консультации (Ф7б)
+
+```prisma
+enum ConsultationStatus { NEW CONTACTED CLOSED }
+model ConsultationRequest {
+  id          String   @id @default(cuid())
+  name        String
+  contact     String   // email/телефон/мессенджер — свободный текст (CONS-01)
+  topic       String?  // направление: оптимизация/автоматизация/персональная система (опц.)
+  message     String   // описание задачи
+  status      ConsultationStatus @default(NEW)
+  userId      String?  // если из кабинета (CONS-02); без каскада на удаление — заявка переживает
+  source      String   @default("cabinet") // cabinet | public
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  @@index([status, createdAt])
+}
+```
+`userId` — **без** `onDelete: Cascade` (заявка на консультацию — бизнес-лид, не персональные данные учёбы; при GDPR-удалении студента обезличить `userId → null`, как решит ADM-10-логика; [РЕШЕНИЕ АВТОРА: обезличивать, не удалять — лид принадлежит студии]).
+
+## 5. Мультикурс (Ф7в, D-036)
+
+Схема уже `courseSlug`-aware во всех учебных таблицах (Enrollment, LessonProgress, QuizResult, DeferredQuizState, Submission, Certificate). **Единственная структурная правка — уникальность QuizResult:**
+```prisma
+// БЫЛО: @@unique([userId, lessonId, attempt])  ← отсутствовал courseSlug (латентный мультикурс-баг)
+// СТАНЕТ:
+@@unique([userId, courseSlug, lessonId, attempt])
+```
+Аналогично проверить запросы, где `where` по `(userId, lessonId)` без `courseSlug` (lib/progress/index.ts `startAttempt`, `recordAnswer`) — добавить `courseSlug`. Данных это не мигрирует (все строки `ai-basics`, коллизий нет).
+
+`course.yaml` получает флаг публикации (`published: bool` / `status`) — это КОНТЕНТ (docs/content-format.md, согласовать с course-factory как аддитивное необязательное поле; отсутствие = published по умолчанию для обратной совместимости, D-036). Формат урока НЕ меняется.
+
+## Миграционные заметки (на проде уже есть данные!)
+
+| Изменение | Безопасность миграции |
+|---|---|
+| `User.passwordHash String?`, `whatsapp String?`, `resendContactId String?` | аддитивно, nullable — безопасно; существующие юзеры получают `passwordHash=null` → флоу «задайте пароль» (AUTH-19, D-034) |
+| MagicLink → PasswordResetToken (+`purpose`, TTL 60м) | строки magic_links эфемерны (≤15 мин) — дроп/переименование без потери смысла; выпустить до деплоя, лучше в тихое окно |
+| `EmailType` +4 значения, `RegistrationStatus` +2, новые enum | добавление значений enum безопасно; порядок значений в Postgres — append |
+| `Registration` +whatsapp/inviteLinkId/wantsNewsletter/confirmedAt | аддитивно, nullable/default |
+| новые модели InviteLink, ConsultationRequest | новые таблицы — безопасно |
+| QuizResult `@@unique` +courseSlug | смена уникального индекса; все строки `ai-basics` → дублей нет, пересоздание индекса безопасно |
+| разовая рассылка «задайте пароль» существующим юзерам (D-034) | не миграция схемы — админ-действие/скрипт после деплоя Ф7а; идемпотентно (по `passwordHash=null`) |
+
+**Порядок безопасного выката Ф7а:** миграция схемы (nullable-поля) → деплой кода с паролями + fallback AUTH-19 → разовая рассылка set-password → (опц.) закрытие старого magic-link-входа. На всё время у существующих юзеров есть путь входа через reset-ссылку.
