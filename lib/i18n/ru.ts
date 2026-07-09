@@ -10,6 +10,7 @@ export const ru = {
   home: {
     // legacy, удалить в T4 (используется текущей главной app/page.tsx до её переписывания)
     coursesTitle: 'Наши курсы',
+    // постоянный ключ (SITE-04): главная, лендинг, /register, Header из T3
     toCabinet: 'В кабинет',
 
     // CRAT — бриф §7, §12
