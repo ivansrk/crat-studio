@@ -1,0 +1,9 @@
+import type { MetadataRoute } from 'next'
+
+export default function robots(): MetadataRoute.Robots {
+  const base = process.env.APP_URL ?? 'http://localhost:3000'
+  return {
+    rules: [{ userAgent: '*', allow: '/', disallow: ['/app', '/admin', '/auth/', '/login', '/api/', '/content-assets/', '/unsubscribe/'] }],
+    sitemap: `${base}/sitemap.xml`,
+  }
+}

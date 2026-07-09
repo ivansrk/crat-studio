@@ -1,8 +1,15 @@
+import type { Metadata } from 'next'
 import Link from 'next/link'
 import { getContent } from '@/lib/content'
 import { currentUser } from '@/lib/auth/current-user'
 import { SignupForm } from '@/components/signup-form'
 import { t } from '@/lib/i18n'
+
+export const metadata: Metadata = {
+  title: t.seo.landingTitle,
+  description: t.seo.landingDescription,
+  alternates: { canonical: '/ai-basics' },
+}
 
 export default async function Landing({ searchParams }: { searchParams: Promise<{ signup?: string }> }) {
   const { signup } = await searchParams
