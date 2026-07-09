@@ -11,6 +11,7 @@ export default async function Landing({ searchParams }: { searchParams: Promise<
   return (
     <main>
       <h1>{course.title}</h1>
+      <h2>{t.landing.forWhomTitle}</h2>
       <p>{t.landing.forWhom}</p>
       {user
         ? <p><Link className="mdx-download" href="/app">{t.home.toCabinet}</Link></p>

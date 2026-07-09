@@ -1,11 +1,12 @@
 import { registerAction } from '@/app/actions/register'
 import { t } from '@/lib/i18n'
 
-export function SignupForm({ notice }: { notice?: 'invalid' | 'rate' }) {
+export function SignupForm({ notice, returnTo }: { notice?: 'invalid' | 'rate'; returnTo?: string }) {
   return (
     <form id="signup" action={registerAction} className="signup-form">
       <h2>{t.landing.signupTitle}</h2>
       <p>{t.landing.signupNote}</p>
+      {returnTo && <input type="hidden" name="returnTo" value={returnTo} />}
       {notice && <p role="alert" className="form-alert">{notice === 'rate' ? t.landing.rate : t.landing.invalid}</p>}
       <label>{t.landing.firstName}<input name="firstName" required autoComplete="given-name" /></label>
       <label>{t.landing.lastName}<input name="lastName" required autoComplete="family-name" /></label>
