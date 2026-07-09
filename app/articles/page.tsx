@@ -32,9 +32,9 @@ export default function ArticlesPage() {
             {articles.length === 0 ? (
               <p className="crat-muted">{t.articles.empty}</p>
             ) : (
-              <div className="crat-grid articles-grid">
+              <div className="crat-grid">
                 {articles.map(a => (
-                  <article key={a.meta.slug} className="crat-card article-card">
+                  <article key={a.meta.slug} className="crat-card">
                     <Link href={`/articles/${a.meta.slug}`}>
                       <h2>{a.meta.title}</h2>
                     </Link>

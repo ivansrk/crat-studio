@@ -210,7 +210,13 @@ export const ru = {
     doneTitle: 'Повторение пройдено!',
   },
   callout: { idea: 'Совет', warning: 'Внимание', example: 'Пример' },
-  health: { ok: 'ok', contentValid: 'контент валиден', contentErrors: 'ошибки контента' },
+  health: {
+    ok: 'ok',
+    contentValid: 'контент валиден',
+    contentErrors: 'ошибки контента',
+    articlesLabel: 'Статьи',
+    articleErrorsWord: 'ошибок',
+  },
   auth: {
     kicker: 'Вход в кабинет',
     title: 'Вход',
