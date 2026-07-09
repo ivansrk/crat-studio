@@ -1,0 +1,13 @@
+/* CAB-01: полоса прогресса с фигуркой на «горизонте» — семантический задел под арт Ф5. */
+.progress-track {
+  position: relative;
+  height: 2.2rem;
+  border-bottom: 2px solid color-mix(in srgb, var(--paper) 30%, transparent);
+  margin: 1rem 0 2rem;
+}
+.progress-figure {
+  position: absolute;
+  bottom: 0;
+  transition: left .6s ease;
+  font-size: 1.6rem;
+}

@@ -4,6 +4,7 @@
 @import '../components/site.css';
 @import '../components/admin.css';
 @import '../components/quiz.css';
+@import '../components/cabinet.css';
 
 * { box-sizing: border-box; }
 html { font-size: var(--fs-base); }

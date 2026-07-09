@@ -62,6 +62,14 @@ export const ru = {
     scoreLabel: 'Результат',
     backToLesson: 'Вернуться к уроку',
   },
+  cabinet: {
+    noAccess: 'Доступ к курсу выдаёт администратор — мы напишем вам, когда всё будет готово.',
+    progressLabel: 'уроков пройдено',
+    progressAria: 'Прогресс по курсу',
+    statusDone: 'пройден',
+    statusInProgress: 'в процессе',
+    statusNotStarted: 'не начат',
+  },
   callout: { idea: 'Совет', warning: 'Внимание', example: 'Пример' },
   health: { ok: 'ok', contentValid: 'контент валиден', contentErrors: 'ошибки контента' },
   auth: {
