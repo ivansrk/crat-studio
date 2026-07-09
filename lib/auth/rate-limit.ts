@@ -20,5 +20,6 @@ const g = globalThis as unknown as { __rl?: Record<string, RateLimiter> }
 g.__rl ??= {
   registration: new RateLimiter(5, 60 * 60 * 1000), // REG-07: 5/час/IP
   magicLink: new RateLimiter(3, 15 * 60 * 1000),    // AUTH-08: 3/15мин/email
+  magicLinkIp: new RateLimiter(10, 15 * 60 * 1000), // SEC-03: 10/15мин/IP — против перебора многих email
 }
 export const limiters = g.__rl

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { RateLimiter } from './rate-limit'
+import { RateLimiter, limiters } from './rate-limit'
 
 describe('RateLimiter', () => {
   it('пускает limit попыток в окне и режет следующую', () => {
@@ -25,5 +25,14 @@ describe('RateLimiter', () => {
     const rl = new RateLimiter(1, 1000, 100)
     for (let i = 0; i < 200; i++) rl.allow(`k${i}`, i)
     expect(rl.size).toBeLessThanOrEqual(100)
+  })
+})
+
+describe('limiters', () => {
+  it('magicLinkIp существует с лимитом 10 (SEC-03, ревью T8)', () => {
+    const key = 'mlip:test-limit-check'
+    const t = 5_000_000
+    for (let i = 0; i < 10; i++) expect(limiters.magicLinkIp.allow(key, t + i)).toBe(true)
+    expect(limiters.magicLinkIp.allow(key, t + 10)).toBe(false)
   })
 })
