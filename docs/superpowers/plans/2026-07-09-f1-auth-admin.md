@@ -1015,28 +1015,28 @@ export default async function Registrations() {
 - Create: `app/admin/emails/page.tsx`, `lib/admin/resend-email.ts`
 - Modify: `app/actions/admin.ts`
 
-- [ ] **Step 1: `lib/admin/resend-email.ts`** (переотправка = НОВАЯ запись в email_log — MAIL-05):
+- [ ] **Step 1: `lib/admin/resend-email.ts`** (переотправка = НОВАЯ запись в email_log — MAIL-05; и НОВЫЙ токен — D-028: сырых токенов в payload нет, свежая ссылка полезнее истёкшей):
 
 ```ts
 import { db } from '@/lib/db'
 import { sendEmail } from '@/lib/email'
 import { renderEmail } from '@/lib/email/templates'
+import { mintLoginUrl } from '@/lib/auth/magic-link' // хелпер из T8-фикса D-028
 import { t } from '@/lib/i18n'
 
 export async function resendFromLog(emailLogId: string): Promise<'sent' | 'not_found'> {
   const log = await db.emailLog.findUnique({ where: { id: emailLogId } })
   if (!log) return 'not_found'
-  const payload = log.payload as { url?: string }
+  const url = await mintLoginUrl(log.toEmail) // D-028: всегда свежий токен
   const body = log.type === 'MAGIC_LINK' ? t.email.magicLinkBody : t.email.accessBody
   await sendEmail({
     to: log.toEmail, userId: log.userId, type: log.type, subject: log.subject,
-    html: renderEmail({ body, buttonText: t.email.magicLinkButton, buttonUrl: payload.url }),
-    payload: log.payload as object,
+    html: renderEmail({ body, buttonText: t.email.magicLinkButton, buttonUrl: url }),
+    payload: {},
   })
   return 'sent'
 }
 ```
-Нюанс: у MAGIC_LINK/ACCESS_GRANTED в payload лежит url со старым токеном — он мог истечь (15 мин). Это НОРМАЛЬНО для ручной переотправки «письмо не дошло» в первые минуты; если истёк — студент получит «ссылка устарела» с кнопкой запроса новой. Усложнять перевыпуском токена — YAGNI, спека требует переотправку письма as-is (ADM-08).
 
 - [ ] **Step 2: action** в `app/actions/admin.ts`:
 
