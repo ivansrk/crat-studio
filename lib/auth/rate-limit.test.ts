@@ -26,6 +26,21 @@ describe('RateLimiter', () => {
     for (let i = 0; i < 200; i++) rl.allow(`k${i}`, i)
     expect(rl.size).toBeLessThanOrEqual(100)
   })
+  it('reset(key) сбрасывает счётчик — следующая попытка снова разрешена', () => {
+    const rl = new RateLimiter(1, 60_000)
+    expect(rl.allow('k', 0)).toBe(true)
+    expect(rl.allow('k', 1)).toBe(false)
+    rl.reset('k')
+    expect(rl.allow('k', 2)).toBe(true)
+  })
+  it('reset(key) не трогает другие ключи', () => {
+    const rl = new RateLimiter(1, 60_000)
+    rl.allow('a', 0)
+    rl.allow('b', 0)
+    rl.reset('a')
+    expect(rl.allow('a', 1)).toBe(true)
+    expect(rl.allow('b', 1)).toBe(false)
+  })
 })
 
 describe('limiters', () => {
@@ -34,5 +49,17 @@ describe('limiters', () => {
     const t = 5_000_000
     for (let i = 0; i < 10; i++) expect(limiters.magicLinkIp.allow(key, t + i)).toBe(true)
     expect(limiters.magicLinkIp.allow(key, t + 10)).toBe(false)
+  })
+  it('loginEmail существует с лимитом 10/15мин (AUTH-20)', () => {
+    const key = 'le:test-limit-check'
+    const t = 6_000_000
+    for (let i = 0; i < 10; i++) expect(limiters.loginEmail.allow(key, t + i)).toBe(true)
+    expect(limiters.loginEmail.allow(key, t + 10)).toBe(false)
+  })
+  it('loginIp существует с лимитом 20/15мин (AUTH-20)', () => {
+    const key = 'lip:test-limit-check'
+    const t = 7_000_000
+    for (let i = 0; i < 20; i++) expect(limiters.loginIp.allow(key, t + i)).toBe(true)
+    expect(limiters.loginIp.allow(key, t + 20)).toBe(false)
   })
 })

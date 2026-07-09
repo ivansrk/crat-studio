@@ -12,6 +12,8 @@ export class RateLimiter {
     if (this.hits.size > this.maxKeys) this.hits.delete(this.hits.keys().next().value!)
     return true
   }
+  /** Сбрасывает счётчик ключа (например, после успешного входа — AUTH-20). */
+  reset(key: string): void { this.hits.delete(key) }
   get size() { return this.hits.size }
 }
 
@@ -21,5 +23,7 @@ g.__rl ??= {
   registration: new RateLimiter(5, 60 * 60 * 1000), // REG-07: 5/час/IP
   magicLink: new RateLimiter(3, 15 * 60 * 1000),    // AUTH-08: 3/15мин/email
   magicLinkIp: new RateLimiter(10, 15 * 60 * 1000), // SEC-03: 10/15мин/IP — против перебора многих email
+  loginEmail: new RateLimiter(10, 15 * 60 * 1000),  // AUTH-20: 10/15мин/email — перебор пароля
+  loginIp: new RateLimiter(20, 15 * 60 * 1000),     // AUTH-20: 20/15мин/IP — перебор многих email
 }
 export const limiters = g.__rl
