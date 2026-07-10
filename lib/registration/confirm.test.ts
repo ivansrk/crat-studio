@@ -16,10 +16,10 @@ import type { PrismaClient, RegistrationStatus, InviteLink } from '@/lib/generat
 
 type FakeReg = {
   id: string; email: string; firstName: string; lastName: string; phone: string | null
-  telegram: string | null; status: RegistrationStatus; inviteLinkId: string | null
+  telegram: string | null; whatsapp: string | null; status: RegistrationStatus; inviteLinkId: string | null
   wantsNewsletter: boolean; confirmedAt: Date | null
 }
-type FakeUser = { id: string; email: string; firstName: string; lastName: string; phone: string | null; telegram: string | null; passwordHash: string | null }
+type FakeUser = { id: string; email: string; firstName: string; lastName: string; phone: string | null; telegram: string | null; whatsapp: string | null; passwordHash: string | null }
 type FakeConsent = { id: string; email: string; userId: string | null; type: string; granted: boolean; source: string; createdAt: Date }
 
 const RAW = 'raw-confirm-token'
@@ -27,7 +27,7 @@ const RAW = 'raw-confirm-token'
 function makeReg(overrides: Partial<FakeReg> = {}): FakeReg {
   return {
     id: 'reg-1', email: 'a@b.c', firstName: 'Иван', lastName: 'Петров', phone: '+1',
-    telegram: null, status: 'PENDING_OPT_IN' as RegistrationStatus, inviteLinkId: null,
+    telegram: null, whatsapp: null, status: 'PENDING_OPT_IN' as RegistrationStatus, inviteLinkId: null,
     wantsNewsletter: false, confirmedAt: null,
     ...overrides,
   }
@@ -249,6 +249,16 @@ describe('confirmRegistration — путь по инвайту, авто-выд�
     expect(call.payload).toEqual({}) // D-028
   })
 
+  it('M1: whatsapp из заявки прокидывается в User при авто-выдаче по инвайту', async () => {
+    const invite = makeInvite({ id: 'inv-9' })
+    const reg = makeReg({ inviteLinkId: 'inv-9', whatsapp: '+79991234567' })
+    const { client, store } = fakeClient({ reg, invite })
+
+    await confirmRegistration(RAW, client)
+
+    expect(store.user?.whatsapp).toBe('+79991234567')
+  })
+
   it('инвайт исчерпан на момент подтверждения (E-INV2) → invite_gone, Consent записаны, Registration = CONFIRMED (не ENROLLED)', async () => {
     const invite = makeInvite({ id: 'inv-9', maxRegistrations: 1, registrationsCount: 1 })
     const reg = makeReg({ inviteLinkId: 'inv-9', wantsNewsletter: true })
@@ -285,7 +295,7 @@ describe('confirmRegistration — путь по инвайту, авто-выд�
   it('юзер с email уже существует и имеет пароль (идемпотентность createUserWithPassword) → plainPassword null, письмо без пароля, ссылка reset', async () => {
     const invite = makeInvite({ id: 'inv-9' })
     const reg = makeReg({ inviteLinkId: 'inv-9' })
-    const existingUser = { id: 'u-existing', email: reg.email, firstName: reg.firstName, lastName: reg.lastName, phone: reg.phone, telegram: reg.telegram, passwordHash: 'already-set' }
+    const existingUser = { id: 'u-existing', email: reg.email, firstName: reg.firstName, lastName: reg.lastName, phone: reg.phone, telegram: reg.telegram, whatsapp: reg.whatsapp, passwordHash: 'already-set' }
     const { client, store } = fakeClient({ reg, invite, user: existingUser })
 
     const result = await confirmRegistration(RAW, client)

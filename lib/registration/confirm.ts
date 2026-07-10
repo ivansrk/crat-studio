@@ -58,7 +58,7 @@ export async function confirmRegistration(rawToken: string, client: ConfirmClien
     try {
       provisioned = await client.$transaction(async tx => {
         const p = await createUserWithPassword(
-          { email: reg.email, firstName: reg.firstName, lastName: reg.lastName, phone: reg.phone, telegram: reg.telegram },
+          { email: reg.email, firstName: reg.firstName, lastName: reg.lastName, phone: reg.phone, telegram: reg.telegram, whatsapp: reg.whatsapp },
           tx,
         )
         await tx.consent.updateMany({ where: { email: reg.email, userId: null }, data: { userId: p.user.id } }) // F2, тот же приём, что grant-access

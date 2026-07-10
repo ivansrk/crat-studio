@@ -24,7 +24,7 @@ export async function grantAccess(registrationId: string, adminUserId: string): 
   try {
     const result = await db.$transaction(async tx => {
       const provisioned = await createUserWithPassword(
-        { email: reg.email, firstName: reg.firstName, lastName: reg.lastName, phone: reg.phone, telegram: reg.telegram },
+        { email: reg.email, firstName: reg.firstName, lastName: reg.lastName, phone: reg.phone, telegram: reg.telegram, whatsapp: reg.whatsapp },
         tx,
       )
       await tx.consent.updateMany({ where: { email: reg.email, userId: null }, data: { userId: provisioned.user.id } }) // F2: consents получают userId

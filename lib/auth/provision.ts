@@ -8,6 +8,7 @@ export type ProvisionInput = {
   lastName: string
   phone?: string | null
   telegram?: string | null
+  whatsapp?: string | null
 }
 
 export type ProvisionResult = {
@@ -46,6 +47,7 @@ export async function createUserWithPassword(
           lastName: input.lastName,
           phone: input.phone,
           telegram: input.telegram,
+          whatsapp: input.whatsapp,
           passwordHash,
         },
       })
