@@ -278,6 +278,13 @@
   justify-content: space-between;
   gap: .4rem 1rem;
 }
+/* T6 дизайн-аудита (Пакет Б.9): ссылка урока — из сплошного красного в paper +
+   underline-reveal красным (reveal-line-паттерн из crat.css, уже на Link) —
+   красный снова свет/акцент, а не заливка обычного текстового элемента списка.
+   Статусы ниже (lesson-status-*) остаются в своих цветах — не трогаем. */
+.module-lesson-row a {
+  color: var(--paper);
+}
 .module-lesson-status {
   font-family: var(--font-mono), monospace;
   text-transform: uppercase;

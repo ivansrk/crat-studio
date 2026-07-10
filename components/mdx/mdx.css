@@ -5,10 +5,15 @@
 
 /* impeccable P2-2а: side-stripe (border-left) — забаненный AI-slop паттерн (детектор
    критики 2026-07-10, mdx.css:6). Фоновый тинт + полная тонкая рамка вместо полосы,
-   радиус симметричный. Варианты — свои тинты из существующих токенов. */
-.mdx-callout { border: 1px solid var(--line-red); background: color-mix(in srgb, var(--neon) 9%, transparent); padding: 1rem 1.25rem; border-radius: 10px; margin: 1.5rem 0; }
-.mdx-callout-warning { border-color: color-mix(in srgb, var(--lavender) 48%, transparent); background: color-mix(in srgb, var(--lavender) 9%, transparent); }
-.mdx-callout-example { border-color: color-mix(in srgb, var(--mint) 48%, transparent); background: color-mix(in srgb, var(--mint) 9%, transparent); }
+   радиус симметричный. Варианты — свои тинты из существующих токенов.
+   T6 дизайн-аудита (Пакет Б.11): семантика цвета — warning = красный (тревога,
+   единственный тип, где уместен «свет» неона), idea = мята (позитив/инсайт),
+   example = лаванда (метаданные, как .crat-tag). Базовый .mdx-callout — нейтральный
+   paper-тинт на случай типа без явного правила ниже. */
+.mdx-callout { border: 1px solid var(--line-soft); background: color-mix(in srgb, var(--paper) 4%, transparent); padding: 1rem 1.25rem; border-radius: 10px; margin: 1.5rem 0; }
+.mdx-callout-warning { border-color: var(--line-red); background: color-mix(in srgb, var(--neon) 9%, transparent); }
+.mdx-callout-idea { border-color: color-mix(in srgb, var(--mint) 48%, transparent); background: color-mix(in srgb, var(--mint) 9%, transparent); }
+.mdx-callout-example { border-color: color-mix(in srgb, var(--lavender) 48%, transparent); background: color-mix(in srgb, var(--lavender) 9%, transparent); }
 
 /* T5 дизайн-аудита: mono-лейбл вместо эмодзи-иконки (Callout.tsx) — цвет = цвет
    рамки своего типа, скобки как у .crat-tag (lib/design/crat.css), но не сам
@@ -23,9 +28,9 @@
 }
 .mdx-callout-label::before { content: '['; }
 .mdx-callout-label::after { content: ']'; }
-.mdx-callout-idea .mdx-callout-label { color: var(--neon); }
-.mdx-callout-warning .mdx-callout-label { color: var(--lavender); }
-.mdx-callout-example .mdx-callout-label { color: var(--mint); }
+.mdx-callout-idea .mdx-callout-label { color: var(--mint); }
+.mdx-callout-warning .mdx-callout-label { color: var(--neon); }
+.mdx-callout-example .mdx-callout-label { color: var(--lavender); }
 
 .mdx-video { position: relative; aspect-ratio: 16 / 9; }
 .mdx-video iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; border-radius: 8px; }
