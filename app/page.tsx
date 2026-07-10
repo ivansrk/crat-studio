@@ -52,21 +52,18 @@ export default function Home() {
             <h2 className="crat-display">{t.home.directionsTitle}</h2>
             <div className="crat-grid direction-grid">
               <DirectionCard
-                num="01"
                 kicker={t.home.educationKicker}
                 title={t.home.educationTitle}
                 text={t.home.educationText}
                 image="/images/dir-education.webp"
               />
               <DirectionCard
-                num="02"
                 kicker={t.home.automationKicker}
                 title={t.home.automationTitle}
                 text={t.home.automationText}
                 image="/images/dir-automation.webp"
               />
               <DirectionCard
-                num="03"
                 kicker={t.home.creativeKicker}
                 title={t.home.creativeTitle}
                 text={t.home.creativeText}

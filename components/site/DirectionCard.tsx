@@ -8,13 +8,11 @@ import Image from 'next/image'
  * Картинка декоративная (alt="") — весь смысл уже в тексте карточки.
  */
 export function DirectionCard({
-  num,
   kicker,
   title,
   text,
   image,
 }: {
-  num: string
   kicker: string
   title: string
   text: string
@@ -31,7 +29,9 @@ export function DirectionCard({
       />
       <span className="direction-card-scrim" aria-hidden="true" />
       <div className="direction-card-body">
-        <span className="direction-card-num" aria-hidden="true">{num}</span>
+        {/* impeccable P2-1б: номер карточки убран — порядок «Обучаем/Автоматизируем/
+            Создаём» не несёт смысла, нумерация была ярлычным рефлексом (критика 2026-07-10).
+            Номера у «Процесс»/«Команда» остаются — там семантика (шаг/досье). */}
         <span className="crat-kicker">{kicker}</span>
         <h3>{title}</h3>
         <p className="crat-muted">{text}</p>

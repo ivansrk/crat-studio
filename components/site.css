@@ -53,10 +53,37 @@
   flex-shrink: 0;
 }
 
-@media (max-width: 720px) {
+/* impeccable P1-2: шапка 245px на 360px съедала весь первый экран без действия.
+   ≤760px — компактная шапка: логотип меньше, mono-подпись направлений скрыта
+   (текст не теряется — та же строка озвучена в HeroVisual/HeroVisual-mark,
+   декоративный aria-hidden-блок скрывать можно без потери для скринридера
+   ЗА ИСКЛЮЧЕНИЕМ случаев, когда hero-visual сам скрыт — но на публичных
+   страницах он есть всегда рядом с header). Липкость шапки сохраняется. */
+@media (max-width: 760px) {
+  .site-brand-logo {
+    width: 56px;
+    height: 56px;
+  }
+  .site-brand-text {
+    display: none;
+  }
+  .site-header-inner {
+    padding-block: .3rem;
+    gap: .3rem 1rem;
+  }
+}
+
+/* impeccable P1-3: на 1440×900 верх primary hero-CTA был на 912px — ниже фолда,
+   первый экран без действия. Логотип чуть меньше (≥64px — «название» на самом
+   логотипе остаётся читаемым, решение Ивана 2026-07-10) и компактнее
+   header-паддинг — только на десктопе, планшет (768) не трогаем. */
+@media (min-width: 1024px) {
   .site-brand-logo {
     width: 72px;
     height: 72px;
+  }
+  .site-header-inner {
+    padding-block: .6rem;
   }
 }
 
@@ -76,6 +103,24 @@
      тач-таргет за пределы «схлопнутой» margin-ом строки, и без запаса ≥2×.7rem
      между строками боксы соседних ссылок накладываются (ревью Ф5-полировка). */
   gap: 1.5rem;
+}
+
+/* impeccable P1-2: на 360px nav — главный вклад в 245px шапки (2 строки по
+   ~54px). Компактнее тач-таргет (всё ещё ≥44px) + плотнее строка + меньший,
+   но безопасный row-gap (тот же принцип: gap ≥ удвоенный padding-block,
+   иначе паддинг-инфляция кликабельной зоны налезает на соседнюю строку —
+   см. историю дефектов в SKILL.md). Проверено измерением, накладок нет. */
+@media (max-width: 760px) {
+  /* скоуп на шапку: у футера свой .site-footer-legal с другим (уже безопасным)
+     gap — трогать его тут не нужно, задача только про высоту header. */
+  .site-header .crat-nav a {
+    padding-block: .6rem;
+    margin-block: -.6rem;
+    line-height: 1.25;
+  }
+  .site-header .site-nav {
+    gap: 1.35rem 1rem;
+  }
 }
 
 .site-footer {
@@ -191,8 +236,11 @@ main.crat-page {
   margin-bottom: 1rem;
 }
 
+/* impeccable P2-2б: --maxw-text (46rem) на самом кегле секций даёт 92–117 символов
+   в строке (детектор критики 2026-07-10) — глобальный токен не трогаем, локально
+   ограничиваем сам вводный абзац ~65ch. */
 .section-intro {
-  max-width: var(--maxw-text);
+  max-width: 65ch;
   margin-top: .75rem;
 }
 
@@ -247,6 +295,19 @@ main.crat-page {
 .hero-copy {
   display: grid;
   gap: 1.1rem;
+}
+
+/* impeccable P1-3: hero — самая тяжёлая секция (display-заголовок в 3–4 строки),
+   на десктопе ей не нужен тот же воздух, что «MUBI-кадрам» ниже (crat.css,
+   min-width:1024 .crat-section) — иначе primary CTA уезжает за фолд на 1440×900.
+   Только верх/низ hero и внутренний gap; сам заголовок не мельчим (бриф §5). */
+@media (min-width: 1024px) {
+  .hero-section {
+    padding-block: clamp(1.75rem, 4vh, 3rem);
+  }
+  .hero-copy {
+    gap: .5rem;
+  }
 }
 
 .hero-subtitle {
@@ -375,10 +436,11 @@ main.crat-page {
   text-shadow: 0 1px 8px rgba(0, 0, 0, .85);
 }
 
-.direction-card-num {
-  font-family: var(--font-mono), monospace;
-  color: var(--paper-muted);
-  font-size: var(--fs-small);
+/* impeccable P2-2в: kicker поверх фото — --paper-muted (замерено ≈3.6:1 у соседнего
+   номера, критика 2026-07-10) заменён на --paper (светлее) + тень выше держат
+   контраст ≥4.5:1 на любом участке фото под скримом (минимум 35% затемнения). */
+.direction-card-body .crat-kicker {
+  color: var(--paper);
 }
 
 /* курс в фокусе */
@@ -549,6 +611,31 @@ main.crat-page {
   flex: none;
 }
 
+/* ---------- «Формат и условия» /ai-basics (импекабл, блок утверждён основателем) ----------
+   Тот же компактный приём, что .exp-facts на главной (mono-строка + красная линия) —
+   не карточки-коробки 3×N (анти-дефолт). */
+.format-facts {
+  list-style: none;
+  margin: 2rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: 1rem;
+}
+.format-fact {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  font-family: var(--font-mono), monospace;
+  font-size: var(--fs-small);
+  color: var(--paper-muted);
+}
+.format-fact .crat-red-line {
+  flex: none;
+}
+.format-price-note {
+  margin-top: 1.5rem;
+}
+
 /* ---------- лендинг /ai-basics (Ф5 Task 5, бриф §8) ---------- */
 
 /* main.crat-page: та же широкая обвязка, что у главной (main.crat-home) —
@@ -688,6 +775,8 @@ main.crat-page {
   margin: 0;
   flex: 1 1 260px;
   min-width: 0;
+  /* impeccable P2-2б: та же локальная граница ~65ch, что у .section-intro (--maxw-text не трогаем). */
+  max-width: 65ch;
 }
 /* тач-таргет ≥44px на инлайн-ссылке «Подробнее», тот же приём, что у .crat-nav a. */
 .cookie-banner-text a {
