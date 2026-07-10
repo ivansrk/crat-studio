@@ -27,5 +27,6 @@ g.__rl ??= {
   // живёт на своих лимитерах с теми же параметрами.
   resetEmail: new RateLimiter(3, 15 * 60 * 1000),   // AUTH-08-аналог: 3/15мин/email
   resetIp: new RateLimiter(10, 15 * 60 * 1000),     // SEC-03-аналог: 10/15мин/IP
+  consultIp: new RateLimiter(5, 60 * 60 * 1000),    // CONS-05: 5/час/IP — заявки на консультацию
 }
 export const limiters = g.__rl

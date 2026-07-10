@@ -187,6 +187,8 @@ export default function Home() {
             <div className="hero-cta-row">
               <Link href="/ai-basics#signup" className="crat-button primary">{t.home.contactCourseCta}</Link>
               <a href={`mailto:${t.footer.contactEmail}`} className="crat-button secondary">{t.home.contactProjectCta}</a>
+              {/* Ф7б Task 8, CONS-01: вторая точка входа на консультацию по внедрению ИИ, не меняя существующие кнопки. */}
+              <Link href="/consult" className="crat-button secondary">{t.home.contactConsultCta}</Link>
             </div>
           </div>
         </section>

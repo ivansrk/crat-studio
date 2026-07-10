@@ -136,6 +136,15 @@ export default async function Cabinet() {
             <Link className="crat-button" href="/app/trainers">{t.trainers.open}</Link>
           </div>
 
+          {/* Ф7б Task 8, MC-03/CONS-01: блок-приглашение на консультацию по внедрению ИИ. */}
+          <div className="crat-card cabinet-project">
+            <div>
+              <h2 className="crat-kicker">{t.consult.cabinetTitle}</h2>
+              <p className="crat-muted">{t.consult.cabinetOfferText}</p>
+            </div>
+            <Link className="crat-button" href="/consult">{t.consult.cabinetCta}</Link>
+          </div>
+
           {/* T7: блок сертификата — только при выданном VALID (CERT-01/05/06). */}
           {certificate && (
             <div className="crat-card cabinet-cert">

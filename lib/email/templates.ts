@@ -7,6 +7,16 @@ export function fillPlaceholders(template: string, values: Record<string, string
   return Object.entries(values).reduce((acc, [key, val]) => acc.split(`{{${key}}}`).join(val), template)
 }
 
+/** CONS-03: письмо админам о новой заявке на консультацию — та же плейсхолдер-подстановка,
+ *  что и у WELCOME (fillPlaceholders): данные заявки живут в HTML-теле, а не готовым текстом
+ *  в ru.ts. Направление (topic) опционально — прочерк, если не выбрано. */
+export function renderConsultationEmail(input: { name: string; contact: string; topic: string | null; message: string }): string {
+  const body = fillPlaceholders(t.email.consultationBody, {
+    name: input.name, contact: input.contact, topic: input.topic ?? '—', message: input.message,
+  })
+  return renderEmail({ body })
+}
+
 export function renderEmail(opts: { body: string; buttonText?: string; buttonUrl?: string; unsubscribeUrl?: string }): string {
   const btn = opts.buttonUrl && opts.buttonText
     ? `<p style="margin:28px 0"><a href="${opts.buttonUrl}" style="background:#FF4B3A;color:#F2E9DC;padding:14px 28px;border-radius:8px;text-decoration:none;font-size:18px">${opts.buttonText}</a></p>`
