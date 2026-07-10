@@ -1,9 +1,34 @@
 import { syncAdmins } from '@/lib/auth/sync-admins'
 import { db } from '@/lib/db'
 import { mintResetToken } from '@/lib/auth/reset'
+import { hashPassword } from '@/lib/auth/password'
 import { warsawDayStart } from '@/lib/trainers/limits'
 
 const SEED = (n: string) => `${n}@seed.crat.example`
+
+// T8 (Ф7а, D-031): known-пароль для всех seed-юзеров (студент/дипломант/админы из ADMIN_EMAILS) —
+// Иван и разработчики должны логиниться в кабинет/админку локально/на стенде без похода в письма.
+// Не секрет продакшена: seed трогает только *@seed.crat.example + ADMIN_EMAILS, никогда реальных
+// студентов (см. docs/seed.md). Хэш считаем один раз (bcrypt cost 12, D-032, — медленно, но на
+// 3-5 seed-юзеров это доли секунды) и переиспользуем строку хэша для всех — это seed-данные, а
+// не боевая учётка, отдельная соль на юзера тут ничего не защищает.
+export const SEED_PASSWORD = 'seed-pass-2026'
+let seedPasswordHashPromise: Promise<string> | null = null
+function seedPasswordHash(): Promise<string> {
+  seedPasswordHashPromise ??= hashPassword(SEED_PASSWORD)
+  return seedPasswordHashPromise
+}
+
+/** Идемпотентно проставляет known-пароль (SEED_PASSWORD) юзеру по email — update, не upsert
+ *  (юзер уже должен существовать, создаётся выше по коду). Повторный `npm run seed` ВСЕГДА
+ *  перезаписывает passwordHash обратно на known-значение — даже если пароль поменяли руками
+ *  через reset-флоу при ручном тестировании, seed остаётся надёжной точкой возврата. Молчит,
+ *  если юзера с таким email нет (updateMany.count===0) — на случай вызова до создания записи. */
+async function setSeedPassword(email: string): Promise<void> {
+  const passwordHash = await seedPasswordHash()
+  const updated = await db.user.updateMany({ where: { email }, data: { passwordHash } })
+  if (updated.count > 0) console.log(`[seed] вход: ${email} / пароль: ${SEED_PASSWORD}`)
+}
 
 /** Отклонение от кода плана: консенты в seed оборачиваем в проверку «уже есть записи для email»,
  *  чтобы повторные прогоны не раздували append-only журнал (D-014) до бесконечности. */
@@ -63,24 +88,18 @@ async function seedF1() {
     { type: 'NEWSLETTER', granted: true, userId: student.id },
   ])
 
-  // T6 (Ф7а, D-031): magic-link-вход снят — печатаем reset-ссылки («задать пароль») в stdout
-  // (docs/seed.md «Вход студентом без почты») вместо ссылок входа. Resend не нужен.
-  for (const email of [
-    SEED('student'),
-    ...(process.env.ADMIN_EMAILS ?? '').split(',').map((e) => e.trim().toLowerCase()).filter(Boolean),
-  ]) {
-    await printResetLink(email, 'v1')
-  }
+  // T8 (Ф7а, D-031): вход по email+паролю — проставляем known-пароль вместо magic-link-ссылки.
+  await setSeedPassword(SEED('student'))
 }
 
-/** Общий механизм печати reset-ссылки (переиспользуется seedF1/seedF3, docs/seed.md «Вход без почты»).
- *  Отклонение от Task 6 (не переделывать логику seed — это Task 8): seed-юзеры создаются БЕЗ
- *  passwordHash (как и раньше), поэтому смысл ссылки для них сейчас — «задать пароль», не «войти». */
+/** T8: одна демонстрационная reset-ссылка (не «вход по умолчанию» — тот теперь через
+ *  SEED_PASSWORD выше) — живой пример reset-флоу (F12/AUTH-16/17) для ручной проверки без
+ *  настоящего Resend. Печатается один раз из main(), не на каждого seed-юзера. */
 async function printResetLink(email: string, version: string) {
   const user = await db.user.findUnique({ where: { email } })
   if (!user) return
   const { url } = await mintResetToken(email)
-  console.log(`[seed ${version}] задать пароль для ${email}: ${url}`)
+  console.log(`[seed ${version}] demo reset-ссылка для ${email}: ${url}`)
 }
 
 const COURSE = 'ai-basics'
@@ -279,7 +298,7 @@ async function seedF3() {
     },
   })
 
-  await printResetLink(SEED('diplomant'), 'v3')
+  await setSeedPassword(SEED('diplomant'))
 }
 
 /** Ф4: у student@ — бэкдейт урока 1.1 (пройден ≥7 дней назад, LES-13) и dueAt его
@@ -321,6 +340,7 @@ async function seedF4() {
 async function main() {
   const admins = await syncAdmins()
   console.log(`[seed v0] админы синхронизированы: ${admins.join(', ') || '(ADMIN_EMAILS пуст)'}`)
+  for (const email of admins) await setSeedPassword(email) // T8: known-пароль и админам тоже
   await seedF1()
   console.log('[seed v1] заявки/студент/ссылки готовы')
   await seedF2()
@@ -329,6 +349,7 @@ async function main() {
   console.log('[seed v3] дипломант 12/12 + SUBMITTED, needs_changes студенту готовы')
   await seedF4()
   console.log('[seed v4] повторение к сдаче, тренажёр 19/20')
+  await printResetLink(SEED('student'), 'reset-demo') // T8: живой пример reset-флоу, см. комментарий у функции
 }
 
 main()
