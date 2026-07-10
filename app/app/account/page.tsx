@@ -25,6 +25,8 @@ export default async function AccountPage({ searchParams }: {
       <section className="crat-section">
         <div className="crat-shell">
           <h1 className="crat-display">{t.auth.accountTitle}</h1>
+          {/* T5 дизайн-аудита (П8): собственный email виден на странице аккаунта. */}
+          <p className="crat-muted account-email">{t.auth.accountEmailLabel}: {user.email}</p>
 
           {done && <div className="crat-card accepted-card"><p>{t.auth.passwordChanged}</p></div>}
           {sent && <div className="crat-card accepted-card"><p>{t.auth.sentBody}</p></div>}
@@ -33,7 +35,11 @@ export default async function AccountPage({ searchParams }: {
           {user.passwordHash ? (
             <form action={changePasswordAction} className="signup-form crat-card">
               <label>{t.auth.currentPasswordLabel}<input name="currentPassword" type="password" required autoComplete="current-password" /></label>
-              <label>{t.auth.newPasswordLabel}<input name="newPassword" type="password" required autoComplete="new-password" minLength={8} /></label>
+              <label>
+                {t.auth.newPasswordLabel}
+                <input name="newPassword" type="password" required autoComplete="new-password" minLength={8} />
+                <span className="crat-muted field-hint">{t.auth.minPasswordHint}</span>
+              </label>
               <label>{t.auth.passwordConfirmLabel}<input name="newPasswordConfirm" type="password" required autoComplete="new-password" minLength={8} /></label>
               <button type="submit" className="crat-button primary">{t.auth.changePasswordSubmit}</button>
             </form>

@@ -52,10 +52,16 @@ export default async function ResetTokenPage({ params, searchParams }: {
   const state = await peekResetToken(token)
 
   if (state.status !== 'ok') {
+    // T5 дизайн-аудита (П8): три разных статуса — три разных заголовка. Раньше 'invalid'
+    // (несуществующий токен/не тот purpose) молча показывал usedTitle («уже использована») —
+    // неправда для ссылки, которой вообще не было; теперь у него свой текст.
+    const title = state.status === 'expired' ? t.auth.expiredTitle
+      : state.status === 'used' ? t.auth.usedTitle
+        : t.auth.invalidTitle
     return (
       <Frame>
         <div className="crat-card accepted-card">
-          <h1 className="crat-display">{state.status === 'expired' ? t.auth.expiredTitle : t.auth.usedTitle}</h1>
+          <h1 className="crat-display">{title}</h1>
           <p className="crat-muted">{t.auth.invalidBody}</p>
           <Link className="crat-button primary" href="/reset">{t.auth.requestAgain}</Link>
         </div>
