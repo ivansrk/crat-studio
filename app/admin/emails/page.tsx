@@ -17,42 +17,49 @@ export default async function Emails({ searchParams }: { searchParams: Promise<{
       {resend === 'unsupported' && <p role="alert" className="form-alert">{t.admin.emailUnsupported}</p>}
       {resend === 'cert_gone' && <p role="alert" className="form-alert">{t.admin.emailCertGone}</p>}
       {resend === 'send_failed' && <p role="alert" className="form-alert">{t.admin.emailSendFailed}</p>}
-      {logs.length === 0 ? <p>{t.admin.noData}</p> : (
-        <table className="admin-table">
-          <thead>
-          <tr>
-            <th>{t.admin.colDate}</th>
-            <th>{t.admin.colTo}</th>
-            <th>{t.admin.colType}</th>
-            <th>{t.admin.colStatus}</th>
-            <th>{t.admin.colError}</th>
-            <th>{t.admin.colActions}</th>
-          </tr>
-          </thead>
-          <tbody>
-          {logs.map(log => {
-            const stuck = isStaleQueued(log, now)
-            return (
-              <tr key={log.id}>
-                <td>{formatDateTime(log.createdAt)}</td>
-                <td>{log.toEmail}</td>
-                <td>{t.admin.emailType[log.type]}</td>
-                <td className={log.status === 'FAILED' || stuck ? 'form-alert' : undefined}>
-                  {log.status === 'QUEUED' ? (stuck ? t.admin.emailStuck : t.admin.emailQueued) : t.admin.emailStatus[log.status]}
-                  {log.attempts > 0 && ` (${log.attempts})`}
-                </td>
-                <td>{log.lastError ?? ''}</td>
-                <td>
-                  <form action={resendEmailAction}>
-                    <input type="hidden" name="emailLogId" value={log.id} />
-                    <button className="crat-button compact" type="submit">{t.admin.resend}</button>
-                  </form>
-                </td>
-              </tr>
-            )
-          })}
-          </tbody>
-        </table>
+      {logs.length === 0 ? (
+        <div className="crat-card">
+          <p>{t.admin.emailsEmptyTitle}</p>
+          <p className="crat-muted">{t.admin.emailsEmptyBody}</p>
+        </div>
+      ) : (
+        <div className="admin-table-wrap">
+          <table className="admin-table">
+            <thead>
+            <tr>
+              <th>{t.admin.colDate}</th>
+              <th>{t.admin.colTo}</th>
+              <th>{t.admin.colType}</th>
+              <th>{t.admin.colStatus}</th>
+              <th>{t.admin.colError}</th>
+              <th>{t.admin.colActions}</th>
+            </tr>
+            </thead>
+            <tbody>
+            {logs.map(log => {
+              const stuck = isStaleQueued(log, now)
+              return (
+                <tr key={log.id}>
+                  <td>{formatDateTime(log.createdAt)}</td>
+                  <td>{log.toEmail}</td>
+                  <td>{t.admin.emailType[log.type]}</td>
+                  <td className={log.status === 'FAILED' || stuck ? 'form-alert' : undefined}>
+                    {log.status === 'QUEUED' ? (stuck ? t.admin.emailStuck : t.admin.emailQueued) : t.admin.emailStatus[log.status]}
+                    {log.attempts > 0 && ` (${log.attempts})`}
+                  </td>
+                  <td>{log.lastError ?? ''}</td>
+                  <td>
+                    <form action={resendEmailAction}>
+                      <input type="hidden" name="emailLogId" value={log.id} />
+                      <button className="crat-button compact" type="submit">{t.admin.resend}</button>
+                    </form>
+                  </td>
+                </tr>
+              )
+            })}
+            </tbody>
+          </table>
+        </div>
       )}
     </main>
   )

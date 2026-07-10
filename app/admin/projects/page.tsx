@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { db } from '@/lib/db'
 import { formatDateTime } from '@/lib/i18n/format-date'
 import { reviewProjectAction } from '@/app/actions/admin'
@@ -54,6 +55,7 @@ export default async function AdminProjects({ searchParams }: { searchParams: Pr
               <h2>{sub.user.firstName} {sub.user.lastName}</h2>
               <p className="crat-muted">
                 {sub.user.email} · {sub.submittedAt ? formatDateTime(sub.submittedAt) : t.admin.notYet}
+                {' · '}<Link href={`/admin/students/${sub.userId}`}>{t.admin.studentLinkLabel}</Link>
               </p>
               {PROJECT_FIELDS.map(field => (
                 <p key={field}><strong>{FIELD_LABEL[field]}:</strong> {sub[field]}</p>

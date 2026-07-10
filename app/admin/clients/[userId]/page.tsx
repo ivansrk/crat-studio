@@ -32,7 +32,7 @@ export default async function ClientCard({
   const { updated, resync } = await searchParams
   const detail = await getClient(userId)
   if (!detail) notFound()
-  const { user, registration, consents, enrollments, certificate, subscribed } = detail
+  const { user, registration, consents, enrollments, certificate, consultations, subscribed } = detail
   const tc = t.admin.clients
 
   const updateBanner = updated ? UPDATE_BANNER[updated] : undefined
@@ -104,48 +104,52 @@ export default async function ClientCard({
 
       <h3>{tc.consentsSection}</h3>
       {consents.length === 0 ? <p className="crat-muted">{tc.noConsents}</p> : (
-        <table className="admin-table">
-          <thead>
-          <tr>
-            <th>{tc.colConsentType}</th>
-            <th>{tc.colConsentGranted}</th>
-            <th>{tc.colConsentSource}</th>
-            <th>{tc.colConsentDate}</th>
-          </tr>
-          </thead>
-          <tbody>
-          {consents.map(c => (
-            <tr key={c.id}>
-              <td>{tc.consentType[c.type]}</td>
-              <td>{c.granted ? tc.consentGranted : tc.consentRevoked}</td>
-              <td>{tc.consentSource[c.source]}</td>
-              <td>{formatDate(c.createdAt)}</td>
+        <div className="admin-table-wrap">
+          <table className="admin-table">
+            <thead>
+            <tr>
+              <th>{tc.colConsentType}</th>
+              <th>{tc.colConsentGranted}</th>
+              <th>{tc.colConsentSource}</th>
+              <th>{tc.colConsentDate}</th>
             </tr>
-          ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+            {consents.map(c => (
+              <tr key={c.id}>
+                <td>{tc.consentType[c.type]}</td>
+                <td>{c.granted ? tc.consentGranted : tc.consentRevoked}</td>
+                <td>{tc.consentSource[c.source]}</td>
+                <td>{formatDate(c.createdAt)}</td>
+              </tr>
+            ))}
+            </tbody>
+          </table>
+        </div>
       )}
 
       <h3>{tc.coursesSection}</h3>
       {enrollments.length === 0 ? <p className="crat-muted">{tc.noCourses}</p> : (
-        <table className="admin-table">
-          <thead>
-          <tr>
-            <th>{tc.colCourseSlug}</th>
-            <th>{tc.colCourseSource}</th>
-            <th>{tc.colCourseDate}</th>
-          </tr>
-          </thead>
-          <tbody>
-          {enrollments.map(e => (
-            <tr key={e.id}>
-              <td>{e.courseSlug}</td>
-              <td>{e.source}</td>
-              <td>{formatDate(e.createdAt)}</td>
+        <div className="admin-table-wrap">
+          <table className="admin-table">
+            <thead>
+            <tr>
+              <th>{tc.colCourseSlug}</th>
+              <th>{tc.colCourseSource}</th>
+              <th>{tc.colCourseDate}</th>
             </tr>
-          ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+            {enrollments.map(e => (
+              <tr key={e.id}>
+                <td>{e.courseSlug}</td>
+                <td>{e.source}</td>
+                <td>{formatDate(e.createdAt)}</td>
+              </tr>
+            ))}
+            </tbody>
+          </table>
+        </div>
       )}
       <p><Link className="crat-button compact" href={`/admin/students/${user.id}`}>{t.admin.progress}</Link></p>
 
@@ -157,6 +161,32 @@ export default async function ClientCard({
           {' · '}{formatDate(certificate.issuedAt)}
         </p>
       ) : <p className="crat-muted">{t.admin.notYet}</p>}
+
+      {/* T8 дизайн-аудита (П3): заявки на консультацию этого клиента — видны прямо в карточке,
+          не нужно искать по имени/контакту в общем списке /admin/consultations. */}
+      <h3>{tc.consultationsSection}</h3>
+      {consultations.length === 0 ? <p className="crat-muted">{tc.noConsultations}</p> : (
+        <div className="admin-table-wrap">
+          <table className="admin-table">
+            <thead>
+            <tr>
+              <th>{t.admin.colDate}</th>
+              <th>{t.admin.consultations.colTopic}</th>
+              <th>{t.admin.colStatus}</th>
+            </tr>
+            </thead>
+            <tbody>
+            {consultations.map(c => (
+              <tr key={c.id}>
+                <td>{formatDate(c.createdAt)}</td>
+                <td>{c.topic ? (t.consult.topicOptions[c.topic as keyof typeof t.consult.topicOptions] ?? c.topic) : t.admin.notYet}</td>
+                <td>{t.admin.consultations.statusLabel[c.status]}</td>
+              </tr>
+            ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </main>
   )
 }

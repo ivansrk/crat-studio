@@ -19,45 +19,47 @@ export default async function Consultations({ searchParams }: { searchParams: Pr
       <h1>{tc.title}</h1>
       {updated === 'ok' && <p className="crat-muted">{tc.updated}</p>}
       {consultations.length === 0 ? <p>{tc.noData}</p> : (
-        <table className="admin-table">
-          <thead>
-          <tr>
-            <th>{t.admin.colDate}</th>
-            <th>{t.admin.colName}</th>
-            <th>{tc.colContact}</th>
-            <th>{tc.colTopic}</th>
-            <th>{tc.colMessage}</th>
-            <th>{t.admin.colStatus}</th>
-            <th>{t.admin.colActions}</th>
-          </tr>
-          </thead>
-          <tbody>
-          {consultations.map(c => {
-            const next = NEXT_STATUS[c.status as keyof typeof NEXT_STATUS]
-            return (
-              <tr key={c.id}>
-                <td>{formatDateTime(c.createdAt)}</td>
-                <td>{c.name}</td>
-                <td>{c.contact}</td>
-                <td>{c.topic ? (t.consult.topicOptions[c.topic as keyof typeof t.consult.topicOptions] ?? c.topic) : t.admin.notYet}</td>
-                <td>{c.message}</td>
-                <td>{tc.statusLabel[c.status]}</td>
-                <td>
-                  {next && (
-                    <form action={updateConsultationStatusAction}>
-                      <input type="hidden" name="id" value={c.id} />
-                      <input type="hidden" name="status" value={next} />
-                      <button className="crat-button compact" type="submit">
-                        {next === 'CONTACTED' ? tc.markContacted : tc.markClosed}
-                      </button>
-                    </form>
-                  )}
-                </td>
-              </tr>
-            )
-          })}
-          </tbody>
-        </table>
+        <div className="admin-table-wrap">
+          <table className="admin-table">
+            <thead>
+            <tr>
+              <th>{t.admin.colDate}</th>
+              <th>{t.admin.colName}</th>
+              <th>{tc.colContact}</th>
+              <th>{tc.colTopic}</th>
+              <th>{tc.colMessage}</th>
+              <th>{t.admin.colStatus}</th>
+              <th>{t.admin.colActions}</th>
+            </tr>
+            </thead>
+            <tbody>
+            {consultations.map(c => {
+              const next = NEXT_STATUS[c.status as keyof typeof NEXT_STATUS]
+              return (
+                <tr key={c.id}>
+                  <td>{formatDateTime(c.createdAt)}</td>
+                  <td>{c.name}</td>
+                  <td>{c.contact}</td>
+                  <td>{c.topic ? (t.consult.topicOptions[c.topic as keyof typeof t.consult.topicOptions] ?? c.topic) : t.admin.notYet}</td>
+                  <td>{c.message}</td>
+                  <td>{tc.statusLabel[c.status]}</td>
+                  <td>
+                    {next && (
+                      <form action={updateConsultationStatusAction}>
+                        <input type="hidden" name="id" value={c.id} />
+                        <input type="hidden" name="status" value={next} />
+                        <button className="crat-button compact" type="submit">
+                          {next === 'CONTACTED' ? tc.markContacted : tc.markClosed}
+                        </button>
+                      </form>
+                    )}
+                  </td>
+                </tr>
+              )
+            })}
+            </tbody>
+          </table>
+        </div>
       )}
     </main>
   )

@@ -5,6 +5,7 @@ import { getCourseProgress } from '@/lib/progress'
 import { isLessonPassed } from '@/lib/progress/quiz-logic'
 import { getCurrentSubmission } from '@/lib/project'
 import { formatDate } from '@/lib/i18n/format-date'
+import { gdprDeleteAction } from '@/app/actions/admin'
 import { t } from '@/lib/i18n'
 
 export const dynamic = 'force-dynamic'
@@ -16,8 +17,12 @@ const SUBMISSION_STATUS_LABEL = {
   APPROVED: t.project.statusApproved,
 } as const
 
-export default async function StudentProgress({ params }: { params: Promise<{ userId: string }> }) {
+export default async function StudentProgress({ params, searchParams }: {
+  params: Promise<{ userId: string }>
+  searchParams: Promise<{ gdpr?: string }>
+}) {
   const { userId } = await params
+  const { gdpr } = await searchParams
   const user = await db.user.findUnique({ where: { id: userId } })
   if (!user) notFound() // гейт админа — в app/admin/layout.tsx; здесь только валидность userId
 
@@ -37,60 +42,66 @@ export default async function StudentProgress({ params }: { params: Promise<{ us
     <main className="admin-wide">
       <h1>{user.firstName} {user.lastName}</h1>
       <p>{user.email}</p>
+      {gdpr === 'mismatch' && <p role="alert" className="form-alert">{t.admin.gdprMismatch}</p>}
+      {gdpr === 'is_admin' && <p role="alert" className="form-alert">{t.admin.gdprIsAdmin}</p>}
 
       <h2>{t.admin.progress}</h2>
-      <table className="admin-table">
-        <thead>
-        <tr>
-          <th>{t.admin.colLesson}</th>
-          <th>{t.admin.colQuiz}</th>
-          <th>{t.admin.colPractice}</th>
-          <th>{t.admin.colDone}</th>
-        </tr>
-        </thead>
-        <tbody>
-        {lessons.map(l => {
-          const p = byLesson.get(l.id)
-          // «Пройден» — ЖИВОЕ определение, как у студента (D-029/E16, isLessonPassed — правило 9);
-          // completedAt — только тайминг deferred (первое достижение, не откатывается), в UI не светим.
-          const doneAt = isLessonPassed(p)
-            ? new Date(Math.max(p.quizPassedAt.getTime(), p.practiceDoneAt.getTime()))
-            : null
-          return (
-            <tr key={l.id}>
-              <td>{l.title}</td>
-              <td>{p?.quizPassedAt ? formatDate(p.quizPassedAt) : t.admin.notYet}</td>
-              <td>{p?.practiceDoneAt ? formatDate(p.practiceDoneAt) : t.admin.notYet}</td>
-              <td>{doneAt ? formatDate(doneAt) : t.admin.notYet}</td>
-            </tr>
-          )
-        })}
-        </tbody>
-      </table>
+      <div className="admin-table-wrap">
+        <table className="admin-table">
+          <thead>
+          <tr>
+            <th>{t.admin.colLesson}</th>
+            <th>{t.admin.colQuiz}</th>
+            <th>{t.admin.colPractice}</th>
+            <th>{t.admin.colDone}</th>
+          </tr>
+          </thead>
+          <tbody>
+          {lessons.map(l => {
+            const p = byLesson.get(l.id)
+            // «Пройден» — ЖИВОЕ определение, как у студента (D-029/E16, isLessonPassed — правило 9);
+            // completedAt — только тайминг deferred (первое достижение, не откатывается), в UI не светим.
+            const doneAt = isLessonPassed(p)
+              ? new Date(Math.max(p.quizPassedAt.getTime(), p.practiceDoneAt.getTime()))
+              : null
+            return (
+              <tr key={l.id}>
+                <td>{l.title}</td>
+                <td>{p?.quizPassedAt ? formatDate(p.quizPassedAt) : t.admin.notYet}</td>
+                <td>{p?.practiceDoneAt ? formatDate(p.practiceDoneAt) : t.admin.notYet}</td>
+                <td>{doneAt ? formatDate(doneAt) : t.admin.notYet}</td>
+              </tr>
+            )
+          })}
+          </tbody>
+        </table>
+      </div>
 
       <h2>{t.admin.mission}</h2>
       <p>{user.mission ?? t.admin.notYet}</p>
 
       <h2>{t.admin.deferredTitle}</h2>
       {deferred.length === 0 ? <p>{t.admin.notYet}</p> : (
-        <table className="admin-table">
-          <thead>
-          <tr>
-            <th>{t.admin.colLesson}</th>
-            <th>{t.admin.colDueAt}</th>
-            <th>{t.admin.colAnsweredAt}</th>
-          </tr>
-          </thead>
-          <tbody>
-          {deferred.map(d => (
-            <tr key={d.id}>
-              <td>{d.lessonId}</td>
-              <td>{formatDate(d.dueAt)}</td>
-              <td>{d.answeredAt ? formatDate(d.answeredAt) : t.admin.notYet}</td>
+        <div className="admin-table-wrap">
+          <table className="admin-table">
+            <thead>
+            <tr>
+              <th>{t.admin.colLesson}</th>
+              <th>{t.admin.colDueAt}</th>
+              <th>{t.admin.colAnsweredAt}</th>
             </tr>
-          ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+            {deferred.map(d => (
+              <tr key={d.id}>
+                <td>{d.lessonId}</td>
+                <td>{formatDate(d.dueAt)}</td>
+                <td>{d.answeredAt ? formatDate(d.answeredAt) : t.admin.notYet}</td>
+              </tr>
+            ))}
+            </tbody>
+          </table>
+        </div>
       )}
 
       <h2>{t.admin.projectTitle}</h2>
@@ -104,6 +115,23 @@ export default async function StudentProgress({ params }: { params: Promise<{ us
           {certificate.number} · {certificate.status === 'VALID' ? t.admin.certStatusValid : t.admin.certStatusRevoked} · {formatDate(certificate.issuedAt)}
         </p>
       ) : <p>{t.admin.notYet}</p>}
+
+      {/* T8 дизайн-аудита (П2): удаление переехало со строки списка сюда — необратимое
+          действие спрятано за <details>, не рядом с обычными действиями таблицы. */}
+      <details className="danger-zone">
+        <summary>{t.admin.dangerZoneTitle}</summary>
+        <div className="danger-zone-body">
+          <p className="crat-muted">{t.admin.dangerZoneWarning}</p>
+          <form action={gdprDeleteAction}>
+            <input type="hidden" name="userId" value={user.id} />
+            <label>
+              {t.admin.gdprConfirm}
+              <input name="confirmEmail" placeholder={user.email} required />
+            </label>
+            <button className="crat-button danger" type="submit">{t.admin.gdprDelete}</button>
+          </form>
+        </div>
+      </details>
     </main>
   )
 }

@@ -7,13 +7,45 @@
 .admin-nav {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   gap: 1.75rem;
   padding: 1.25rem clamp(1.25rem, 4vw, 2.5rem);
   border-bottom: 1px solid var(--line-soft);
 }
 
+/* T8 дизайн-аудита (П4): «Выйти» прижат к правому краю на широких экранах, на узких
+   переносится вместе с остальными пунктами (flex-wrap уже на .admin-nav). */
+.admin-nav-logout {
+  margin-inline-start: auto;
+  display: flex;
+  align-items: center;
+}
+.admin-nav-logout button {
+  display: inline-flex;
+  align-items: center;
+  padding-block: .7rem;
+  margin-block: -.7rem;
+  background: none;
+  border: none;
+  color: var(--paper);
+  font: inherit;
+  font-size: var(--fs-small);
+  cursor: pointer;
+}
+.admin-nav-logout button:focus-visible {
+  outline: 2px solid var(--neon);
+  outline-offset: 2px;
+}
+
 .admin-wide {
   max-width: 72rem;
+}
+
+/* T8 дизайн-аудита (П3): узкие вьюпорты — таблицы админки шире экрана (проверено на 360,
+   826–1157px горизонтального скролла всей СТРАНИЦЫ). Обёртка со своим overflow-x держит
+   скролл ВНУТРИ таблицы, а не на body. */
+.admin-table-wrap {
+  overflow-x: auto;
 }
 
 .admin-table {
@@ -73,10 +105,19 @@
   padding: .7rem 1rem;
   font-size: var(--fs-base);
   min-width: 20rem;
+  max-width: 100%;
   transition: border-color .3s ease;
 }
 .admin-search input:hover { border-color: var(--line-red); }
 .admin-search input:focus-visible { outline: 2px solid var(--neon); outline-offset: 2px; }
+/* T8 дизайн-аудита (П3): min-width:20rem (~320–380px по базовому кеглю) на узких экранах
+   был шире вьюпорта 360px — горизонтальный скролл всей страницы. */
+@media (max-width: 30rem) {
+  .admin-search input {
+    min-width: 0;
+    width: 100%;
+  }
+}
 
 .admin-edit-form {
   display: grid;
@@ -84,11 +125,13 @@
   max-width: 32rem;
   margin-block: 1rem 1.5rem;
 }
-.admin-edit-form label {
+.admin-edit-form label,
+.danger-zone-body label {
   display: grid;
   gap: .35rem;
 }
-.admin-edit-form input {
+.admin-edit-form input,
+.danger-zone-body input {
   background: var(--ink);
   color: var(--paper);
   border: 1px solid var(--line-soft);
@@ -97,8 +140,10 @@
   font-size: var(--fs-base);
   transition: border-color .3s ease;
 }
-.admin-edit-form input:hover { border-color: var(--line-red); }
-.admin-edit-form input:focus-visible { outline: 2px solid var(--neon); outline-offset: 2px; }
+.admin-edit-form input:hover,
+.danger-zone-body input:hover { border-color: var(--line-red); }
+.admin-edit-form input:focus-visible,
+.danger-zone-body input:focus-visible { outline: 2px solid var(--neon); outline-offset: 2px; }
 .admin-edit-form input:disabled { opacity: .6; cursor: not-allowed; }
 .admin-edit-form .crat-button { justify-self: start; }
 
@@ -115,4 +160,32 @@
 }
 .admin-review-list .crat-card:hover {
   transform: none;
+}
+
+/* T8 дизайн-аудита (П2): удаление студента — спрятано за <details>, не рядом с обычными
+   действиями («Прогресс» и т.п.) — необратимое действие не должно быть на расстоянии одного
+   случайного клика. */
+.danger-zone {
+  margin-block: 2.5rem 1rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--line-soft);
+}
+.danger-zone summary {
+  cursor: pointer;
+  display: inline-block;
+  font-family: var(--font-mono), monospace;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  font-size: var(--fs-small);
+  color: var(--red-blood);
+}
+.danger-zone summary:focus-visible {
+  outline: 2px solid var(--neon);
+  outline-offset: 2px;
+}
+.danger-zone-body {
+  display: grid;
+  gap: 1rem;
+  max-width: 32rem;
+  margin-top: 1.25rem;
 }

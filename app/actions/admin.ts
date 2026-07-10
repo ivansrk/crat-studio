@@ -64,11 +64,16 @@ export async function reviewProjectAction(formData: FormData) {
 
 export async function gdprDeleteAction(formData: FormData) {
   await requireAdmin()
+  const userId = String(formData.get('userId'))
   const { gdprDeleteStudent } = await import('@/lib/admin/gdpr')
-  const result = await gdprDeleteStudent(String(formData.get('userId')), String(formData.get('confirmEmail')))
+  const result = await gdprDeleteStudent(userId, String(formData.get('confirmEmail')))
   revalidatePath('/admin/students')
-  // Ревью: удаление НЕОБРАТИМО — молчаливый no-op при несовпадении email недопустим, админ должен
-  // увидеть явный результат в обоих случаях, а не гадать, сработала ли форма.
-  if (result === 'email_mismatch') redirect('/admin/students?gdpr=mismatch')
+  revalidatePath(`/admin/students/${userId}`)
+  // T8 дизайн-аудита: форма переехала со строки списка в «Опасную зону» карточки студента
+  // (/admin/students/[userId]) — ошибки (email не совпал / попытка удалить админа) возвращают
+  // ТУДА ЖЕ, с сохранённым контекстом студента, а не на список. Успех — на список: карточки
+  // удалённого студента больше не существует.
+  if (result === 'email_mismatch') redirect(`/admin/students/${userId}?gdpr=mismatch`)
+  if (result === 'is_admin') redirect(`/admin/students/${userId}?gdpr=is_admin`)
   if (result === 'deleted') redirect('/admin/students?gdpr=deleted')
 }

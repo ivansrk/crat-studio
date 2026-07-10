@@ -1247,3 +1247,11 @@ main.crat-page {
     min-height: 420px;
   }
 }
+
+/* ---------- /not-found (П1) — три выхода вместо тупика ---------- */
+.not-found-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}

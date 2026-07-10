@@ -34,6 +34,9 @@ export default async function Unsubscribe({ params }: { params: Promise<{ token:
             <div className="crat-card accepted-card">
               <h1 className="crat-display">{email ? t.unsub.doneTitle : t.unsub.badTitle}</h1>
               <p className="crat-muted">{email ? t.unsub.doneBody : t.unsub.badBody}</p>
+              {/* T8 дизайн-аудита (П2): битый токен — сразу дать способ написать нам, а не
+                  оставлять текст «напишите нам» без единой ссылки. */}
+              {!email && <a className="crat-button" href={`mailto:${t.footer.contactEmail}`}>{t.invite.contactCta}</a>}
             </div>
           </div>
         </section>

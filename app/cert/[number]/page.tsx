@@ -30,7 +30,13 @@ export default async function CertPage({ params }: Props) {
           <div className="crat-shell">
             <SectionLabel kicker={t.cert.kicker} />
             {!cert ? (
-              <h1 className="crat-display">{t.cert.notFound}</h1>
+              // T8 дизайн-аудита (П2): формат номера + ссылка на контакт — раньше голый заголовок
+              // без единой подсказки, что делать дальше (тот же приём accepted-card, что /login /reset).
+              <div className="crat-card accepted-card">
+                <h1 className="crat-display">{t.cert.notFound}</h1>
+                <p className="crat-muted">{t.cert.notFoundHint}</p>
+                <a className="crat-button" href={`mailto:${t.footer.contactEmail}`}>{t.invite.contactCta}</a>
+              </div>
             ) : cert.status === 'REVOKED' ? (
               <>
                 <h1 className="crat-display">{t.cert.kicker} <span className="cert-number">{cert.number}</span></h1>

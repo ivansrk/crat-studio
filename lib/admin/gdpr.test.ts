@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 
 // gdpr.ts обращается к глобальному db.$transaction/db.user (не DI) — мокаем модуль целиком,
 // тот же приём, что grant-access.test.ts. syncContactDelete мокается отдельно: gdpr.ts вызывает
@@ -52,14 +52,29 @@ function setup(user: FakeUser | null) {
 
 const user: FakeUser = { id: 'u-1', email: 'student@test.c', firstName: 'Игорь', lastName: 'Волков', resendContactId: 'c-1' }
 
+const ORIGINAL_ADMIN_EMAILS = process.env.ADMIN_EMAILS
+
 beforeEach(() => {
   vi.mocked(syncContactDelete).mockClear().mockResolvedValue('synced')
+})
+
+afterEach(() => {
+  process.env.ADMIN_EMAILS = ORIGINAL_ADMIN_EMAILS
 })
 
 describe('gdprDeleteStudent (ADM-10/11)', () => {
   it('не найден → not_found, транзакция не запускается', async () => {
     setup(null)
     expect(await gdprDeleteStudent('missing', 'x@y.c')).toBe('not_found')
+    expect(db.$transaction).not.toHaveBeenCalled()
+  })
+
+  // T8 дизайн-аудита (П2): нельзя удалить учётку, чей email сейчас в ADMIN_EMAILS —
+  // даже с верным confirmEmail, транзакция не запускается.
+  it('email админа (ADMIN_EMAILS) → is_admin, транзакция не запускается', async () => {
+    setup(user)
+    process.env.ADMIN_EMAILS = 'student@test.c'
+    expect(await gdprDeleteStudent('u-1', 'student@test.c')).toBe('is_admin')
     expect(db.$transaction).not.toHaveBeenCalled()
   })
 

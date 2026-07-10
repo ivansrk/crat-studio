@@ -1,7 +1,8 @@
 import { db } from '@/lib/db'
 import { syncContactDelete } from '@/lib/resend-audience'
+import { isAdminEmail } from '@/lib/auth/current-user'
 
-export type GdprResult = 'deleted' | 'not_found' | 'email_mismatch'
+export type GdprResult = 'deleted' | 'not_found' | 'email_mismatch' | 'is_admin'
 
 /**
  * ADM-10/11: необратимое удаление студента и всех его данных по запросу GDPR.
@@ -28,6 +29,10 @@ export type GdprResult = 'deleted' | 'not_found' | 'email_mismatch'
 export async function gdprDeleteStudent(userId: string, confirmEmail: string): Promise<GdprResult> {
   const user = await db.user.findUnique({ where: { id: userId } })
   if (!user) return 'not_found'
+  // T8 дизайн-аудита (П2): списки студентов/клиентов уже исключают админов (email NOT IN
+  // ADMIN_EMAILS), но эндпоинт остаётся прямым POST — тот же серверный гейт, что и на списках,
+  // на случай прямого вызова с чужим/старым userId.
+  if (isAdminEmail(user.email)) return 'is_admin'
   if (user.email !== confirmEmail.trim().toLowerCase()) return 'email_mismatch' // ADM-11: явное подтверждение email админом
 
   // F17/CRM-04: удаление контакта из Resend Audience — ПЕРЕД удалением User (right to erasure

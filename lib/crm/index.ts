@@ -2,12 +2,13 @@ import { db } from '@/lib/db'
 import { normalizePhone } from '@/lib/registration/phone'
 import { getEffectiveConsent, isEffectivelyGranted } from '@/lib/consent/effective'
 import { syncContactSubscribe, syncContactUnsubscribe } from '@/lib/resend-audience'
-import type { Certificate, Consent, Enrollment, PrismaClient, Registration, User } from '@/lib/generated/prisma/client'
+import { parseAdminEmails } from '@/lib/auth/parse-admin-emails'
+import type { Certificate, Consent, ConsultationRequest, Enrollment, PrismaClient, Registration, User } from '@/lib/generated/prisma/client'
 
 // F16/CRM-01…03: клиентская база в админке. Три операции — список с поиском, карточка-история,
 // редактирование — плюс пересинхронизация Resend по действующему согласию (CRM-05).
 
-type CrmDbClient = Pick<PrismaClient, 'user' | 'consent' | 'registration' | 'enrollment' | 'certificate'>
+type CrmDbClient = Pick<PrismaClient, 'user' | 'consent' | 'registration' | 'enrollment' | 'certificate' | 'consultationRequest'>
 
 export type ClientListItem = {
   id: string
@@ -28,7 +29,7 @@ export type ClientListItem = {
  *  relation) в том же findMany, а не отдельным запросом на каждого пользователя. */
 export async function listClients(query?: string, client: CrmDbClient = db): Promise<ClientListItem[]> {
   const q = (query ?? '').trim()
-  const where = q
+  const searchWhere = q
     ? {
         OR: [
           { firstName: { contains: q, mode: 'insensitive' as const } },
@@ -38,6 +39,11 @@ export async function listClients(query?: string, client: CrmDbClient = db): Pro
         ],
       }
     : {}
+  // T8 дизайн-аудита (П2): админы — не клиенты, в базу CRM не попадают (см. app/admin/students/page.tsx,
+  // тот же приём). Ключ добавляем только при непустом списке — не меняет форму where для проектов
+  // без ADMIN_EMAILS (в т.ч. существующих тестов).
+  const adminEmails = parseAdminEmails(process.env.ADMIN_EMAILS)
+  const where = adminEmails.length > 0 ? { ...searchWhere, email: { notIn: adminEmails } } : searchWhere
 
   const users = await client.user.findMany({
     where,
@@ -68,6 +74,7 @@ export type ClientDetail = {
   consents: Consent[] // весь журнал по email, новые сверху (D-014)
   enrollments: Enrollment[]
   certificate: Certificate | null
+  consultations: ConsultationRequest[] // T8 дизайн-аудита (П3): заявки на консультацию этого клиента
   subscribed: boolean // действующее согласие NEWSLETTER, свёрнутое из consents
 }
 
@@ -76,18 +83,19 @@ export async function getClient(userId: string, client: CrmDbClient = db): Promi
   const user = await client.user.findUnique({ where: { id: userId } })
   if (!user) return null
 
-  const [registration, consents, enrollments, certificate] = await Promise.all([
+  const [registration, consents, enrollments, certificate, consultations] = await Promise.all([
     client.registration.findUnique({ where: { email: user.email } }),
     client.consent.findMany({ where: { email: user.email }, orderBy: { createdAt: 'desc' } }),
     client.enrollment.findMany({ where: { userId }, orderBy: { createdAt: 'desc' } }),
     client.certificate.findFirst({ where: { userId, status: { in: ['VALID', 'REVOKED'] } }, orderBy: { issuedAt: 'desc' } }),
+    client.consultationRequest.findMany({ where: { userId }, orderBy: { createdAt: 'desc' } }),
   ])
 
   // D-014: действующее = последняя запись по createdAt — та же свёртка, что у CSV-экспорта и
   // resync (lib/consent/effective), просто над уже загруженным журналом, без похода в базу.
   const subscribed = isEffectivelyGranted(consents.filter(c => c.type === 'NEWSLETTER'))
 
-  return { user, registration, consents, enrollments, certificate, subscribed }
+  return { user, registration, consents, enrollments, certificate, consultations, subscribed }
 }
 
 export type UpdateClientInput = {

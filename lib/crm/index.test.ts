@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect, vi, afterEach } from 'vitest'
 
 vi.mock('@/lib/resend-audience', () => ({
   syncContactSubscribe: vi.fn().mockResolvedValue('synced'),
@@ -22,6 +22,7 @@ type FakeEnrollment = { id: string; userId: string; courseSlug: string; createdA
 type FakeConsent = { id: string; email: string; userId: string | null; type: string; granted: boolean; createdAt: Date }
 type FakeRegistration = { id: string; email: string; status: string }
 type FakeCertificate = { id: string; userId: string; status: string; issuedAt: Date }
+type FakeConsultation = { id: string; userId: string | null; createdAt: Date }
 
 function makeUser(overrides: Partial<FakeUser> = {}): FakeUser {
   return {
@@ -34,7 +35,7 @@ function makeUser(overrides: Partial<FakeUser> = {}): FakeUser {
 
 function fakeClient(opts: {
   users?: FakeUser[]; enrollments?: FakeEnrollment[]; consents?: FakeConsent[]
-  registrations?: FakeRegistration[]; certificates?: FakeCertificate[]
+  registrations?: FakeRegistration[]; certificates?: FakeCertificate[]; consultations?: FakeConsultation[]
 } = {}) {
   const store = {
     users: opts.users ?? [],
@@ -42,10 +43,15 @@ function fakeClient(opts: {
     consents: opts.consents ?? [],
     registrations: opts.registrations ?? [],
     certificates: opts.certificates ?? [],
+    consultations: opts.consultations ?? [],
   }
 
   function matchesSearch(u: FakeUser, where: unknown): boolean {
-    const w = where as { OR?: { firstName?: { contains: string }; lastName?: { contains: string }; email?: { contains: string }; phone?: { contains: string } }[] }
+    const w = where as {
+      OR?: { firstName?: { contains: string }; lastName?: { contains: string }; email?: { contains: string }; phone?: { contains: string } }[]
+      email?: { notIn: string[] }
+    }
+    if (w.email?.notIn?.includes(u.email.toLowerCase())) return false
     if (!w.OR) return true
     const lc = (s: string | null) => (s ?? '').toLowerCase()
     return w.OR.some(cond => {
@@ -95,8 +101,12 @@ function fakeClient(opts: {
     findFirst: vi.fn(async ({ where }: { where: { userId: string } }) =>
       [...store.certificates.filter(c => c.userId === where.userId)].sort((a, b) => b.issuedAt.getTime() - a.issuedAt.getTime())[0] ?? null),
   }
+  const consultationRequest = {
+    findMany: vi.fn(async ({ where }: { where: { userId: string } }) =>
+      [...store.consultations.filter(c => c.userId === where.userId)].sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())),
+  }
 
-  const client = { user, consent, registration, enrollment, certificate } as never
+  const client = { user, consent, registration, enrollment, certificate, consultationRequest } as never
   return { client, store }
 }
 
@@ -148,6 +158,25 @@ describe('listClients (CRM-01/02)', () => {
     const { client } = fakeClient({ users: [u] })
     expect((await listClients(undefined, client))[0].resendSyncError).toBe(true)
   })
+
+  // T8 дизайн-аудита (П2): админы — не клиенты студии, не должны попадать в CRM-базу.
+  const ORIGINAL_ADMIN_EMAILS = process.env.ADMIN_EMAILS
+  afterEach(() => { process.env.ADMIN_EMAILS = ORIGINAL_ADMIN_EMAILS })
+
+  it('email из ADMIN_EMAILS исключён из списка', async () => {
+    const admin = makeUser({ id: 'u-1', email: 'admin@test.c' })
+    const client_ = makeUser({ id: 'u-2', email: 'anna@test.c', createdAt: new Date('2026-02-01') })
+    const { client } = fakeClient({ users: [admin, client_] })
+    process.env.ADMIN_EMAILS = 'admin@test.c'
+    expect((await listClients(undefined, client)).map(c => c.id)).toEqual(['u-2'])
+  })
+
+  it('без ADMIN_EMAILS фильтр не применяется — все клиенты видны', async () => {
+    const u = makeUser({ id: 'u-1' })
+    const { client } = fakeClient({ users: [u] })
+    process.env.ADMIN_EMAILS = ''
+    expect((await listClients(undefined, client)).map(c => c.id)).toEqual(['u-1'])
+  })
 })
 
 describe('getClient (CRM-03)', () => {
@@ -176,6 +205,21 @@ describe('getClient (CRM-03)', () => {
     expect(detail!.enrollments).toHaveLength(1)
     expect(detail!.certificate?.id).toBe('cert-1')
     expect(detail!.subscribed).toBe(false) // последняя NEWSLETTER-запись — отписка (c2)
+  })
+
+  // T8 дизайн-аудита (П3): карточка клиента показывает его заявки на консультацию.
+  it('собирает заявки на консультацию клиента, новые сверху', async () => {
+    const u = makeUser({ id: 'u-1' })
+    const { client } = fakeClient({
+      users: [u],
+      consultations: [
+        { id: 'cons-1', userId: 'u-1', createdAt: new Date('2026-01-01') },
+        { id: 'cons-2', userId: 'u-1', createdAt: new Date('2026-03-01') },
+        { id: 'cons-3', userId: 'other', createdAt: new Date('2026-02-01') },
+      ],
+    })
+    const detail = await getClient('u-1', client)
+    expect(detail!.consultations.map(c => c.id)).toEqual(['cons-2', 'cons-1'])
   })
 })
 

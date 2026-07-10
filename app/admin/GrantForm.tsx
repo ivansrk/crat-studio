@@ -1,9 +1,30 @@
 'use client'
-import { useActionState } from 'react'
+import { useActionState, useState } from 'react'
 import { grantAccessAction, type GrantActionState } from '@/app/actions/admin'
 import { t } from '@/lib/i18n'
 
 const initialState: GrantActionState = { status: 'idle' }
+const COPIED_TIMEOUT_MS = 2000
+
+/** T8 дизайн-аудита (П3): «Скопировать» рядом с паролем, показанным один раз (см. комментарий
+ *  ниже) — набирать вручную 12+ случайных символов неудобно и легко ошибиться при передаче студенту. */
+function CopyPasswordButton({ password }: { password: string }) {
+  const [copied, setCopied] = useState(false)
+  return (
+    <button
+      type="button"
+      className="crat-button compact"
+      onClick={() => {
+        navigator.clipboard.writeText(password).then(() => {
+          setCopied(true)
+          setTimeout(() => setCopied(false), COPIED_TIMEOUT_MS)
+        })
+      }}
+    >
+      {copied ? t.admin.copied : t.admin.copyPassword}
+    </button>
+  )
+}
 
 /** T5 (AUTH-15/F11): пароль показывается один раз — живёт только в памяти этого клиентского
  *  компонента (useActionState), никогда не уходит в query-string/cookie/БД. Перезагрузка страницы
@@ -18,7 +39,10 @@ export function GrantForm({ registrationId, canGrant }: { registrationId: string
       <div>
         {state.status === 'granted_email_failed' && <p role="alert" className="form-alert">{t.admin.emailFailed}</p>}
         {state.plainPassword ? (
-          <p><strong>{t.admin.passwordOnceLabel}:</strong> <code>{state.plainPassword}</code></p>
+          <p>
+            <strong>{t.admin.passwordOnceLabel}:</strong> <code>{state.plainPassword}</code>{' '}
+            <CopyPasswordButton password={state.plainPassword} />
+          </p>
         ) : (
           <p className="crat-muted">{t.admin.passwordAlreadySet}</p>
         )}
