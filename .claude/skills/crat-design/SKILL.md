@@ -12,7 +12,7 @@ description: Use when doing ANY visual or design work on this site — pages, co
 **Black is the space. Red is the light. Image is the protagonist. Interface is quiet.**
 Ночной город, красные вывески, маленький кинотеатр, архив, мастерская, ручная линия. Референсы: MUBI, NOWNESS, Are.na, e-flux, wolfai.be (свет кнопок).
 
-Палитра — только токены lib/design/tokens.css. Красный = свет (glow/underline/линии/прогресс), не заливка. Мята/лаванда — редкие акценты.
+Палитра — только токены lib/design/tokens.css. Красный = свет (glow/underline/линии/прогресс), не заливка. Мята/лаванда/лайм (--lime-neon, D-041) — редкие акценты; лайм = сигнал креатива (hero-шейдер, линии секции «Студия»), не второй основной цвет.
 
 ## Анти-дефолт (признаки «AI-дизайна» — запрещены)
 

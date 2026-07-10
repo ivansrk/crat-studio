@@ -236,6 +236,14 @@
   box-shadow: var(--neon-glow);
 }
 
+/* Лаймовый вариант линии (D-041): сигнал креатива — секция «Студия» и точечные
+   акценты. Красный остаётся основным светом; лайм применять редко. */
+.crat-lime-line,
+#studio .crat-red-line {
+  background: var(--lime-neon);
+  box-shadow: 0 0 24px rgba(187, 224, 92, .45);
+}
+
 .crat-tag {
   font-family: var(--font-mono), monospace;
   text-transform: uppercase;
