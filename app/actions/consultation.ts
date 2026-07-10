@@ -38,7 +38,9 @@ export async function updateConsultationStatusAction(formData: FormData) {
   const id = String(formData.get('id'))
   const status = String(formData.get('status')) as ConsultationStatus
   const result = await updateConsultationStatus(id, status)
-  if (result === 'not_found') notFound()
+  // m-1 (ревью Ф7б): invalid_transition — форма всегда шлёт только следующий по цепочке статус
+  // (NEXT_STATUS в page.tsx), достижимо только прямым POST в обход UI → тот же отказ, что notFound.
+  if (result === 'not_found' || result === 'invalid_transition') notFound()
   revalidatePath('/admin/consultations')
   redirect('/admin/consultations?updated=ok')
 }

@@ -65,18 +65,27 @@ export async function listConsultations(client: ConsultationDbClient = db): Prom
   return [...rows].sort((a, b) => STATUS_ORDER.indexOf(a.status) - STATUS_ORDER.indexOf(b.status))
 }
 
-export type UpdateConsultationStatusResult = 'ok' | 'not_found'
+export type UpdateConsultationStatusResult = 'ok' | 'not_found' | 'invalid_transition'
 
-/** CONS-04: переключение статуса админом. */
+// m-1 (ревью Ф7б): раньше update() принимал любой статус напрямую — прямой POST мог откатить
+// CLOSED → NEW. Разрешены только вперёд по порядку CONS-04 (NEW → CONTACTED → CLOSED), включая
+// «перепрыжку» NEW → CLOSED; назад и повторно текущий статус — invalid_transition.
+const ALLOWED_TRANSITIONS: Readonly<Record<ConsultationStatus, readonly ConsultationStatus[]>> = {
+  NEW: ['CONTACTED', 'CLOSED'],
+  CONTACTED: ['CLOSED'],
+  CLOSED: [],
+}
+
+/** CONS-04: переключение статуса админом — только допустимые переходы вперёд (см. ALLOWED_TRANSITIONS). */
 export async function updateConsultationStatus(
   id: string,
   status: ConsultationStatus,
   client: ConsultationDbClient = db,
 ): Promise<UpdateConsultationStatusResult> {
-  try {
-    await client.consultationRequest.update({ where: { id }, data: { status } })
-    return 'ok'
-  } catch {
-    return 'not_found'
-  }
+  const row = await client.consultationRequest.findUnique({ where: { id } })
+  if (!row) return 'not_found'
+  if (!ALLOWED_TRANSITIONS[row.status].includes(status)) return 'invalid_transition'
+
+  await client.consultationRequest.update({ where: { id }, data: { status } })
+  return 'ok'
 }

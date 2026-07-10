@@ -15,6 +15,10 @@ export type GdprResult = 'deleted' | 'not_found' | 'email_mismatch'
  *   строки без userId каскад не увидит → удаляем явно deleteMany по email.
  * - Registration и PasswordResetToken (бывш. MagicLink) — вообще без FK на User (связь только по email) → каскад их не заденет
  *   в принципе, удаляем явно deleteMany по email.
+ * - ConsultationRequest — userId ОПЦИОНАЛЕН и БЕЗ onDelete: Cascade (docs/data-model.md:405, D-036):
+ *   заявка — бизнес-лид студии, не персональные данные учёбы, каскад её не заденет и специально не
+ *   должен — обезличиваем явно (userId → null), сама заявка и её contact/message остаются
+ *   (M-2, ревью Ф7б; поле contact — отдельный вопрос Ивану, вне этого фикса).
  * - Certificate — userId опционален, onDelete: SetNull, но SetNull сам по себе оставил бы status:
  *   VALID с number/courseTitle и без ФИО — сертификат должен пережить удаление владельца именно как
  *   ОБЕЗЛИЧЕННЫЙ И ОТОЗВАННЫЙ артефакт (D-010, CERT-07-заготовка), поэтому обезличиваем и отзываем
@@ -36,6 +40,7 @@ export async function gdprDeleteStudent(userId: string, confirmEmail: string): P
       where: { userId },
       data: { userId: null, fullName: null, status: 'REVOKED', revokedAt: new Date() },
     })
+    await tx.consultationRequest.updateMany({ where: { userId }, data: { userId: null } })
     await tx.passwordResetToken.deleteMany({ where: { email: user.email } })
     await tx.consent.deleteMany({ where: { email: user.email } })
     await tx.registration.deleteMany({ where: { email: user.email } })

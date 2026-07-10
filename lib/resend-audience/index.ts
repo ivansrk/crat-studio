@@ -43,6 +43,15 @@ function isDuplicateContactError(message: string): boolean {
   return /already exists|duplicate/i.test(message)
 }
 
+// m-2 (ревью Ф7б): resync легаси-юзера, которого никогда не было в Resend Audience (например,
+// зарегистрирован до подключения CRM-04) — contacts.update по email/id получает `not_found`
+// (RESEND_ERROR_CODE_KEY 'not_found', см. node_modules/resend/dist/index.d.mts). Это не сбой
+// синка — отписывать нечего, контакта и так нет ни в одном списке рассылки. Детектим и по типовому
+// коду ошибки (`error.name`), и по HTTP 404, и по тексту — тем же приёмом, что isDuplicateContactError.
+function isNotFoundContactError(error: { message: string; statusCode?: number | null; name?: string }): boolean {
+  return error.name === 'not_found' || error.statusCode === 404 || /not[ _-]?found/i.test(error.message)
+}
+
 async function recordSyncError(client: DbClient, userId: string, e: unknown): Promise<void> {
   const message = e instanceof Error ? e.message : String(e)
   await client.user.update({ where: { id: userId }, data: { resendSyncError: message } })
@@ -109,7 +118,9 @@ export async function syncContactUnsubscribe(user: SyncUser, client: DbClient = 
   try {
     const selector = user.resendContactId ? { id: user.resendContactId } : { email: user.email }
     const { error } = await contacts.update({ audienceId: aud, unsubscribed: true, ...selector })
-    if (error) throw new Error(error.message)
+    if (error && !isNotFoundContactError(error)) throw new Error(error.message)
+    // error есть, но это isNotFoundContactError → легаси-юзер вне Audience, нечего отписывать:
+    // трактуем как успех-noop, resendSyncError сбрасываем (не пишем ошибку синка) наравне с обычным успехом.
     await client.user.update({ where: { id: user.id }, data: { resendSyncError: null } })
     return 'synced'
   } catch (e) {

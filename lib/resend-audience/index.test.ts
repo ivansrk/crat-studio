@@ -136,11 +136,42 @@ describe('syncContactUnsubscribe (CRM-04, MAIL-06) — update unsubscribed=true,
     expect(call.id).toBeUndefined()
   })
 
-  it('сбой Resend → resendSyncError записан + throw', async () => {
-    updateMock.mockResolvedValue({ data: null, error: { message: 'not_found', statusCode: 404, name: 'not_found' } })
+  it('сбой Resend (не not_found) → resendSyncError записан + throw', async () => {
+    updateMock.mockResolvedValue({ data: null, error: { message: 'internal_server_error', statusCode: 500, name: 'internal_server_error' } })
 
-    await expect(syncContactUnsubscribe(user)).rejects.toThrow('not_found')
-    expect(userUpdateMock).toHaveBeenCalledWith({ where: { id: 'u-1' }, data: { resendSyncError: 'not_found' } })
+    await expect(syncContactUnsubscribe(user)).rejects.toThrow('internal_server_error')
+    expect(userUpdateMock).toHaveBeenCalledWith({ where: { id: 'u-1' }, data: { resendSyncError: 'internal_server_error' } })
+  })
+
+  // m-2 (ревью Ф7б): легаси-юзер, которого никогда не было в Audience — contacts.update отвечает
+  // not_found, это не сбой синка (нечего отписывать), а успех-noop без записи resendSyncError.
+  describe('not_found от Resend (легаси-юзер вне Audience) → успех-noop, не throw (m-2)', () => {
+    it('error.name === "not_found" (типовой код Resend)', async () => {
+      updateMock.mockResolvedValue({ data: null, error: { message: 'Contact not found', statusCode: 404, name: 'not_found' } })
+
+      const result = await syncContactUnsubscribe(user)
+
+      expect(result).toBe('synced')
+      expect(userUpdateMock).toHaveBeenCalledWith({ where: { id: 'u-1' }, data: { resendSyncError: null } })
+    })
+
+    it('только statusCode 404 без типового name — тоже noop', async () => {
+      updateMock.mockResolvedValue({ data: null, error: { message: 'gone', statusCode: 404, name: 'application_error' } })
+
+      const result = await syncContactUnsubscribe(user)
+
+      expect(result).toBe('synced')
+      expect(userUpdateMock).toHaveBeenCalledWith({ where: { id: 'u-1' }, data: { resendSyncError: null } })
+    })
+
+    it('только текст сообщения "not found" без name/statusCode — тоже noop', async () => {
+      updateMock.mockResolvedValue({ data: null, error: { message: 'Contact not found', statusCode: null, name: 'application_error' } })
+
+      const result = await syncContactUnsubscribe(user)
+
+      expect(result).toBe('synced')
+      expect(userUpdateMock).toHaveBeenCalledWith({ where: { id: 'u-1' }, data: { resendSyncError: null } })
+    })
   })
 })
 

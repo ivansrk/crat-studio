@@ -28,6 +28,7 @@ function fakeClient(rows: ConsultationRequest[] = []) {
       return row
     }),
     findMany: vi.fn(async () => [...store.rows].sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())),
+    findUnique: vi.fn(async ({ where }: { where: { id: string } }) => store.rows.find(r => r.id === where.id) ?? null),
     update: vi.fn(async ({ where, data }: { where: { id: string }; data: Partial<ConsultationRequest> }) => {
       const row = store.rows.find(r => r.id === where.id)
       if (!row) throw new Error('not found')
@@ -159,8 +160,48 @@ describe('updateConsultationStatus', () => {
     expect(store.rows[0].status).toBe('CLOSED')
   })
 
+  it('NEW → CLOSED напрямую — тоже допустимый переход', async () => {
+    const { client, store } = fakeClient([makeRow({ id: 'c-1', status: 'NEW' as ConsultationStatus })])
+    expect(await updateConsultationStatus('c-1', 'CLOSED', client)).toBe('ok')
+    expect(store.rows[0].status).toBe('CLOSED')
+  })
+
   it('несуществующий id → not_found', async () => {
     const { client } = fakeClient()
     expect(await updateConsultationStatus('missing', 'CLOSED', client)).toBe('not_found')
+  })
+
+  // m-1 (ревью Ф7б): сервер раньше принимал любой переход напрямую — прямой POST мог откатить
+  // CLOSED → NEW. Теперь допустимы только переходы вперёд по цепочке.
+  describe('запрещённые переходы → invalid_transition, статус не меняется (m-1)', () => {
+    it('CLOSED → NEW (откат)', async () => {
+      const { client, store } = fakeClient([makeRow({ id: 'c-1', status: 'CLOSED' as ConsultationStatus })])
+      expect(await updateConsultationStatus('c-1', 'NEW', client)).toBe('invalid_transition')
+      expect(store.rows[0].status).toBe('CLOSED')
+    })
+
+    it('CONTACTED → NEW (откат)', async () => {
+      const { client, store } = fakeClient([makeRow({ id: 'c-1', status: 'CONTACTED' as ConsultationStatus })])
+      expect(await updateConsultationStatus('c-1', 'NEW', client)).toBe('invalid_transition')
+      expect(store.rows[0].status).toBe('CONTACTED')
+    })
+
+    it('CLOSED → CONTACTED (откат)', async () => {
+      const { client, store } = fakeClient([makeRow({ id: 'c-1', status: 'CLOSED' as ConsultationStatus })])
+      expect(await updateConsultationStatus('c-1', 'CONTACTED', client)).toBe('invalid_transition')
+      expect(store.rows[0].status).toBe('CLOSED')
+    })
+
+    it('CLOSED → CLOSED (нет-op на терминальном статусе)', async () => {
+      const { client, store } = fakeClient([makeRow({ id: 'c-1', status: 'CLOSED' as ConsultationStatus })])
+      expect(await updateConsultationStatus('c-1', 'CLOSED', client)).toBe('invalid_transition')
+      expect(store.rows[0].status).toBe('CLOSED')
+    })
+
+    it('NEW → NEW (повтор текущего статуса)', async () => {
+      const { client, store } = fakeClient([makeRow({ id: 'c-1', status: 'NEW' as ConsultationStatus })])
+      expect(await updateConsultationStatus('c-1', 'NEW', client)).toBe('invalid_transition')
+      expect(store.rows[0].status).toBe('NEW')
+    })
   })
 })

@@ -7,12 +7,29 @@ export function fillPlaceholders(template: string, values: Record<string, string
   return Object.entries(values).reduce((acc, [key, val]) => acc.split(`{{${key}}}`).join(val), template)
 }
 
+/** M-1 (ревью Ф7б): значения из публичной формы /consult (name/contact/topic/message) попадают
+ *  в HTML-тело письма админам без экранирования — `<a href="https://evil">…</a>` в message
+ *  рендерился бы кликабельной ссылкой (phishing на админов). Экранируем & < > " ' в КАЖДОМ
+ *  пользовательском значении перед подстановкой; шаблонные <br/> из ru.ts не трогаем — они
+ *  приходят из t.email.consultationBody, а не из values. */
+export function escapeHtml(s: string): string {
+  return s
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+}
+
 /** CONS-03: письмо админам о новой заявке на консультацию — та же плейсхолдер-подстановка,
  *  что и у WELCOME (fillPlaceholders): данные заявки живут в HTML-теле, а не готовым текстом
  *  в ru.ts. Направление (topic) опционально — прочерк, если не выбрано. */
 export function renderConsultationEmail(input: { name: string; contact: string; topic: string | null; message: string }): string {
   const body = fillPlaceholders(t.email.consultationBody, {
-    name: input.name, contact: input.contact, topic: input.topic ?? '—', message: input.message,
+    name: escapeHtml(input.name),
+    contact: escapeHtml(input.contact),
+    topic: escapeHtml(input.topic ?? '—'),
+    message: escapeHtml(input.message),
   })
   return renderEmail({ body })
 }
