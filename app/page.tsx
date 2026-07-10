@@ -74,41 +74,55 @@ export default function Home() {
           </div>
         </section>
 
-        {/* 3. Курс в фокусе (бриф §7.4) */}
+        {/* 3. Курс в фокусе (бриф §7.4) — T6: киноафиша 3fr/2fr, курс как главный товар */}
         <section className="crat-section" id="course">
           <div className="crat-shell">
-            <SectionLabel kicker={t.home.courseFocusTitle} />
-            <div className="crat-card course-card">
-              <h3 className="crat-display">{course.title}</h3>
-              <p className="crat-muted course-facts">{courseFacts}</p>
-              <Link href="/ai-basics" className="crat-button primary">{t.home.courseCta}</Link>
+            <div className="course-focus-grid">
+              <div className="course-focus-copy">
+                <SectionLabel kicker={t.home.courseFocusTitle} />
+                <h3 className="crat-display">{course.title}</h3>
+                <p className="crat-muted course-facts">{courseFacts}</p>
+                <Link href="/ai-basics" className="crat-button primary">{t.home.courseCta}</Link>
+              </div>
+              <div className="crat-visual-frame horizon crat-noise course-focus-frame" aria-hidden="true">
+                <Image
+                  src="/images/hero-course.webp"
+                  alt=""
+                  fill
+                  sizes="(max-width: 860px) 100vw, 40vw"
+                  className="crat-frame-img"
+                />
+              </div>
             </div>
           </div>
         </section>
 
-        {/* 4. Автоматизации (бриф §7.5) */}
+        {/* 4. Автоматизации (бриф §7.5) — T6: mono-список с display-цифрами вместо карточной сетки */}
         <section className="crat-section" id="automation">
           <div className="crat-shell">
-            <SectionLabel kicker={t.footer.navAutomation} />
             <h2 className="crat-display">{t.home.automationSectionTitle}</h2>
             <p className="crat-muted section-intro">{t.home.automationSectionText}</p>
-            <div className="crat-grid cols-4">
-              {t.home.automationCards.map(card => (
-                <div key={card} className="crat-card automation-card">
-                  <p>{card}</p>
-                </div>
+            <ul className="mono-list">
+              {t.home.automationCards.map((card, i) => (
+                <li key={card} className="mono-list-row">
+                  <span className="mono-list-num crat-display" aria-hidden="true">{String(i + 1).padStart(2, '0')}</span>
+                  <p className="mono-list-text">{card}</p>
+                </li>
               ))}
-            </div>
+            </ul>
             <Link href="/#contact" className="crat-button">{t.home.automationCta}</Link>
           </div>
         </section>
 
-        {/* 5. Креативная студия (бриф §7.6) */}
-        <section className="crat-section" id="studio">
+        {/* 5. Креативная студия (бриф §7.6) — T6: full-bleed сетка + лаймовый горизонт (D-041) */}
+        <section className="crat-section studio-section" id="studio">
           <div className="crat-shell">
             <SectionLabel kicker={t.footer.navStudio} />
             <h2 className="crat-display">{t.home.creativeSectionTitle}</h2>
             <p className="crat-muted section-intro">{t.home.creativeSectionText}</p>
+          </div>
+          <div className="studio-bleed">
+            <span className="studio-horizon" aria-hidden="true" />
             <div className="studio-grid">
               <div className="crat-visual-frame crat-noise studio-frame-a" aria-hidden="true">
                 <Image src="/images/studio-1.webp" alt="" fill sizes="(max-width: 760px) 100vw, 50vw" className="crat-frame-img" />
@@ -126,37 +140,37 @@ export default function Home() {
           </div>
         </section>
 
-        {/* 6. Этика (бриф §7.7) */}
-        <section className="crat-section">
+        {/* 6. Этика (бриф §7.7) — T6: full-bleed манифест, единственный «цветовой акт» страницы */}
+        <section className="crat-section ethics-section">
           <div className="crat-shell">
-            <SectionLabel kicker={t.home.ethicsKicker} />
             <h2 className="crat-display">{t.home.ethicsTitle}</h2>
-            <div className="crat-card">
-              <p>{t.home.ethicsText}</p>
+          </div>
+          <div className="ethics-manifesto">
+            <div className="crat-shell">
+              <p className="crat-display ethics-manifesto-text">{t.home.ethicsManifesto}</p>
+              <p className="crat-muted ethics-manifesto-sub">{t.home.ethicsText}</p>
             </div>
           </div>
         </section>
 
-        {/* 7. Как мы работаем (бриф §7.8) */}
+        {/* 7. Как мы работаем (бриф §7.8) — T6: монтажная линейка на красной линии */}
         <section className="crat-section">
           <div className="crat-shell">
-            <SectionLabel kicker={t.home.processKicker} />
             <h2 className="crat-display">{t.home.processTitle}</h2>
-            <div className="crat-grid cols-4 process-grid">
+            <ol className="process-line">
               {t.home.processSteps.map((step, i) => (
-                <div key={step} className="crat-card crat-noise process-card">
-                  <span className="crat-kicker process-num">{String(i + 1).padStart(2, '0')}</span>
-                  <p>{step}</p>
-                </div>
+                <li key={step} className="process-line-step">
+                  <span className="process-line-num crat-display" aria-hidden="true">{String(i + 1).padStart(2, '0')}</span>
+                  <p className="process-line-text">{step}</p>
+                </li>
               ))}
-            </div>
+            </ol>
           </div>
         </section>
 
         {/* 8. Команда (бриф §7.9 / §11) */}
         <section className="crat-section" id="team">
           <div className="crat-shell">
-            <SectionLabel kicker={t.footer.navTeam} />
             <h2 className="crat-display">{t.home.teamTitle}</h2>
             <p className="crat-muted section-intro">{t.home.teamSubtitle}</p>
             <div className="team-grid">
@@ -177,7 +191,6 @@ export default function Home() {
         {/* 9. Опыт (бриф §7.10) */}
         <section className="crat-section">
           <div className="crat-shell">
-            <SectionLabel kicker={t.home.experienceKicker} />
             <h2 className="crat-display">{t.home.expTitle}</h2>
             <p className="crat-muted section-intro">{t.home.expText}</p>
             <ul className="exp-facts">
@@ -196,7 +209,6 @@ export default function Home() {
           {/* T2 дизайн-аудита (D-042): волна-эхо hero-шейдера, тише — см. site.css .section-shader--contact-ripple. */}
           <SectionShader variant="contact-ripple" />
           <div className="crat-shell shader-content">
-            <SectionLabel kicker={t.home.contactKicker} />
             <h2 className="crat-display">{t.home.contactTitle}</h2>
             <p className="crat-muted section-intro">{t.home.contactText}</p>
             <div className="hero-cta-row">

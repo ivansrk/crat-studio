@@ -21,7 +21,7 @@
 
 /* flex-дети по умолчанию min-width:auto — mono-подпись хедера
    ("APPLIED AI / EDUCATION / …") не переносилась и раздувала документ
-   на 360px (тот же класс бага, что у .course-card > *). */
+   на 360px (тот же класс бага, что у .course-focus-copy > *). */
 .site-header-inner > *,
 .site-footer-inner > * {
   min-width: 0;
@@ -270,6 +270,9 @@ main.crat-page {
 .section-intro {
   max-width: 65ch;
   margin-top: .75rem;
+  /* T6 дизайн-аудита: типогигиена — абзацы вводных секций без «сиротских» слов
+     в последней строке там, где браузер это умеет. */
+  text-wrap: pretty;
 }
 
 /* hero */
@@ -552,24 +555,51 @@ main.crat-page {
   color: var(--paper);
 }
 
-/* курс в фокусе */
+/* курс в фокусе — T6: киноафиша 3fr/2fr (кадр — полноразмерный, курс = главный товар) */
 
-.course-card {
+.course-focus-grid {
+  display: grid;
+  grid-template-columns: 3fr 2fr;
+  gap: clamp(2rem, 5vw, 4rem);
+  align-items: stretch;
+}
+@media (max-width: 860px) {
+  .course-focus-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.course-focus-copy {
   display: grid;
   gap: 1.25rem;
+  align-content: center;
 }
 
 /* мобайл 360px: grid-дети по умолчанию min-width:auto — длинный заголовок/факты раздували карточку */
-.course-card > * {
+.course-focus-copy > * {
   min-width: 0;
 }
 
-.course-card h3 {
+.course-focus-copy h3 {
   overflow-wrap: anywhere;
 }
 
-.course-card .crat-button {
+.course-focus-copy .crat-button {
   justify-self: start;
+}
+
+.course-focus-frame {
+  aspect-ratio: auto;
+  height: 100%;
+  min-height: 320px;
+}
+@media (max-width: 860px) {
+  .course-focus-frame {
+    order: -1;
+    aspect-ratio: 16 / 9;
+    height: auto;
+    min-height: 0;
+  }
 }
 
 .course-facts {
@@ -638,21 +668,70 @@ main.crat-page {
 
 /* узкий экран: display-кегль ломал «профессиональной» посреди слова — умеренный размер, слова целые */
 @media (max-width: 480px) {
-  .course-card h3 {
+  .course-focus-copy h3 {
     font-size: 1.5rem;
   }
-  .course-card .crat-button {
+  .course-focus-copy .crat-button {
     padding-inline: 1.2rem;
   }
 }
 
-/* автоматизации */
+/* автоматизации — T6: mono-список с display-цифрами вместо карточной сетки 2×2.
+   Переиспользуется — тот же паттерн подошёл бы любому mono-перечню (не только автоматизациям). */
 
-.automation-card p {
+.mono-list {
+  list-style: none;
+  margin: 2rem 0 0;
+  padding: 0;
+  display: grid;
+}
+.mono-list-row {
+  display: flex;
+  align-items: center;
+  gap: clamp(1.25rem, 4vw, 2.5rem);
+  padding-block: 1.5rem;
+  border-bottom: 1px solid var(--line-soft);
+}
+.mono-list-row:first-child {
+  border-top: 1px solid var(--line-soft);
+}
+.mono-list-num {
+  flex: none;
+  min-width: 2.5ch;
+  font-size: clamp(2rem, 7vw, 3.5rem);
+  line-height: 1;
+  opacity: .3;
+}
+.mono-list-text {
   margin: 0;
 }
 
-/* студия — асимметричная сетка CSS-кадров (бриф §7.6) */
+/* студия — асимметричная сетка CSS-кадров (бриф §7.6), T6: full-bleed edge-to-edge */
+
+.studio-section {
+  position: relative;
+  /* «едва заметный» — градиент затухает задолго до низа секции */
+  background: linear-gradient(to bottom, color-mix(in srgb, var(--green-night) 45%, transparent) 0%, transparent 55%);
+}
+
+.studio-bleed {
+  position: relative;
+  /* overflow:hidden клипует горизонтальный вылет box-shadow-«свечения» линии на
+     самых краях full-bleed контейнера (иначе на 360px document.scrollWidth
+     превышает innerWidth — главный риск full-bleed, отмеченный в задаче T6);
+     padding-top даёт месту для вертикального вылета того же свечения. */
+  overflow: hidden;
+  margin-top: 3rem;
+  padding-top: 2rem;
+}
+
+.studio-horizon {
+  display: block;
+  height: 1px;
+  margin: 0 0 clamp(1.5rem, 4vw, 2.5rem);
+  background: var(--lime-neon);
+  box-shadow: 0 0 24px rgba(187, 224, 92, .45);
+}
 
 .studio-grid {
   display: grid;
@@ -662,7 +741,6 @@ main.crat-page {
     'a a b c'
     'a a d d';
   gap: 1.25rem;
-  margin-top: 2rem;
 }
 .studio-grid .crat-visual-frame {
   aspect-ratio: auto;
@@ -691,24 +769,74 @@ main.crat-page {
   }
 }
 
-/* как мы работаем */
+/* этика — T6: full-bleed манифест-разворот, единственный «цветовой акт» страницы (П1 Пакета Б) */
 
-.process-grid {
+.ethics-manifesto {
   margin-top: 2rem;
+  padding-block: clamp(3rem, 8vh, 6rem);
+  background: radial-gradient(ellipse at 50% 120%, color-mix(in srgb, var(--red-dark) 55%, transparent), var(--bg-void));
+}
+.ethics-manifesto-text {
+  font-size: clamp(1.9rem, 3vw, 2.6rem);
+  max-width: 30ch;
+}
+.ethics-manifesto-sub {
+  max-width: 45ch;
+  margin-top: 1.5rem;
 }
 
-.process-card {
+/* как мы работаем — T6: монтажная линейка (горизонтальная красная линия + 4 шага) вместо карточной сетки */
+
+.process-line {
+  list-style: none;
+  margin: 3rem 0 0;
+  padding: 0;
+  position: relative;
   display: grid;
-  gap: .75rem;
-  align-content: start;
+  grid-template-columns: repeat(4, 1fr);
+  gap: clamp(1.5rem, 4vw, 3rem);
 }
-
-.process-num {
-  color: var(--paper-muted);
+.process-line::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--neon);
+  box-shadow: var(--neon-glow);
 }
-
-.process-card p {
+.process-line-step {
+  display: grid;
+  gap: .5rem;
+  padding-top: 2rem;
+}
+.process-line-num {
+  font-size: clamp(2.4rem, 6vw, 3.5rem);
+  line-height: 1;
+  opacity: .3;
+}
+.process-line-text {
   margin: 0;
+}
+
+@media (max-width: 760px) {
+  .process-line {
+    grid-template-columns: 1fr;
+    gap: 2.5rem;
+    padding-left: 1.75rem;
+  }
+  .process-line::before {
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: auto;
+    width: 2px;
+    height: auto;
+  }
+  .process-line-step {
+    padding-top: 0;
+  }
 }
 
 /* команда */
@@ -729,6 +857,13 @@ main.crat-page {
   display: grid;
   gap: .75rem;
   align-content: start;
+}
+
+/* T6 дизайн-аудита: имя — средняя ступень кегля, не полный .crat-display
+   (досье — не заголовок секции). */
+.team-card h3 {
+  font-size: var(--fs-h3);
+  margin: 0;
 }
 
 .team-card-frame {
@@ -807,7 +942,7 @@ main.crat-page {
 .hero-section h1 {
   margin-top: 1rem;
   /* course.title (из content, не куратированный текст брифа) содержит длинные
-     слова («профессиональной») — та же защита, что у .course-card h3 на главной. */
+     слова («профессиональной») — та же защита, что у .course-focus-copy h3 на главной. */
   overflow-wrap: anywhere;
 }
 @media (max-width: 480px) {
@@ -835,6 +970,8 @@ main.crat-page {
 }
 .program-module h3 {
   margin: 0;
+  /* T6 дизайн-аудита: та же средняя ступень, что у имён команды (--fs-h3). */
+  font-size: var(--fs-h3);
 }
 
 .program-lessons {

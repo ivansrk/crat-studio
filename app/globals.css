@@ -32,3 +32,31 @@ main { max-width: var(--maxw-text); margin: 0 auto; padding: 2rem 1rem; }
   *, *::before, *::after { animation: none !important; transition: none !important; }
   html { scroll-behavior: auto; }
 }
+
+/* T6 дизайн-аудита: типогигиена — выделение текста и скроллбар в системе CRAT
+   (браузерный синий/системный серый — оба «дефолт-AI» приметы). */
+::selection {
+  background: var(--red-dark);
+  color: var(--paper);
+}
+
+/* Firefox + декларативный Chromium-фолбэк */
+html {
+  scrollbar-color: var(--red-dark) var(--bg-void);
+  scrollbar-width: thin;
+}
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+*::-webkit-scrollbar-track {
+  background: var(--bg-void);
+}
+*::-webkit-scrollbar-thumb {
+  background: var(--red-dark);
+  border-radius: 6px;
+  border: 2px solid var(--bg-void);
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--neon);
+}
