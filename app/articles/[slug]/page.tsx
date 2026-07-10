@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
+import Image from 'next/image'
 import { MDXRemote } from 'next-mdx-remote/rsc'
 import { getArticle } from '@/lib/content'
 import { mdxComponents } from '@/components/mdx'
@@ -41,6 +42,17 @@ export default async function ArticlePage({ params }: Props) {
       <JsonLd data={articleSchema(article)} />
       <SiteHeader />
       <main>
+        {article.meta.cover && (
+          <div className="article-cover">
+            <Image
+              src={`/images/${article.meta.cover}`}
+              alt={article.meta.title}
+              fill
+              priority
+              sizes="(max-width: 800px) 100vw, 46rem"
+            />
+          </div>
+        )}
         <p className="crat-kicker">{t.articles.kicker} · {formatDate(new Date(article.meta.date))}</p>
         <h1 className="crat-display">{article.meta.title}</h1>
         <MDXRemote source={article.mdx} components={mdxComponents(base)} />

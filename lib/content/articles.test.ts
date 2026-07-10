@@ -51,6 +51,14 @@ describe('loadArticles', () => {
     expect(articles).toHaveLength(0)
   })
 
+  it('cover указан, но файла нет в public/images/ — warning, статья всё равно публикуется (Ф7в, §8)', () => {
+    const { articles, issues } = loadArticles(fx('articles-cover-missing'))
+    expect(articles).toHaveLength(1)
+    expect(issues.filter(i => i.level === 'error')).toHaveLength(0)
+    const warnings = issues.filter(i => i.level === 'warning').map(i => i.message).join('\n')
+    expect(warnings).toMatch(/cover "no-such-file\.webp" не найден в public\/images\//)
+  })
+
   it('несуществующий каталог content/articles — пусто, без ошибок (раздел опционален)', () => {
     const { articles, issues } = loadArticles(fx('articles-does-not-exist'))
     expect(articles).toHaveLength(0)

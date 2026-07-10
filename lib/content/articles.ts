@@ -10,6 +10,8 @@ export type ArticleMeta = {
   description: string
   date: string
   draft?: boolean
+  /** Ф7в: обложка статьи, аддитивное поле контракта §8 — имя файла в public/images/. Опционально: нет поля → карточка/шапка без картинки, как раньше. */
+  cover?: string
 }
 export type Article = { meta: ArticleMeta; mdx: string; dir: string }
 export type ArticleIssue = { level: 'error' | 'warning'; slug?: string; message: string }
@@ -39,6 +41,14 @@ export function loadArticles(dir: string): { articles: Article[]; issues: Articl
       if (!isNonEmptyString(meta.title)) err('title пуст или не строка')
       if (!isNonEmptyString(meta.description)) err('description пуст или не строка')
       if (!meta.date || Number.isNaN(Date.parse(String(meta.date)))) err(`date некорректна: "${meta.date}"`)
+      // cover — аддитивное поле §8: warning, не error (не роняем статью из-за отсутствующей картинки).
+      if (meta.cover !== undefined) {
+        if (!isNonEmptyString(meta.cover)) {
+          issues.push({ level: 'warning', slug, message: 'cover задан, но не непустая строка — игнорируется' })
+        } else if (!fs.existsSync(path.join(process.cwd(), 'public', 'images', meta.cover))) {
+          issues.push({ level: 'warning', slug, message: `cover "${meta.cover}" не найден в public/images/` })
+        }
+      }
     }
     if (mdx !== null) {
       const assetsDir = path.join(articleDir, 'assets')

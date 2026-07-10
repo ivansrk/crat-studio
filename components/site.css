@@ -137,6 +137,30 @@
   text-decoration-color: var(--neon);
 }
 
+/* обложка статьи в карточке /articles — опциональна (§8, cover может отсутствовать) */
+.article-card-cover {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 1.25rem;
+}
+.article-card-cover img {
+  object-fit: cover;
+}
+
+/* обложка в шапке статьи (Ф7в/D-038) — та же узкая колонка, что у остального текста статьи */
+.article-cover {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  border-radius: 14px;
+  overflow: hidden;
+  margin-bottom: 1.5rem;
+}
+.article-cover img {
+  object-fit: cover;
+}
+
 /* ---------- главная — редакционный монтаж (Ф5 Task 4, бриф §7) ---------- */
 
 main.crat-home,

@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import Image from 'next/image'
 import { getArticles } from '@/lib/content'
 import { formatDate } from '@/lib/i18n/format-date'
 import { t } from '@/lib/i18n'
@@ -36,6 +37,16 @@ export default function ArticlesPage() {
                 {articles.map(a => (
                   <Link key={a.meta.slug} href={`/articles/${a.meta.slug}`} className="crat-card article-card">
                     <article>
+                      {a.meta.cover && (
+                        <div className="article-card-cover">
+                          <Image
+                            src={`/images/${a.meta.cover}`}
+                            alt={a.meta.title}
+                            fill
+                            sizes="(max-width: 700px) 100vw, 33vw"
+                          />
+                        </div>
+                      )}
                       <h2>{a.meta.title}</h2>
                       <p className="crat-muted">{a.meta.description}</p>
                       <p className="crat-kicker">{formatDate(new Date(a.meta.date))}</p>
