@@ -53,6 +53,60 @@
   gap: .6rem;
 }
 
+/* Ф7б Task 7: клиентская база (/admin/clients, CRM-01…03) — поиск, форма редактирования карточки. */
+.admin-search {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: .75rem;
+  margin-block: 1rem;
+}
+.admin-search label {
+  display: grid;
+  gap: .35rem;
+}
+.admin-search input {
+  background: var(--ink);
+  color: var(--paper);
+  border: 1px solid var(--line-soft);
+  border-radius: 8px;
+  padding: .7rem 1rem;
+  font-size: var(--fs-base);
+  min-width: 20rem;
+  transition: border-color .3s ease;
+}
+.admin-search input:hover { border-color: var(--line-red); }
+.admin-search input:focus-visible { outline: 2px solid var(--neon); outline-offset: 2px; }
+
+.admin-edit-form {
+  display: grid;
+  gap: 1rem;
+  max-width: 32rem;
+  margin-block: 1rem 1.5rem;
+}
+.admin-edit-form label {
+  display: grid;
+  gap: .35rem;
+}
+.admin-edit-form input {
+  background: var(--ink);
+  color: var(--paper);
+  border: 1px solid var(--line-soft);
+  border-radius: 8px;
+  padding: .8rem 1rem;
+  font-size: var(--fs-base);
+  transition: border-color .3s ease;
+}
+.admin-edit-form input:hover { border-color: var(--line-red); }
+.admin-edit-form input:focus-visible { outline: 2px solid var(--neon); outline-offset: 2px; }
+.admin-edit-form input:disabled { opacity: .6; cursor: not-allowed; }
+.admin-edit-form .crat-button { justify-self: start; }
+
+.crm-flag {
+  font-family: var(--font-mono), monospace;
+  font-size: var(--fs-small);
+}
+
 /* T6: карточки проверки мини-проектов (/admin/projects) — стопка crat-card, hover-подъём не нужен. */
 .admin-review-list {
   display: grid;

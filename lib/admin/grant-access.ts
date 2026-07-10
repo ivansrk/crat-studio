@@ -4,6 +4,8 @@ import { createUserWithPassword } from '@/lib/auth/provision'
 import { mintResetToken } from '@/lib/auth/reset'
 import { ResetTokenPurpose } from '@/lib/generated/prisma/client'
 import { isUniqueViolation } from '@/lib/db-errors'
+import { getEffectiveConsent } from '@/lib/consent/effective'
+import { syncContactSubscribe } from '@/lib/resend-audience'
 
 export type GrantResult =
   | { status: 'granted'; plainPassword: string | null; email: string }
@@ -49,6 +51,14 @@ export async function grantAccess(registrationId: string, adminUserId: string): 
   } catch (e) {
     if (isUniqueViolation(e)) return { status: 'already' } // unique(userId, courseSlug) — ADM-04, письмо НЕ шлём
     throw e
+  }
+
+  // Ф7б Task 7 (CRM-гэп): ручная выдача (F15/D-035, публичная заявка) — confirm.ts синкает
+  // контакт в Resend Audience только на авто-инвайт-пути (F14). Если email уже дал действующее
+  // согласие NEWSLETTER при double opt-in (REG-13, публичный путь), контакт в Audience до сих пор
+  // не заведён — заводим его здесь. Best-effort: сбой не должен ронять уже выданный доступ (CRM-05).
+  if (await getEffectiveConsent(user.email, 'NEWSLETTER')) {
+    await syncContactSubscribe(user).catch(e => console.error('[grant-access] Resend-синк подписки не удался (CRM-05):', e))
   }
 
   // Нота ревью T4/T9: транзакция уже успешна (доступ выдан) — сбой письма после неё не «выдача не удалась».

@@ -26,10 +26,3 @@ export async function recordUnsubscribe(email: string): Promise<UnsubscribedUser
   await appendConsent({ email: normalized, type: 'NEWSLETTER', granted: false, source: 'UNSUBSCRIBE_LINK', userId: user?.id })
   return user ? { id: user.id, email: user.email, resendContactId: user.resendContactId } : null
 }
-
-/** Чистая свёртка «действующее согласие = последняя запись» — используется CSV-экспортом (ADM-09). */
-export function latestConsentByEmail(rows: { email: string; granted: boolean; createdAt: Date }[]): Map<string, boolean> {
-  const m = new Map<string, boolean>()
-  for (const r of [...rows].sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime())) m.set(r.email, r.granted)
-  return m
-}

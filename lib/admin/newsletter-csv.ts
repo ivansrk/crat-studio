@@ -1,4 +1,4 @@
-import { latestConsentByEmail } from '@/lib/registration/consents'
+import { latestConsentByEmail } from '@/lib/consent/effective'
 
 type Contact = { email: string; firstName: string; lastName: string; phone: string | null; telegram: string | null }
 type ConsentRow = { email: string; granted: boolean; createdAt: Date }

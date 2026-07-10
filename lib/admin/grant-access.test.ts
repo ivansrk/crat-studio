@@ -2,14 +2,17 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 // grant-access.ts обращается к глобальному db.$transaction (не DI, как provision.ts/mintResetToken) —
 // мокаем модуль целиком, тем же приёмом, что reset.test.ts мокает '@/lib/email'.
+// consent.findFirst — Ф7б Task 7 (CRM-гэп): getEffectiveConsent тоже ходит через глобальный db.
 vi.mock('@/lib/db', () => ({
-  db: { registration: { findUnique: vi.fn() }, $transaction: vi.fn() },
+  db: { registration: { findUnique: vi.fn() }, consent: { findFirst: vi.fn() }, $transaction: vi.fn() },
 }))
 vi.mock('@/lib/email', () => ({ sendEmail: vi.fn().mockResolvedValue('log-id') }))
+vi.mock('@/lib/resend-audience', () => ({ syncContactSubscribe: vi.fn().mockResolvedValue('synced') }))
 
 import { grantAccess } from './grant-access'
 import { db } from '@/lib/db'
 import { sendEmail } from '@/lib/email'
+import { syncContactSubscribe } from '@/lib/resend-audience'
 import { verifyPassword } from '@/lib/auth/password'
 
 type FakeUser = {
@@ -55,8 +58,11 @@ function fakeTx(existingUser: FakeUser | null) {
   return { tx, store, userCreate, userUpdate, enrollmentCreate, tokenCreate }
 }
 
-function setup(reg: FakeReg, existingUser: FakeUser | null, opts: { enrollmentError?: unknown } = {}) {
+function setup(reg: FakeReg, existingUser: FakeUser | null, opts: { enrollmentError?: unknown; subscribed?: boolean } = {}) {
   vi.mocked(db.registration.findUnique).mockResolvedValue(reg as never)
+  // Ф7б Task 7 (CRM-гэп): по умолчанию нет действующего согласия NEWSLETTER — тесты, которым
+  // важен сам гэп, передают opts.subscribed = true.
+  vi.mocked(db.consent.findFirst).mockResolvedValue((opts.subscribed ? { granted: true } : null) as never)
   const { tx, store, userCreate, userUpdate, enrollmentCreate, tokenCreate } = fakeTx(existingUser)
   if (opts.enrollmentError) enrollmentCreate.mockRejectedValueOnce(opts.enrollmentError)
   // db.$transaction типизирован по реальному PrismaClient — в тесте нужен только колбэк-раннер
@@ -75,6 +81,7 @@ describe('grantAccess (ADM-03/04, AUTH-15, F11, D-028)', () => {
   beforeEach(() => {
     vi.mocked(sendEmail).mockClear()
     vi.mocked(db.$transaction).mockClear()
+    vi.mocked(syncContactSubscribe).mockClear()
   })
 
   it('заявка не найдена → not_found, транзакция не запускается', async () => {
@@ -157,5 +164,28 @@ describe('grantAccess (ADM-03/04, AUTH-15, F11, D-028)', () => {
     expect(result.status).toBe('granted_email_failed')
     if (result.status !== 'granted_email_failed') throw new Error('unreachable')
     expect(result.plainPassword).toMatch(/^[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}$/)
+  })
+
+  // Ф7б Task 7 (CRM-гэп): F15 публичный путь — заявка уже подтвердила double opt-in с подпиской
+  // (Consent NEWSLETTER granted=true по email), доступ выдаётся вручную; confirm.ts синкает
+  // Resend Audience только на авто-инвайт-пути (F14), поэтому здесь контакт до сих пор не заведён.
+  it('действующая NEWSLETTER-подписка по email → зовёт syncContactSubscribe после выдачи', async () => {
+    setup(reg, null, { subscribed: true })
+    await grantAccess(reg.id, 'admin-1')
+    expect(syncContactSubscribe).toHaveBeenCalledOnce()
+    expect(vi.mocked(syncContactSubscribe).mock.calls[0][0].email).toBe(reg.email)
+  })
+
+  it('нет действующей подписки → syncContactSubscribe не вызывается', async () => {
+    setup(reg, null, { subscribed: false })
+    await grantAccess(reg.id, 'admin-1')
+    expect(syncContactSubscribe).not.toHaveBeenCalled()
+  })
+
+  it('сбой Resend-синка не роняет выдачу — доступ всё равно granted', async () => {
+    setup(reg, null, { subscribed: true })
+    vi.mocked(syncContactSubscribe).mockRejectedValueOnce(new Error('resend down'))
+    const result = await grantAccess(reg.id, 'admin-1')
+    expect(result.status).toBe('granted')
   })
 })
