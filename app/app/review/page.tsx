@@ -24,12 +24,12 @@ export default async function ReviewPage({ searchParams }: {
   // паттерн из app/app/page.tsx/lessons/[lessonId].
   const user = await currentUser()
   if (!user) redirect('/login')
-  if (!(await hasCourseAccess(user))) redirect('/app')
+  if (!(await hasCourseAccess(user, 'ai-basics'))) redirect('/app') // Ф7в T3: из маршрута; сам due-блок ниже — по всем курсам (F19)
 
   if (done) {
     const state = await db.deferredQuizState.findFirst({ where: { id: done, userId: user.id } })
     if (!state || !state.answeredAt) redirect('/app') // не найден/чужой/ещё не отвечен — нечего показывать
-    const lesson = getLesson('ai-basics', state.lessonId) // Ф7в T3: заменить на courseSlug из маршрута
+    const lesson = getLesson(state.courseSlug, state.lessonId) // MC-05: курс — из самой строки (deferred по всем курсам)
     if (!lesson) redirect('/app') // урок пропал после сдачи (E10) — нечего показывать
     const questions = lesson.quiz.deferred ?? lesson.quiz.questions
     const answers = (state.answers as StoredAnswer[] | null) ?? []

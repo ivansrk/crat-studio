@@ -213,7 +213,7 @@ model QuizResult {
   startedAt  DateTime  @default(now())
   finishedAt DateTime?
 
-  @@unique([userId, lessonId, attempt])
+  @@unique([userId, courseSlug, lessonId, attempt]) // Ф7в: было без courseSlug — латентный мультикурс-баг (MC-05, E-MC2)
 }
 
 // Отложенное повторение: создаётся при completedAt урока, dueAt = +7 дней (LES-13).

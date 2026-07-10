@@ -9,7 +9,7 @@ import { db } from '@/lib/db'
 
 async function requireStudent() {
   const user = await currentUser()
-  if (!user || !(await hasCourseAccess(user))) redirect('/login')
+  if (!user || !(await hasCourseAccess(user, 'ai-basics'))) redirect('/login') // Ф7в T3: из маршрута
   return user
 }
 
@@ -17,14 +17,14 @@ async function requireStudent() {
 export async function startQuizAction(formData: FormData) {
   const user = await requireStudent()
   const lessonId = String(formData.get('lessonId'))
-  const attempt = await startAttempt(user.id, lessonId)
+  const attempt = await startAttempt(user.id, 'ai-basics', lessonId) // Ф7в T3: из маршрута
   redirect(`/app/lessons/${lessonId}/quiz?attempt=${attempt.id}`)
 }
 
 export async function togglePracticeAction(formData: FormData) {
   const user = await requireStudent()
   const lessonId = String(formData.get('lessonId'))
-  await setPractice(user.id, lessonId, formData.get('done') === 'on')
+  await setPractice(user.id, 'ai-basics', lessonId, formData.get('done') === 'on') // Ф7в T3: из маршрута
   revalidatePath(`/app/lessons/${lessonId}`)
 }
 

@@ -16,12 +16,12 @@ export default async function LessonPage({ params }: { params: Promise<{ lessonI
   // на всякий случай (истёкшая сессия между рендерами) отправляем на /login, а не падаем.
   const user = await currentUser()
   if (!user) redirect('/login')
-  if (!(await hasCourseAccess(user))) redirect('/app')
+  if (!(await hasCourseAccess(user, 'ai-basics'))) redirect('/app') // Ф7в T3: из маршрута
 
   const lesson = getLesson('ai-basics', lessonId) // Ф7в T3: заменить на courseSlug из маршрута
   if (!lesson) return <main><p>{t.lesson.unavailable}</p></main>
-  await ensureProgress(user.id, lessonId) // только для валидного урока — битые/несуществующие не создают LessonProgress
-  const state = await getLessonState(user.id, lessonId)
+  await ensureProgress(user.id, 'ai-basics', lessonId) // Ф7в T3: из маршрута; только для валидного урока — битые/несуществующие не создают LessonProgress
+  const state = await getLessonState(user.id, 'ai-basics', lessonId) // Ф7в T3: из маршрута
   const base = assetBase('ai-basics', lesson) // Ф7в T3: заменить на courseSlug из маршрута
   const next = nextLessonId('ai-basics', lessonId) // Ф7в T3: заменить на courseSlug из маршрута
   return (

@@ -7,7 +7,7 @@ import { isValidChoice, type StoredAnswer } from '@/lib/progress/quiz-logic'
 
 async function requireStudent() {
   const user = await currentUser()
-  if (!user || !(await hasCourseAccess(user))) redirect('/login')
+  if (!user || !(await hasCourseAccess(user, 'ai-basics'))) redirect('/login') // Ф7в T3: из маршрута
   return user
 }
 

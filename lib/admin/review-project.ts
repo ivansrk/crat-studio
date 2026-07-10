@@ -38,7 +38,8 @@ export async function reviewProject(
   if (verdict === 'approve') {
     // Динамический импорт — не создаём статический цикл (тот же приём, что recomputeCompletion → lib/cert).
     const { checkAndIssueCertificate } = await import('@/lib/cert') // триггер CERT-01 №2 (PROJ-05)
-    const certResult = await checkAndIssueCertificate(sub.userId).catch(e => {
+    // MC-05: courseSlug берётся из самой Submission (данные, не хардкод) — проект уже courseSlug-aware.
+    const certResult = await checkAndIssueCertificate(sub.userId, sub.courseSlug).catch(e => {
       console.error('[cert] выдача после approve:', e)
       return 'not_eligible' as const
     })

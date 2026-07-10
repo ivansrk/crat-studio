@@ -3,11 +3,9 @@ import { isUniqueViolation } from '@/lib/db-errors'
 import { PROJECT_FIELDS, normalizeDraft, isSubmittable, type ProjectDraft } from './fields'
 import type { Submission } from '@/lib/generated/prisma/client'
 
-const COURSE = 'ai-basics'
-
 /** Текущая попытка мини-проекта = max(attempt) (D-016: пересдача — новая строка). */
-export async function getCurrentSubmission(userId: string): Promise<Submission | null> {
-  return db.submission.findFirst({ where: { userId, courseSlug: COURSE }, orderBy: { attempt: 'desc' } })
+export async function getCurrentSubmission(userId: string, courseSlug: string): Promise<Submission | null> {
+  return db.submission.findFirst({ where: { userId, courseSlug }, orderBy: { attempt: 'desc' } })
 }
 
 type ProjectField = (typeof PROJECT_FIELDS)[number]
@@ -25,10 +23,10 @@ export type SaveDraftResult = 'saved' | 'locked'
  *  P2002-ретрай на гонку attempt (паттерн startAttempt из lib/progress).
  *  Контракт: ожидает все 7 ключей на каждый вызов (одна полная форма) —
  *  частичный объект обнулит непереданные поля (normalizeDraft: отсутствующее → null). */
-export async function saveDraft(userId: string, draft: Record<string, unknown>): Promise<SaveDraftResult> {
+export async function saveDraft(userId: string, courseSlug: string, draft: Record<string, unknown>): Promise<SaveDraftResult> {
   const normalized = normalizeDraft(draft)
   for (let tryN = 0; tryN < 2; tryN++) {
-    const current = await getCurrentSubmission(userId)
+    const current = await getCurrentSubmission(userId, courseSlug)
     if (current?.status === 'APPROVED' || current?.status === 'SUBMITTED') return 'locked'
 
     try {
@@ -36,7 +34,7 @@ export async function saveDraft(userId: string, draft: Record<string, unknown>):
         await db.submission.create({
           // ...draftFields(current) при полном draft перекрывается normalized целиком —
           // страховка на случай частичного draft от будущего вызывающего (предзаполнение прошлой попыткой, PROJ-04).
-          data: { userId, courseSlug: COURSE, attempt: current.attempt + 1, status: 'DRAFT', ...draftFields(current), ...normalized },
+          data: { userId, courseSlug, attempt: current.attempt + 1, status: 'DRAFT', ...draftFields(current), ...normalized },
         })
       } else if (current) {
         // DRAFT. Status-guard против TOCTOU: submitProject из второй вкладки мог успеть
@@ -44,7 +42,7 @@ export async function saveDraft(userId: string, draft: Record<string, unknown>):
         const updated = await db.submission.updateMany({ where: { id: current.id, status: 'DRAFT' }, data: normalized })
         if (updated.count !== 1) return 'locked'
       } else {
-        await db.submission.create({ data: { userId, courseSlug: COURSE, attempt: 1, status: 'DRAFT', ...normalized } })
+        await db.submission.create({ data: { userId, courseSlug, attempt: 1, status: 'DRAFT', ...normalized } })
       }
       return 'saved'
     } catch (e) {
@@ -57,8 +55,8 @@ export async function saveDraft(userId: string, draft: Record<string, unknown>):
 export type SubmitResult = 'submitted' | 'incomplete' | 'locked'
 
 /** PROJ-01/03: отправка — только из DRAFT и только когда все 7 полей заполнены. */
-export async function submitProject(userId: string): Promise<SubmitResult> {
-  const current = await getCurrentSubmission(userId)
+export async function submitProject(userId: string, courseSlug: string): Promise<SubmitResult> {
+  const current = await getCurrentSubmission(userId, courseSlug)
   if (current?.status !== 'DRAFT') return 'locked'
   if (!isSubmittable(draftFields(current))) return 'incomplete'
   // Status-guard против TOCTOU (двойной submit из двух вкладок): переводим только из DRAFT.

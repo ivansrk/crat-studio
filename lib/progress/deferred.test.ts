@@ -1,8 +1,8 @@
 import { describe, it, expect } from 'vitest'
 import { pickDueDeferred, type DeferredRow } from './deferred'
 
-const row = (id: string, lessonId: string, dueAt: Date, answeredAt: Date | null = null): DeferredRow => ({
-  id, lessonId, dueAt, answeredAt,
+const row = (id: string, lessonId: string, dueAt: Date, answeredAt: Date | null = null, courseSlug = 'ai-basics'): DeferredRow => ({
+  id, courseSlug, lessonId, dueAt, answeredAt,
 })
 
 const now = new Date('2026-07-09T12:00:00Z')

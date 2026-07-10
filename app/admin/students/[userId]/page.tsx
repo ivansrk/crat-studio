@@ -22,9 +22,9 @@ export default async function StudentProgress({ params }: { params: Promise<{ us
   if (!user) notFound() // гейт админа — в app/admin/layout.tsx; здесь только валидность userId
 
   const [{ byLesson }, deferred, submission, certificate] = await Promise.all([
-    getCourseProgress(userId),
-    db.deferredQuizState.findMany({ where: { userId }, orderBy: { dueAt: 'asc' } }),
-    getCurrentSubmission(userId),
+    getCourseProgress(userId, 'ai-basics'), // Ф7в T3: из маршрута
+    db.deferredQuizState.findMany({ where: { userId }, orderBy: { dueAt: 'asc' } }), // по всем курсам студента (F19) — без courseSlug
+    getCurrentSubmission(userId, 'ai-basics'), // Ф7в T3: из маршрута
     db.certificate.findFirst({ where: { userId, status: { in: ['VALID', 'REVOKED'] } }, orderBy: { issuedAt: 'desc' } }),
   ])
   // Ф7в T3: заменить на courseSlug из маршрута

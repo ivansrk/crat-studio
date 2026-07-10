@@ -129,7 +129,7 @@ async function seedF2() {
       create: { userId: student.id, courseSlug: COURSE, lessonId, quizPassedAt: now, practiceDoneAt: now, completedAt: now },
     })
     await db.quizResult.upsert({
-      where: { userId_lessonId_attempt: { userId: student.id, lessonId, attempt: 1 } },
+      where: { userId_courseSlug_lessonId_attempt: { userId: student.id, courseSlug: COURSE, lessonId, attempt: 1 } },
       update: {},
       create: {
         userId: student.id, courseSlug: COURSE, lessonId, attempt: 1,
@@ -142,7 +142,7 @@ async function seedF2() {
       },
     })
     await db.quizResult.upsert({
-      where: { userId_lessonId_attempt: { userId: student.id, lessonId, attempt: 2 } },
+      where: { userId_courseSlug_lessonId_attempt: { userId: student.id, courseSlug: COURSE, lessonId, attempt: 2 } },
       update: {},
       create: {
         userId: student.id, courseSlug: COURSE, lessonId, attempt: 2,
@@ -168,7 +168,7 @@ async function seedF2() {
     create: { userId: student.id, courseSlug: COURSE, lessonId: '1.3', quizPassedAt: now },
   })
   await db.quizResult.upsert({
-    where: { userId_lessonId_attempt: { userId: student.id, lessonId: '1.3', attempt: 1 } },
+    where: { userId_courseSlug_lessonId_attempt: { userId: student.id, courseSlug: COURSE, lessonId: '1.3', attempt: 1 } },
     update: {},
     create: {
       userId: student.id, courseSlug: COURSE, lessonId: '1.3', attempt: 1,
@@ -188,7 +188,7 @@ async function seedF2() {
     create: { userId: student.id, courseSlug: COURSE, lessonId: '2.1' },
   })
   await db.quizResult.upsert({
-    where: { userId_lessonId_attempt: { userId: student.id, lessonId: '2.1', attempt: 1 } },
+    where: { userId_courseSlug_lessonId_attempt: { userId: student.id, courseSlug: COURSE, lessonId: '2.1', attempt: 1 } },
     update: {},
     create: {
       userId: student.id, courseSlug: COURSE, lessonId: '2.1', attempt: 1,
@@ -252,7 +252,7 @@ async function seedF3() {
       create: { userId: diplomant.id, courseSlug: COURSE, lessonId, quizPassedAt: now, practiceDoneAt: now, completedAt: now },
     })
     await db.quizResult.upsert({
-      where: { userId_lessonId_attempt: { userId: diplomant.id, lessonId, attempt: 1 } },
+      where: { userId_courseSlug_lessonId_attempt: { userId: diplomant.id, courseSlug: COURSE, lessonId, attempt: 1 } },
       update: {},
       create: {
         userId: diplomant.id, courseSlug: COURSE, lessonId, attempt: 1,

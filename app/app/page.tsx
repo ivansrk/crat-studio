@@ -26,7 +26,7 @@ export default async function Cabinet() {
   const user = await currentUser()
   if (!user) redirect('/login')
 
-  if (!(await hasCourseAccess(user))) {
+  if (!(await hasCourseAccess(user, 'ai-basics'))) { // Ф7в T3: из маршрута (Task 4 добавит каталог/«Мои курсы»)
     return (
       <main className="crat-page">
         <section className="crat-section">
@@ -41,12 +41,13 @@ export default async function Cabinet() {
   }
 
   const { course } = getCourse('ai-basics')! // Ф7в T3: заменить на courseSlug из маршрута
-  const { byLesson, completedCount } = await getCourseProgress(user.id)
+  const { byLesson, completedCount } = await getCourseProgress(user.id, 'ai-basics') // Ф7в T3: из маршрута
   const total = lessonCount('ai-basics') // знаменатель «N/12» из course.yaml, не хардкод (ревью T6); Ф7в T3: courseSlug из маршрута
   const pct = Math.min(100, (completedCount / total) * 100)
-  // Ф4 T2: due-блок повторения (CAB-04/06) — один запрос, без кэша (план); показывается ВВЕРХУ кабинета.
+  // Ф4 T2/F19: due-блок повторения (CAB-04/06) — по всем курсам студента (без courseSlug — deferred.ts T2),
+  // один запрос, без кэша (план); показывается ВВЕРХУ кабинета.
   const dueReview = await getDueDeferred(user.id)
-  const projectSubmission = await getCurrentSubmission(user.id) // T5: доп. запрос — приемлемо (план)
+  const projectSubmission = await getCurrentSubmission(user.id, 'ai-basics') // Ф7в T3: из маршрута; T5: доп. запрос — приемлемо (план)
   const projectStatusText = projectSubmission ? PROJECT_STATUS_LABEL[projectSubmission.status] : t.project.statusNone
   // T7: один findFirst — есть ли действующий сертификат (CERT-06/D-011: PDF по требованию, не хранится).
   const certificate = await db.certificate.findFirst({ where: { userId: user.id, courseSlug: 'ai-basics', status: 'VALID' } })

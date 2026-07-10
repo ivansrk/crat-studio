@@ -9,28 +9,28 @@ import { renderEmail } from '@/lib/email/templates'
 import { formatDate } from '@/lib/i18n/format-date'
 import { t } from '@/lib/i18n'
 
-const COURSE = 'ai-basics' // Ф7в T3: заменить на courseSlug через сигнатуры (MC-05)
-
-/** CERT-01/02: живое 12/12 (D-029) И текущий Submission APPROVED. */
-export async function isEligible(userId: string): Promise<boolean> {
+/** CERT-01/02/MC-06: живое N/N (D-029) — знаменатель lessonCount(courseSlug) КОНКРЕТНОГО курса,
+ *  не хардкод 12 — И текущий Submission APPROVED того же курса. */
+export async function isEligible(userId: string, courseSlug: string): Promise<boolean> {
   const [{ byLesson }, current] = await Promise.all([
-    getCourseProgress(userId),
-    db.submission.findFirst({ where: { userId, courseSlug: COURSE }, orderBy: { attempt: 'desc' } }),
+    getCourseProgress(userId, courseSlug),
+    db.submission.findFirst({ where: { userId, courseSlug }, orderBy: { attempt: 'desc' } }),
   ])
-  const all = getCourse(COURSE)!.course.modules.flatMap(m => m.lessons.map(l => l.id))
+  const all = getCourse(courseSlug)!.course.modules.flatMap(m => m.lessons.map(l => l.id))
   const passed = all.filter(id => isLessonPassed(byLesson.get(id))).length
   // Инвариант: после APPROVED новые попытки не создаются (PROJ-06, enforced в lib/project) —
   // current всегда остаётся APPROVED.
-  return passed === lessonCount(COURSE) && current?.status === 'APPROVED'
+  return passed === lessonCount(courseSlug) && current?.status === 'APPROVED'
 }
 
 /** Идемпотентная выдача (E12): транзакция «нет VALID → номер FOR UPDATE → insert».
- *  Вызывается на обоих триггерах CERT-01 (approve и «последний урок пройден»); повторный вызов — no-op. */
-export async function checkAndIssueCertificate(userId: string): Promise<'issued' | 'already' | 'not_eligible'> {
-  if (!(await isEligible(userId))) return 'not_eligible'
+ *  Вызывается на обоих триггерах CERT-01 (approve и «последний урок пройден»); повторный вызов — no-op.
+ *  MC-06: один VALID сертификат на (userId, courseSlug) — сертификат per-course. */
+export async function checkAndIssueCertificate(userId: string, courseSlug: string): Promise<'issued' | 'already' | 'not_eligible'> {
+  if (!(await isEligible(userId, courseSlug))) return 'not_eligible'
   const user = await db.user.findUnique({ where: { id: userId } })
   if (!user) return 'not_eligible'
-  const courseTitle = getCourse(COURSE)!.course.title
+  const courseTitle = getCourse(courseSlug)!.course.title
 
   let issuedNumber: string | null = null
   await db.$transaction(async tx => {
@@ -38,12 +38,14 @@ export async function checkAndIssueCertificate(userId: string): Promise<'issued'
     // снимается автоматически на commit/rollback. Без него два одновременных вызова оба
     // видят existing=null (единственная блокировка — FOR UPDATE счётчика — стоит позже)
     // и выдают два сертификата. После ожидания lock'а existing-check видит коммит первой транзакции.
+    // Ключ блокировки — userId (не userId+courseSlug): сериализует все конкурентные триггеры
+    // студента, включая параллельные разных курсов — дороже, но проще и безопаснее (redo не нужен).
     await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${userId}))`
-    const existing = await tx.certificate.findFirst({ where: { userId, courseSlug: COURSE, status: 'VALID' } })
+    const existing = await tx.certificate.findFirst({ where: { userId, courseSlug, status: 'VALID' } })
     if (existing) return // E12: второй триггер выходит без действия
     const number = await nextCertNumber(tx)
     await tx.certificate.create({
-      data: { number, userId, fullName: `${user.firstName} ${user.lastName}`, courseSlug: COURSE, courseTitle },
+      data: { number, userId, fullName: `${user.firstName} ${user.lastName}`, courseSlug, courseTitle },
     })
     issuedNumber = number
   })

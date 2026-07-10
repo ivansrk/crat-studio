@@ -24,10 +24,12 @@ export async function resendFromLog(emailLogId: string): Promise<ResendResult> {
   if (!log) return 'not_found'
   if (log.type === 'CERTIFICATE') {
     // Свой сценарий (не login-ссылка): ищем актуальный VALID-сертификат владельца — номер в исходном
-    // письме мог быть отозван (D-010), переотправлять отозванный номер нельзя.
+    // письме мог быть отозван (D-010), переотправлять отозванный номер нельзя. MC-05: без хардкода
+    // курса — студент может иметь сертификаты по нескольким курсам, берём последний выданный VALID
+    // (issuedAt desc); письмо и так шлётся по конкретному number ниже (sendCertificateEmail).
     const userId = log.userId
     const cert = userId
-      ? await db.certificate.findFirst({ where: { userId, courseSlug: 'ai-basics', status: 'VALID' } })
+      ? await db.certificate.findFirst({ where: { userId, status: 'VALID' }, orderBy: { issuedAt: 'desc' } })
       : null
     if (!cert || !userId) return 'cert_gone'
     try {

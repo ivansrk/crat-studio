@@ -12,7 +12,7 @@ export default async function T1Page() {
   // паттерн из app/app/page.tsx/lessons/[lessonId].
   const user = await currentUser()
   if (!user) redirect('/login')
-  if (!(await hasCourseAccess(user))) redirect('/app')
+  if (!(await hasCourseAccess(user, 'ai-basics'))) redirect('/app') // Ф7в T3: из маршрута
 
   return (
     <main className="trainers-page">

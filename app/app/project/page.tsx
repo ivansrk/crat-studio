@@ -33,9 +33,9 @@ export default async function ProjectPage({ searchParams }: { searchParams: Prom
   // паттерн из app/app/page.tsx/lessons/[lessonId].
   const user = await currentUser()
   if (!user) redirect('/login')
-  if (!(await hasCourseAccess(user))) redirect('/app')
+  if (!(await hasCourseAccess(user, 'ai-basics'))) redirect('/app') // Ф7в T3: из маршрута
 
-  const submission = await getCurrentSubmission(user.id)
+  const submission = await getCurrentSubmission(user.id, 'ai-basics') // Ф7в T3: из маршрута
   const banner = project ? BANNER[project] : undefined
   const isAlertBanner = project === 'incomplete' || project === 'locked'
   const readOnly = submission?.status === 'SUBMITTED' || submission?.status === 'APPROVED'

@@ -9,12 +9,12 @@ import { recordAnswer } from '@/lib/progress'
  *  пояснение обычным redirect'ом. Реальный сбой (чужая/завершённая попытка, out-of-order) → назад к уроку. */
 export async function answerAction(formData: FormData) {
   const user = await currentUser()
-  if (!user || !(await hasCourseAccess(user))) redirect('/login')
+  if (!user || !(await hasCourseAccess(user, 'ai-basics'))) redirect('/login') // Ф7в T3: из маршрута
   const lessonId = String(formData.get('lessonId'))
   const attemptId = String(formData.get('attemptId'))
   const questionIndex = Number(formData.get('questionIndex'))
   const chosen = Number(formData.get('chosen'))
-  const r = await recordAnswer(user.id, lessonId, attemptId, questionIndex, chosen)
+  const r = await recordAnswer(user.id, 'ai-basics', lessonId, attemptId, questionIndex, chosen) // Ф7в T3: из маршрута
   if (!r.ok) redirect(`/app/lessons/${lessonId}`) // чужая/завершённая попытка → назад к уроку (новая начнётся кнопкой)
   redirect(`/app/lessons/${lessonId}/quiz?attempt=${attemptId}&feedback=${questionIndex}`)
 }

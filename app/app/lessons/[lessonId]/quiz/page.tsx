@@ -17,12 +17,13 @@ export default async function QuizPage({ params, searchParams }: {
   const { lessonId } = await params
   const { attempt: attemptId, feedback } = await searchParams
   const user = await currentUser()
-  if (!user || !(await hasCourseAccess(user))) redirect('/login')
+  if (!user || !(await hasCourseAccess(user, 'ai-basics'))) redirect('/login') // Ф7в T3: из маршрута
   const lesson = getLesson('ai-basics', lessonId) // Ф7в T3: заменить на courseSlug из маршрута
   if (!lesson) notFound()
   if (!attemptId) redirect(`/app/lessons/${lessonId}`) // LES-10: прямой заход — назад, новая попытка только кнопкой
 
-  const attempt = await db.quizResult.findFirst({ where: { id: attemptId, userId: user.id, lessonId } })
+  // courseSlug в where — Ф7в T2: QuizResult @@unique теперь courseSlug-aware (MC-05); Ф7в T3: из маршрута
+  const attempt = await db.quizResult.findFirst({ where: { id: attemptId, userId: user.id, courseSlug: 'ai-basics', lessonId } })
   if (!attempt) redirect(`/app/lessons/${lessonId}`)
   const answers = (attempt.answers as StoredAnswer[] | null) ?? []
 
