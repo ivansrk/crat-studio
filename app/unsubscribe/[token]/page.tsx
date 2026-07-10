@@ -1,5 +1,6 @@
 import { readUnsubToken } from '@/lib/email/unsubscribe-token'
 import { recordUnsubscribe } from '@/lib/registration/consents'
+import { syncContactUnsubscribe } from '@/lib/resend-audience'
 import { sessionSecret } from '@/lib/auth/secret'
 import { t } from '@/lib/i18n'
 import { SiteHeader } from '@/components/site/SiteHeader'
@@ -19,7 +20,11 @@ export const dynamic = 'force-dynamic'
 export default async function Unsubscribe({ params }: { params: Promise<{ token: string }> }) {
   const { token } = await params
   const email = readUnsubToken(token, sessionSecret())
-  if (email) await recordUnsubscribe(email)
+  if (email) {
+    const user = await recordUnsubscribe(email)
+    // F17/CRM-04/05: Resend-синк — best-effort, сбой не должен ломать страницу отписки (отписка в БД уже прошла).
+    if (user) await syncContactUnsubscribe(user).catch(e => console.error('[unsubscribe] Resend-синк отписки не удался (CRM-05):', e))
+  }
   return (
     <>
       <SiteHeader />

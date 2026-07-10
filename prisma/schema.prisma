@@ -86,6 +86,7 @@ model User {
   passwordHash    String? // Ф7а: bcryptjs-хэш (AUTH-14, D-032); null у существующих юзеров до первой установки (AUTH-19, D-034)
   whatsapp        String? // Ф7б: мессенджер whatsapp (REG-10)
   resendContactId String? // Ф7б: id контакта в Resend Audience, для CRM (CRM-04)
+  resendSyncError String? // Ф7б: последняя ошибка синка с Resend Audience — флаг рассинхрона (CRM-05)
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 

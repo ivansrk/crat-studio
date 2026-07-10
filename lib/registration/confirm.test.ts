@@ -1,9 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 vi.mock('@/lib/email', () => ({ sendEmail: vi.fn().mockResolvedValue('log-id') }))
+vi.mock('@/lib/resend-audience', () => ({ syncContactSubscribe: vi.fn().mockResolvedValue('synced') }))
 
 import { confirmRegistration } from './confirm'
 import { sendEmail } from '@/lib/email'
+import { syncContactSubscribe } from '@/lib/resend-audience'
 import { hashToken } from '@/lib/auth/tokens'
 import { ResetTokenPurpose } from '@/lib/generated/prisma/client'
 import type { PrismaClient, RegistrationStatus, InviteLink } from '@/lib/generated/prisma/client'
@@ -144,6 +146,7 @@ function fakeClient(opts: {
 
 beforeEach(() => {
   vi.mocked(sendEmail).mockClear()
+  vi.mocked(syncContactSubscribe).mockReset().mockResolvedValue('synced')
 })
 
 describe('confirmRegistration — токен (AUTH-04/05/06 через consumeResetToken)', () => {
@@ -306,5 +309,45 @@ describe('confirmRegistration — путь по инвайту, авто-выд�
     const call = vi.mocked(sendEmail).mock.calls[0][0]
     expect(call.html).not.toContain('already-set')
     expect(call.html).toContain('/reset/')
+  })
+})
+
+describe('confirmRegistration — Resend-синк подписки при авто-выдаче (CRM-04/05, F17, Ф7б Task 6)', () => {
+  it('wantsNewsletter=true → syncContactSubscribe вызван с id/email нового User и именем из заявки', async () => {
+    const invite = makeInvite({ id: 'inv-9' })
+    const reg = makeReg({ inviteLinkId: 'inv-9', wantsNewsletter: true })
+    const { client, store } = fakeClient({ reg, invite })
+
+    await confirmRegistration(RAW, client)
+
+    expect(syncContactSubscribe).toHaveBeenCalledOnce()
+    expect(syncContactSubscribe).toHaveBeenCalledWith({
+      id: store.user!.id, email: store.user!.email, firstName: reg.firstName, lastName: reg.lastName,
+    })
+  })
+
+  it('wantsNewsletter=false → syncContactSubscribe не вызывается', async () => {
+    const invite = makeInvite({ id: 'inv-9' })
+    const reg = makeReg({ inviteLinkId: 'inv-9', wantsNewsletter: false })
+    const { client } = fakeClient({ reg, invite })
+
+    await confirmRegistration(RAW, client)
+
+    expect(syncContactSubscribe).not.toHaveBeenCalled()
+  })
+
+  it('сбой Resend-синка НЕ роняет confirm (CRM-05): mode auto возвращается, WELCOME всё равно уходит', async () => {
+    vi.mocked(syncContactSubscribe).mockRejectedValueOnce(new Error('resend down'))
+    const spy = vi.spyOn(console, 'error').mockImplementation(() => {})
+    const invite = makeInvite({ id: 'inv-9' })
+    const reg = makeReg({ inviteLinkId: 'inv-9', wantsNewsletter: true })
+    const { client } = fakeClient({ reg, invite })
+
+    const result = await confirmRegistration(RAW, client)
+
+    expect(result).toMatchObject({ mode: 'auto' })
+    expect(sendEmail).toHaveBeenCalledOnce()
+    expect(spy).toHaveBeenCalled()
+    spy.mockRestore()
   })
 })

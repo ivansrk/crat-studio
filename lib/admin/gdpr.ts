@@ -1,4 +1,5 @@
 import { db } from '@/lib/db'
+import { syncContactDelete } from '@/lib/resend-audience'
 
 export type GdprResult = 'deleted' | 'not_found' | 'email_mismatch'
 
@@ -24,6 +25,11 @@ export async function gdprDeleteStudent(userId: string, confirmEmail: string): P
   const user = await db.user.findUnique({ where: { id: userId } })
   if (!user) return 'not_found'
   if (user.email !== confirmEmail.trim().toLowerCase()) return 'email_mismatch' // ADM-11: явное подтверждение email админом
+
+  // F17/CRM-04: удаление контакта из Resend Audience — ПЕРЕД удалением User (right to erasure
+  // не блокируется сбоем Resend, CRM-05); resendSyncError записывать уже некуда/незачем — строка
+  // User удаляется следом в любом случае, поэтому просто логируем, а не .catch внутри syncContactDelete.
+  await syncContactDelete(user).catch(e => console.error('[gdpr] Resend-синк удаления не удался (CRM-05):', e))
 
   await db.$transaction(async tx => {
     await tx.certificate.updateMany({

@@ -5,6 +5,7 @@ import { sendWelcomeEmail } from '@/lib/email/welcome'
 import { getInviteState, incrementInviteCount } from '@/lib/invite'
 import { appendConsent } from '@/lib/registration/consents'
 import { isUniqueViolation } from '@/lib/db-errors'
+import { syncContactSubscribe } from '@/lib/resend-audience'
 import { ResetTokenPurpose, type ConsentType, type PrismaClient } from '@/lib/generated/prisma/client'
 
 export type ConfirmRegistrationResult =
@@ -81,6 +82,12 @@ export async function confirmRegistration(rawToken: string, client: ConfirmClien
       await sendWelcomeEmail(provisioned.user, provisioned.plainPassword, provisioned.url)
     } catch (e) {
       console.error('[confirm] не смог поставить WELCOME в очередь:', e)
+    }
+    // CRM-04/05, F17: контакт синкается в Resend Audience после того, как доступ уже выдан —
+    // сбой Resend не должен откатывать успешный auto-enroll (та же логика, что WELCOME выше).
+    if (reg.wantsNewsletter) {
+      await syncContactSubscribe({ id: provisioned.user.id, email: provisioned.user.email, firstName: reg.firstName, lastName: reg.lastName })
+        .catch(e => console.error('[confirm] Resend-синк подписки не удался (CRM-05):', e))
     }
     return { mode: 'auto', plainPassword: provisioned.plainPassword, courseSlug: invite.courseSlug }
   }
