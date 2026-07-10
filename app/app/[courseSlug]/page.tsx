@@ -7,7 +7,6 @@ import { hasCourseAccess } from '@/lib/progress/access'
 import { getCourseProgress } from '@/lib/progress'
 import { isLessonPassed } from '@/lib/progress/quiz-logic'
 import { getDueDeferred } from '@/lib/progress/deferred'
-import { logoutAction } from '@/app/actions/logout'
 import { saveMissionAction } from '@/app/actions/lesson'
 import { getCurrentSubmission } from '@/lib/project'
 import { db } from '@/lib/db'
@@ -34,13 +33,14 @@ export default async function CourseCabinet({ params }: { params: Promise<{ cour
   if (!user) redirect('/login')
 
   if (!(await hasCourseAccess(user, courseSlug))) { // MC-07
+    // T4 дизайн-аудита: локальная кнопка «Выйти» убрана — CabinetHeader (app/app/layout.tsx)
+    // теперь единственный источник этой ссылки на ВСЕХ страницах кабинета, дубль не нужен.
     return (
       <main className="crat-page">
         <section className="crat-section">
           <div className="crat-shell">
             <h1 className="crat-display">{t.auth.cabinetTitle}</h1>
             <p className="crat-muted">{t.cabinet.noAccess}</p>
-            <form action={logoutAction}><button className="crat-button" type="submit">{t.auth.logout}</button></form>
           </div>
         </section>
       </main>
@@ -140,23 +140,9 @@ export default async function CourseCabinet({ params }: { params: Promise<{ cour
             <Link className="crat-button" href={`/app/${courseSlug}/project`}>{t.project.cabinetCta}</Link>
           </div>
 
-          {/* Ссылка на каталог тренажёров (TRN-01/06) — рядом с блоком мини-проекта.
-              Тренажёры общие для кабинета (без courseSlug), не трогать /app/trainers. */}
-          <div className="crat-card cabinet-project">
-            <div>
-              <h2 className="crat-kicker">{t.trainers.catalogTitle}</h2>
-            </div>
-            <Link className="crat-button" href="/app/trainers">{t.trainers.open}</Link>
-          </div>
-
-          {/* Ф7б Task 8, MC-03/CONS-01: блок-приглашение на консультацию по внедрению ИИ. */}
-          <div className="crat-card cabinet-project">
-            <div>
-              <h2 className="crat-kicker">{t.consult.cabinetTitle}</h2>
-              <p className="crat-muted">{t.consult.cabinetOfferText}</p>
-            </div>
-            <Link className="crat-button" href="/consult">{t.consult.cabinetCta}</Link>
-          </div>
+          {/* T4 дизайн-аудита: карточки «Тренажёры»/«Консультация» убраны с курсовой
+              страницы (дублировали хаб /app) — остаются только там, курсовая страница
+              теперь только про сам курс (модули/уроки/проект/сертификат). */}
 
           {/* T7: блок сертификата — только при выданном VALID (CERT-01/05/06). */}
           {certificate && (
@@ -169,11 +155,6 @@ export default async function CourseCabinet({ params }: { params: Promise<{ cour
               </div>
             </div>
           )}
-
-          <div className="cabinet-account-row">
-            <Link className="crat-button" href="/app/account">{t.auth.accountNavLabel}</Link>
-            <form action={logoutAction}><button className="crat-button" type="submit">{t.auth.logout}</button></form>
-          </div>
         </div>
       </section>
     </main>

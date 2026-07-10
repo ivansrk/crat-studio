@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 import { t } from '@/lib/i18n'
 
 const STORAGE_KEY = 'crat_cookie_ack'
@@ -41,6 +42,10 @@ function getServerSnapshot() {
  */
 export function CookieBanner() {
   const acknowledged = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot)
+  // T4 дизайн-аудита: в кабинете (/app) и админке (/admin) баннер не нужен — это уже
+  // авторизованная зона, LEGAL-04/06 требует показывать его на публичных страницах.
+  const pathname = usePathname()
+  const hiddenRoute = pathname.startsWith('/app') || pathname.startsWith('/admin')
   const ref = useRef<HTMLDivElement>(null)
   // T3 (D-042): fallback для входа снизу в браузерах без @starting-style (site.css
   // .cookie-banner) — один кадр после монтирования переключает атрибут, CSS-transition
@@ -84,7 +89,7 @@ export function CookieBanner() {
     window.dispatchEvent(new Event(ACK_EVENT))
   }
 
-  if (acknowledged) return null
+  if (acknowledged || hiddenRoute) return null
 
   return (
     <div

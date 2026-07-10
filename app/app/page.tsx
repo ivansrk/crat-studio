@@ -4,7 +4,6 @@ import { getCourses, lessonCount, splitCourseCatalog, soleCourseRedirect } from 
 import { currentUser } from '@/lib/auth/current-user'
 import { getCourseProgress } from '@/lib/progress'
 import { getDueDeferred } from '@/lib/progress/deferred'
-import { logoutAction } from '@/app/actions/logout'
 import { db } from '@/lib/db'
 import { t } from '@/lib/i18n'
 
@@ -68,8 +67,28 @@ export default async function Cabinet() {
             )}
           </section>
 
+          {/* Ф4 T5: ссылка на каталог тренажёров (TRN-01/06) — общие для всех курсов кабинета. */}
+          <div className="crat-card cabinet-project">
+            <div>
+              <h2 className="crat-kicker">{t.trainers.catalogTitle}</h2>
+            </div>
+            <Link className="crat-button" href="/app/trainers">{t.trainers.open}</Link>
+          </div>
+
+          {/* Ф7б Task 8, MC-03/CONS-01: блок-приглашение на консультацию по внедрению ИИ. */}
+          <div className="crat-card cabinet-project">
+            <div>
+              <h2 className="crat-kicker">{t.consult.cabinetTitle}</h2>
+              <p className="crat-muted">{t.consult.cabinetOfferText}</p>
+            </div>
+            <Link className="crat-button" href="/consult">{t.consult.cabinetCta}</Link>
+          </div>
+
+          {/* T4 дизайн-аудита: каталог «Другие курсы» (сейчас — только «Демо-курс · Скоро»)
+              смещён в самый низ хаба, после консультации, и приглушён — это витрина будущего,
+              не действие, которое сейчас ждут от студента. */}
           {others.length > 0 && (
-            <section aria-label={t.cabinet.catalogAria} className="cabinet-hub-section">
+            <section aria-label={t.cabinet.catalogAria} className="cabinet-hub-section cabinet-hub-section-quiet">
               <h2 className="crat-kicker">{t.cabinet.catalog}</h2>
               <div className="cabinet-course-grid">
                 {others.map(entry => {
@@ -103,28 +122,6 @@ export default async function Cabinet() {
               </div>
             </section>
           )}
-
-          {/* Ф4 T5: ссылка на каталог тренажёров (TRN-01/06) — общие для всех курсов кабинета. */}
-          <div className="crat-card cabinet-project">
-            <div>
-              <h2 className="crat-kicker">{t.trainers.catalogTitle}</h2>
-            </div>
-            <Link className="crat-button" href="/app/trainers">{t.trainers.open}</Link>
-          </div>
-
-          {/* Ф7б Task 8, MC-03/CONS-01: блок-приглашение на консультацию по внедрению ИИ. */}
-          <div className="crat-card cabinet-project">
-            <div>
-              <h2 className="crat-kicker">{t.consult.cabinetTitle}</h2>
-              <p className="crat-muted">{t.consult.cabinetOfferText}</p>
-            </div>
-            <Link className="crat-button" href="/consult">{t.consult.cabinetCta}</Link>
-          </div>
-
-          <div className="cabinet-account-row">
-            <Link className="crat-button" href="/app/account">{t.auth.accountNavLabel}</Link>
-            <form action={logoutAction}><button className="crat-button" type="submit">{t.auth.logout}</button></form>
-          </div>
         </div>
       </section>
     </main>

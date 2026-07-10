@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import {
-  getCourses, getCourse, getLesson, contentErrors, nextLessonId, lessonCount,
+  getCourses, getCourse, getLesson, contentErrors, nextLessonId, prevLessonId, lessonPosition, lessonCount,
   assetBase, getArticles, getArticle, articleIssues,
   splitCourseCatalog, soleCourseRedirect,
 } from './index'
@@ -70,6 +70,32 @@ describe('nextLessonId(courseSlug, lessonId)', () => {
   })
   it('null для единственного урока демо-курса', () => {
     expect(nextLessonId('demo-course', '1.1')).toBeNull()
+  })
+})
+
+describe('prevLessonId(courseSlug, lessonId) — T4 дизайн-аудита', () => {
+  it('предыдущий урок из середины курса ai-basics', () => {
+    expect(prevLessonId('ai-basics', '1.2')).toBe('1.1')
+    expect(prevLessonId('ai-basics', '2.1')).toBe('1.3') // переход через модуль назад
+  })
+  it('null для первого урока (1.1) и для неизвестного id', () => {
+    expect(prevLessonId('ai-basics', '1.1')).toBeNull()
+    expect(prevLessonId('ai-basics', '9.9')).toBeNull()
+  })
+  it('null для единственного урока демо-курса', () => {
+    expect(prevLessonId('demo-course', '1.1')).toBeNull()
+  })
+})
+
+describe('lessonPosition(courseSlug, lessonId) — T4 дизайн-аудита', () => {
+  it('позиция урока внутри своего модуля', () => {
+    expect(lessonPosition('ai-basics', '1.1')).toEqual({ index: 1, total: 3, moduleId: 1 })
+    expect(lessonPosition('ai-basics', '2.1')).toEqual({ index: 1, total: 3, moduleId: 2 })
+    expect(lessonPosition('ai-basics', '4.3')).toEqual({ index: 3, total: 3, moduleId: 4 })
+  })
+  it('null для неизвестного курса/урока', () => {
+    expect(lessonPosition('ai-basics', '9.9')).toBeNull()
+    expect(lessonPosition('unknown', '1.1')).toBeNull()
   })
 })
 

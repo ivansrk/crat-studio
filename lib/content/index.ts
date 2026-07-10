@@ -98,6 +98,28 @@ export function nextLessonId(courseSlug: string, lessonId: string): string | nul
   return i >= 0 && i + 1 < ids.length ? ids[i + 1] : null
 }
 
+/** T4 дизайн-аудита: предыдущий урок по course.yaml курса, зеркало nextLessonId —
+ *  null для первого урока курса/неизвестного курса/урока. */
+export function prevLessonId(courseSlug: string, lessonId: string): string | null {
+  const c = getCourse(courseSlug)
+  if (!c) return null
+  const ids = c.course.modules.flatMap(m => m.lessons.map(l => l.id))
+  const i = ids.indexOf(lessonId)
+  return i > 0 ? ids[i - 1] : null
+}
+
+/** T4 дизайн-аудита: позиция урока внутри своего модуля («Урок 1 из 3 · Модуль 2») —
+ *  для позиционной подписи на странице урока. null для неизвестного курса/урока. */
+export function lessonPosition(courseSlug: string, lessonId: string): { index: number; total: number; moduleId: number } | null {
+  const c = getCourse(courseSlug)
+  if (!c) return null
+  for (const m of c.course.modules) {
+    const i = m.lessons.findIndex(l => l.id === lessonId)
+    if (i >= 0) return { index: i + 1, total: m.lessons.length, moduleId: m.id }
+  }
+  return null
+}
+
 function getArticlesRaw(): { articles: Article[]; issues: ArticleIssue[] } {
   if (!g.__articles) g.__articles = loadArticles(path.join(CONTENT_DIR, ARTICLES_DIR_NAME))
   return g.__articles

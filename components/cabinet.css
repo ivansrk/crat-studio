@@ -1,3 +1,64 @@
+/* T4 дизайн-аудита: липкая шапка кабинета (CabinetHeader) — компактнее публичной
+   SiteHeader (44px лого, одна строка, без mono-подписи направлений). */
+.cabinet-header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: color-mix(in srgb, var(--bg-deep) 82%, transparent);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--line-soft);
+}
+.cabinet-header-inner {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: .5rem 1.25rem;
+  padding-block: .6rem;
+}
+.cabinet-header-brand {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+.cabinet-header-logo {
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  display: block;
+}
+.cabinet-header-course {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin-right: auto;
+}
+.cabinet-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  flex-shrink: 0;
+}
+/* «Аккаунт» (ссылка) и «Выйти» (кнопка-форма) — парные действия, должны выглядеть
+   одинаково тихо; без этого правила ссылка наследует глобальный a{color:var(--neon)}
+   и «Аккаунт» становится красным рядом с белым «Выйти» — случайный акцент, не задуманный. */
+.cabinet-header-actions a {
+  color: var(--paper);
+}
+.cabinet-header-logout {
+  /* background-color, не background — .reveal-line рисует подчёркивание через
+     background-image на этом же элементе, шорткат его бы стёр. */
+  background-color: transparent;
+  border: none;
+  color: var(--paper);
+  font: inherit;
+  cursor: pointer;
+  padding-block: .7rem;
+  margin-block: -.7rem;
+}
+
 /* CAB-01 бриф §9: «линия горизонта» — 4 модуля-«здания» + полоса прогресса с фигуркой. */
 
 .horizon {
@@ -142,6 +203,11 @@
   display: block;
   margin-bottom: 1rem;
 }
+/* T4 дизайн-аудита: «Демо-курс · Скоро» в самом низу хаба — витрина будущего,
+   не сегодняшнее действие, поэтому тише остальных секций кабинета. */
+.cabinet-hub-section-quiet {
+  opacity: .7;
+}
 .cabinet-course-grid {
   display: grid;
   gap: 1.25rem;
@@ -189,13 +255,6 @@ a.course-card {
   margin-top: .5rem;
 }
 
-/* T6 (Ф7а): строка «Аккаунт» + «Выйти» внизу кабинета — те же отступы, что у cabinet-cert-actions. */
-.cabinet-account-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: .75rem;
-}
-
 /* Ф5-полировка: страница урока (/app/lessons/[id]) не имела своего класса —
    попадала под общий main{padding:2rem 1rem} вместо системного отступа
    остальных страниц кабинета (тот же паттерн, что .project-page/.review-page). */
@@ -211,6 +270,24 @@ a.course-card {
 }
 .lesson-page .crat-card {
   margin: 0;
+}
+/* T4 дизайн-аудита: позиция урока («Урок N из M · Модуль K») сразу над заголовком —
+   сокращаем grid-gap каркаса (1.5rem) до плотной подписи. */
+.lesson-position {
+  margin-bottom: -1rem;
+}
+
+/* T4 дизайн-аудита: компактная пара ссылок навигации по урокам внизу страницы —
+   prev слева, next справа; next становится primary-кнопкой после прохождения урока. */
+.lesson-pager {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: .75rem 1.5rem;
+}
+.lesson-pager-next {
+  margin-left: auto;
 }
 
 /* .lesson-page — grid только для каркаса страницы (h1, видео, MDX-блок, кнопки,
