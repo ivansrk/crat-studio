@@ -50,3 +50,27 @@
 Seed также печатает одну демонстрационную reset-ссылку (`[seed reset-demo]`, для `student@`) —
 живой пример флоу «Забыли пароль» (F12/AUTH-16/17) без настоящего Resend; на вход основным
 паролем эта ссылка не влияет.
+
+**Ф7б:**
+- Инвайт-ссылка на курс `ai-basics` (`sourceLabel: 'seed-invite'`, без лимита и срока) — для
+  проверки формы регистрации по `/invite/{token}` и авто-выдачи доступа (INV-01…06).
+- Заявка `optin@seed.crat.example` в статусе `PENDING_OPT_IN` (с телефоном и `wantsNewsletter=true`)
+  и живым OPT_IN-токеном — для ручной проверки полного цикла double opt-in: форма уже «отправлена»,
+  осталось только подтвердить.
+- Подписанный клиент `confirmed@seed.crat.example`: User с действующими Consent DATA_PROCESSING
+  и NEWSLETTER (granted) — виден в `/admin/clients` с «Да» в колонке «Подписан» (CRM-01/02).
+- Заявка на консультацию от `student@seed.crat.example` в статусе `NEW`, источник `cabinet` —
+  видна в `/admin/consultations` (CONS-01…04).
+
+Seed печатает в stdout две ссылки для ручной проверки:
+- `[seed] инвайт: {url}` — открыть, заполнить форму регистрации, отправить.
+- `[seed] confirm: {url}` — ссылка подтверждения для заявки `optin@`; письмо DOUBLE_OPT_IN реально
+  НЕ уходит (Resend не настроен локально) — вместо похода в почту используем эту ссылку из stdout,
+  чтобы пройти double opt-in целиком: заявка → PENDING_OPT_IN → переход по `[seed] confirm` →
+  CONFIRMED/ENROLLED (в зависимости от того, был ли инвайт).
+
+**Как проверить (10 минут):** открыть `[seed] инвайт`-ссылку → заполнить и отправить форму
+регистрации → зайти в `/admin` и убедиться, что новая заявка видна; открыть `[seed] confirm`-ссылку
+для `optin@` и убедиться, что заявка перешла в `CONFIRMED`/`ENROLLED`; открыть `/admin/clients` —
+`confirmed@seed.crat.example` виден с «Да» в «Подписан»; открыть `/admin/consultations` —
+заявка от `student@` в статусе `NEW`.

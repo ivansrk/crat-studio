@@ -4,6 +4,8 @@ import { db } from '@/lib/db'
 import { mintResetToken } from '@/lib/auth/reset'
 import { hashPassword } from '@/lib/auth/password'
 import { warsawDayStart } from '@/lib/trainers/limits'
+import { createInvite } from '@/lib/invite'
+import { ResetTokenPurpose } from '@/lib/generated/prisma/client'
 
 const SEED = (n: string) => `${n}@seed.crat.example`
 
@@ -338,6 +340,83 @@ async function seedF4() {
   })
 }
 
+/** Ф7б Task 9, INV-01/06: один активный инвайт на ai-basics, без лимита/срока, sourceLabel
+ *  'seed-invite' — для ручной проверки формы регистрации по /invite/{token} и авто-enroll.
+ *  InviteLink не имеет естественного бизнес-ключа кроме token (который сам и генерируется) —
+ *  идемпотентность через findFirst по (courseSlug, sourceLabel): повторный прогон seed находит
+ *  уже созданную ссылку и печатает ту же, а не плодит новые InviteLink на каждый запуск.
+ *  createInvite (lib/invite) переиспользован для «первого раза», чтобы URL строился тем же кодом,
+ *  что и в реальной админке (INV-01), а не дублировался вручную. */
+async function seedInvite(): Promise<void> {
+  const existing = await db.inviteLink.findFirst({ where: { courseSlug: COURSE, sourceLabel: 'seed-invite' } })
+  const url = existing
+    ? `${process.env.APP_URL ?? 'http://localhost:3000'}/invite/${existing.token}`
+    : (await createInvite({ courseSlug: COURSE, sourceLabel: 'seed-invite' }, null)).url
+  console.log(`[seed] инвайт: ${url}`)
+}
+
+/** Ф7б Task 9, REG-11/REG-13: заявка PENDING_OPT_IN с телефоном и wantsNewsletter=true — живой
+ *  пример double opt-in для ручной проверки полного цикла (форма уже отправлена → нужно только
+ *  подтвердить). Идемпотентно через upsert по email, как остальные Registration-блоки. Токен
+ *  минтится заново на каждый прогон (mintResetToken создаёт новую append-only запись
+ *  PasswordResetToken, тот же приём, что у printResetLink/reset-demo ниже) — старые неиспользованные
+ *  OPT_IN-токены того же email просто остаются мёртвыми, на идемпотентность Registration это не влияет. */
+async function seedOptInRegistration(): Promise<void> {
+  await db.registration.upsert({
+    where: { email: SEED('optin') },
+    update: { status: 'PENDING_OPT_IN', confirmedAt: null, phone: '+79991234567', wantsNewsletter: true },
+    create: {
+      email: SEED('optin'), firstName: 'Ольга', lastName: 'Оптинова',
+      phone: '+79991234567', wantsNewsletter: true, status: 'PENDING_OPT_IN',
+    },
+  })
+  const { url } = await mintResetToken(SEED('optin'), ResetTokenPurpose.OPT_IN)
+  console.log(`[seed] confirm: ${url}`)
+}
+
+/** Ф7б Task 9, CRM-01/02: подписанный клиент (email подтверждён, обе Consent действующие) —
+ *  виден в /admin/clients с «Да» в колонке «Подписан». User создаётся напрямую (как student@ в
+ *  seedF1), без Registration/Enrollment — цель блока показать CRM-список подписанных контактов,
+ *  а не флоу заявки (тот отдельно проверяется через optin@ выше). */
+async function seedConfirmedClient(): Promise<void> {
+  const confirmed = await db.user.upsert({
+    where: { email: SEED('confirmed') },
+    update: {},
+    create: { email: SEED('confirmed'), firstName: 'Ксения', lastName: 'Клиентова' },
+  })
+  await seedConsentsOnce(SEED('confirmed'), [
+    { type: 'DATA_PROCESSING', granted: true, userId: confirmed.id },
+    { type: 'NEWSLETTER', granted: true, userId: confirmed.id },
+  ])
+}
+
+/** Ф7б Task 9, CONS-01/04: одна заявка на консультацию в статусе NEW от student@, source
+ *  cabinet — видна в /admin/consultations. ConsultationRequest не имеет естественного бизнес-ключа
+ *  (contact — свободный текст, не unique) — идемпотентность через findFirst по (userId, source). */
+async function seedConsultation(): Promise<void> {
+  const student = await db.user.findUniqueOrThrow({ where: { email: SEED('student') } })
+  const existing = await db.consultationRequest.findFirst({ where: { userId: student.id, source: 'cabinet' } })
+  if (!existing) {
+    await db.consultationRequest.create({
+      data: {
+        name: `${student.firstName} ${student.lastName}`,
+        contact: student.email,
+        message: 'Хотим внедрить ИИ в отдел продаж — с чего начать и сколько это стоит?',
+        userId: student.id,
+        source: 'cabinet',
+        status: 'NEW',
+      },
+    })
+  }
+}
+
+async function seedF7b() {
+  await seedInvite()
+  await seedOptInRegistration()
+  await seedConfirmedClient()
+  await seedConsultation()
+}
+
 async function main() {
   const admins = await syncAdmins()
   console.log(`[seed v0] админы синхронизированы: ${admins.join(', ') || '(ADMIN_EMAILS пуст)'}`)
@@ -350,6 +429,8 @@ async function main() {
   console.log('[seed v3] дипломант 12/12 + SUBMITTED, needs_changes студенту готовы')
   await seedF4()
   console.log('[seed v4] повторение к сдаче, тренажёр 19/20')
+  await seedF7b()
+  console.log('[seed v5] инвайт/opt-in-заявка/подписанный клиент/консультация готовы')
   await printResetLink(SEED('student'), 'reset-demo') // T8: живой пример reset-флоу, см. комментарий у функции
 }
 
