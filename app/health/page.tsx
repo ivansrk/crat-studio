@@ -16,7 +16,7 @@ export default function Health() {
       <h1>{errors.length === 0 ? `✅ ${t.health.ok}` : `❌ ${t.health.contentErrors}`}</h1>
       {courses.map(c => (
         <p key={c.slug}>
-          {c.slug} ({c.published ? 'published' : 'unpublished'}) — {t.health.contentValid}: {c.lessons.size}
+          {c.slug} ({c.published ? t.health.published : t.health.unpublished}) — {t.health.contentValid}: {c.lessons.size}
         </p>
       ))}
       {errors.length > 0 && (

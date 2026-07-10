@@ -18,6 +18,7 @@ export type ConsultationInput = {
   contact: string // email/телефон/мессенджер — свободный текст (CONS-01)
   message: string
   topic?: string | null // направление (опц.) — значение из ru.ts consult.topicOptions
+  dataConsent?: boolean // M3 (ревью Ф7в, LEGAL-05): обязательная галка согласия — без неё invalid
 }
 
 export type CreateConsultationResult = 'accepted' | 'rate' | 'invalid'
@@ -37,7 +38,9 @@ export async function createConsultation(
   const contact = input.contact?.trim() ?? ''
   const message = input.message?.trim() ?? ''
   const topic = input.topic?.trim() || null
-  if (!name || !contact || !message || message.length > MESSAGE_MAX_LENGTH) return 'invalid'
+  // M3 (ревью Ф7в, LEGAL-05): заявка без обязательной галки согласия — invalid, как отсутствующее
+  // обязательное поле; Consent-журнал не пишем (это не подписка на рассылку, D-037 остаётся про неё).
+  if (!name || !contact || !message || message.length > MESSAGE_MAX_LENGTH || !input.dataConsent) return 'invalid'
 
   const source = userId ? 'cabinet' : 'public' // MC-03/CONS-01: одна форма /consult, вход из кабинета или публично
   await client.consultationRequest.create({

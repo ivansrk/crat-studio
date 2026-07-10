@@ -51,7 +51,7 @@ describe('createConsultation', () => {
   it('happy: создаёт заявку NEW, шлёт письмо каждому админу с payload {} (CONS-02/03)', async () => {
     const { client, store } = fakeClient()
     const result = await createConsultation(
-      { name: ' Иван ', contact: ' a@b.c ', message: ' Нужна автоматизация ', topic: 'automation' },
+      { name: ' Иван ', contact: ' a@b.c ', message: ' Нужна автоматизация ', topic: 'automation', dataConsent: true },
       null, 'ip-happy-1', client,
     )
 
@@ -74,7 +74,7 @@ describe('createConsultation', () => {
 
   it('userId прокидывается при наличии сессии → source cabinet (CONS-02/MC-03)', async () => {
     const { client, store } = fakeClient()
-    await createConsultation({ name: 'И', contact: 'c', message: 'm' }, 'user-1', 'ip-happy-2', client)
+    await createConsultation({ name: 'И', contact: 'c', message: 'm', dataConsent: true }, 'user-1', 'ip-happy-2', client)
     expect(store.rows[0]).toMatchObject({ userId: 'user-1', source: 'cabinet' })
   })
 
@@ -82,11 +82,11 @@ describe('createConsultation', () => {
     const { client, store } = fakeClient()
     const ip = 'ip-rate-limit-test'
     for (let i = 0; i < 5; i++) {
-      expect(await createConsultation({ name: 'N', contact: 'c', message: `m${i}` }, null, ip, client)).toBe('accepted')
+      expect(await createConsultation({ name: 'N', contact: 'c', message: `m${i}`, dataConsent: true }, null, ip, client)).toBe('accepted')
     }
     vi.mocked(sendEmail).mockClear()
 
-    const sixth = await createConsultation({ name: 'N', contact: 'c', message: 'm6' }, null, ip, client)
+    const sixth = await createConsultation({ name: 'N', contact: 'c', message: 'm6', dataConsent: true }, null, ip, client)
     expect(sixth).toBe('rate')
     expect(store.rows).toHaveLength(5)
     expect(sendEmail).not.toHaveBeenCalled()
@@ -94,7 +94,7 @@ describe('createConsultation', () => {
 
   it('invalid: пустое message → invalid, заявка не создаётся, письмо не шлётся', async () => {
     const { client, store } = fakeClient()
-    const result = await createConsultation({ name: 'Иван', contact: 'a@b.c', message: '   ' }, null, 'ip-invalid-1', client)
+    const result = await createConsultation({ name: 'Иван', contact: 'a@b.c', message: '   ', dataConsent: true }, null, 'ip-invalid-1', client)
     expect(result).toBe('invalid')
     expect(store.rows).toHaveLength(0)
     expect(sendEmail).not.toHaveBeenCalled()
@@ -102,27 +102,44 @@ describe('createConsultation', () => {
 
   it('invalid: пустое имя или контакт → invalid', async () => {
     const { client } = fakeClient()
-    expect(await createConsultation({ name: ' ', contact: 'c', message: 'm' }, null, 'ip-invalid-2', client)).toBe('invalid')
-    expect(await createConsultation({ name: 'N', contact: ' ', message: 'm' }, null, 'ip-invalid-3', client)).toBe('invalid')
+    expect(await createConsultation({ name: ' ', contact: 'c', message: 'm', dataConsent: true }, null, 'ip-invalid-2', client)).toBe('invalid')
+    expect(await createConsultation({ name: 'N', contact: ' ', message: 'm', dataConsent: true }, null, 'ip-invalid-3', client)).toBe('invalid')
   })
 
   it('invalid: message длиннее 2000 символов', async () => {
     const { client } = fakeClient()
     const long = 'a'.repeat(2001)
-    expect(await createConsultation({ name: 'И', contact: 'c', message: long }, null, 'ip-invalid-4', client)).toBe('invalid')
+    expect(await createConsultation({ name: 'И', contact: 'c', message: long, dataConsent: true }, null, 'ip-invalid-4', client)).toBe('invalid')
+  })
+
+  // M3 (ревью Ф7в, LEGAL-05): форма консультаций теперь требует обязательное согласие,
+  // как форма регистрации (lib/registration/index.test.ts).
+  it('invalid: без согласия (dataConsent) → invalid, заявка не создаётся, письмо не шлётся', async () => {
+    const { client, store } = fakeClient()
+    const result = await createConsultation({ name: 'Иван', contact: 'a@b.c', message: 'Нужна автоматизация' }, null, 'ip-invalid-consent-1', client)
+    expect(result).toBe('invalid')
+    expect(store.rows).toHaveLength(0)
+    expect(sendEmail).not.toHaveBeenCalled()
+  })
+
+  it('invalid: dataConsent: false явно → invalid', async () => {
+    const { client, store } = fakeClient()
+    const result = await createConsultation({ name: 'Иван', contact: 'a@b.c', message: 'm', dataConsent: false }, null, 'ip-invalid-consent-2', client)
+    expect(result).toBe('invalid')
+    expect(store.rows).toHaveLength(0)
   })
 
   it('message ровно 2000 символов — валидно', async () => {
     const { client, store } = fakeClient()
     const exact = 'a'.repeat(2000)
-    expect(await createConsultation({ name: 'И', contact: 'c', message: exact }, null, 'ip-boundary-1', client)).toBe('accepted')
+    expect(await createConsultation({ name: 'И', contact: 'c', message: exact, dataConsent: true }, null, 'ip-boundary-1', client)).toBe('accepted')
     expect(store.rows).toHaveLength(1)
   })
 
   it('ADMIN_EMAILS пуст → заявка создаётся, писем не шлётся', async () => {
     process.env.ADMIN_EMAILS = ''
     const { client, store } = fakeClient()
-    const result = await createConsultation({ name: 'И', contact: 'c', message: 'm' }, null, 'ip-no-admins', client)
+    const result = await createConsultation({ name: 'И', contact: 'c', message: 'm', dataConsent: true }, null, 'ip-no-admins', client)
     expect(result).toBe('accepted')
     expect(store.rows).toHaveLength(1)
     expect(sendEmail).not.toHaveBeenCalled()

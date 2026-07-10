@@ -161,7 +161,7 @@ model QuizResult {
   user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   courseSlug String    @default("ai-basics")
   lessonId   String
-  attempt    Int       // 1, 2, … в рамках (userId, lessonId)
+  attempt    Int       // 1, 2, … в рамках (userId, courseSlug, lessonId)
   answers    Json      // [{questionIndex, chosen, correct}] — по мере ответов
   score      Int       @default(0)
   total      Int       @default(3)
@@ -169,7 +169,7 @@ model QuizResult {
   startedAt  DateTime  @default(now())
   finishedAt DateTime?
 
-  @@unique([userId, lessonId, attempt])
+  @@unique([userId, courseSlug, lessonId, attempt]) // Ф7в: было без courseSlug — латентный мультикурс-баг (MC-05, E-MC2)
 }
 
 // Отложенное повторение: создаётся при completedAt урока, dueAt = +7 дней (LES-13).

@@ -23,6 +23,7 @@ export async function consultAction(formData: FormData) {
       contact: String(formData.get('contact') ?? ''),
       message: String(formData.get('message') ?? ''),
       topic: (formData.get('topic') as string) || null,
+      dataConsent: formData.get('dataConsent') === 'on', // M3, тот же паттерн, что app/actions/register.ts
     },
     user?.id ?? null,
     await clientIp(),

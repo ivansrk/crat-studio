@@ -271,17 +271,34 @@ main.crat-page {
   margin-top: 2rem;
 }
 
+/* M1 (ревью Ф7в): aspect-ratio давал ФИКСИРОВАННУЮ высоту карточки, а
+   .direction-card-body — обычный поток (не absolute) — при длинном
+   тексте (kicker+заголовок+текст) контент был выше карточки и обрезался
+   overflow:hidden (замер ревью: body 561px при card 176px на 360px).
+   min-height вместо aspect-ratio — карточка растёт под контент (нормальный
+   flow), но не ниже «постерного» минимума на каждой ширине; next/image
+   fill + object-fit:cover покрывает итоговую высоту без искажений. */
 .direction-card {
   position: relative;
   overflow: hidden;
-  aspect-ratio: 16 / 9;
+  min-height: 260px;
   display: flex;
   align-items: flex-end;
   padding: 0;
 }
+@media (min-width: 500px) {
+  .direction-card {
+    min-height: 320px;
+  }
+}
 @media (min-width: 700px) {
   .direction-card {
-    aspect-ratio: 4 / 5;
+    min-height: 420px;
+  }
+}
+@media (min-width: 1024px) {
+  .direction-card {
+    min-height: 460px;
   }
 }
 
@@ -290,9 +307,14 @@ main.crat-page {
   object-fit: cover;
   transition: transform 1.2s ease;
 }
-.direction-card:hover .direction-card-img,
 .direction-card:focus-within .direction-card-img {
   transform: scale(1.04);
+}
+/* m6 (ревью Ф7в): :hover-zoom только там, где hover не залипает после тапа (тач). */
+@media (hover: hover) {
+  .direction-card:hover .direction-card-img {
+    transform: scale(1.04);
+  }
 }
 
 /* градиент снизу для читаемости текста поверх фото — сильнее внизу, где текст,
@@ -645,6 +667,12 @@ main.crat-page {
   .cookie-banner-inner {
     flex-direction: column;
     align-items: stretch;
+  }
+  /* M2 (ревью Ф7в): flex-basis 260px из .cookie-banner-text в flex-column
+     раскладке читается как ВЫСОТА (главная ось теперь вертикальная) — баннер
+     раздувался до ~384px на телефонах. auto — размер по контенту. */
+  .cookie-banner-text {
+    flex-basis: auto;
   }
   .cookie-banner-inner .crat-button {
     justify-content: center;

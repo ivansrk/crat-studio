@@ -89,12 +89,16 @@
     0 0 24px rgba(255, 75, 58, .45),
     0 0 64px rgba(255, 75, 58, .25);
 }
-.crat-button.primary:hover {
-  box-shadow:
-    0 0 0 1px rgba(255, 75, 58, .7),
-    0 0 32px rgba(255, 75, 58, .6),
-    0 0 88px rgba(255, 75, 58, .38);
-  transform: scale(1.02);
+/* m6 (ревью Ф7в): :hover с scale — только на устройствах, где hover не «залипает»
+   после тапа (тачскрины держат :hover-состояние до следующего тапа в другое место). */
+@media (hover: hover) {
+  .crat-button.primary:hover {
+    box-shadow:
+      0 0 0 1px rgba(255, 75, 58, .7),
+      0 0 32px rgba(255, 75, 58, .6),
+      0 0 88px rgba(255, 75, 58, .38);
+    transform: scale(1.02);
+  }
 }
 .crat-button.secondary {
   background: transparent;

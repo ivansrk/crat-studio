@@ -35,9 +35,9 @@ export function SignupForm({ notice, returnTo, showTitle = true, inviteToken }: 
         <input type="checkbox" name="dataConsent" required />
         <span>
           {t.landing.dataConsent.before}
-          <Link href="/privacy">{t.landing.dataConsent.privacyLabel}</Link>
+          <Link href="/privacy" target="_blank" rel="noopener">{t.landing.dataConsent.privacyLabel}</Link>
           {t.landing.dataConsent.between}
-          <Link href="/terms">{t.landing.dataConsent.termsLabel}</Link>
+          <Link href="/terms" target="_blank" rel="noopener">{t.landing.dataConsent.termsLabel}</Link>
           {t.landing.dataConsent.after}
         </span>
       </label>

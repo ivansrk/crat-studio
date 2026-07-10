@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import Link from 'next/link'
 import { currentUser } from '@/lib/auth/current-user'
 import { consultAction } from '@/app/actions/consultation'
 import { t } from '@/lib/i18n'
@@ -57,6 +58,18 @@ export default async function Consult({ searchParams }: { searchParams: Promise<
               <label>
                 <span>{tc.fieldMessage}</span>
                 <textarea name="message" required maxLength={2000} rows={5} />
+              </label>
+              {/* M3 (ревью Ф7в, LEGAL-05): та же обязательная галка согласия, что в signup-form.tsx —
+                  без Consent-журнала (это не подписка, достаточно required-чекбокса по брифу). */}
+              <label className="check">
+                <input type="checkbox" name="dataConsent" required />
+                <span>
+                  {tc.dataConsent.before}
+                  <Link href="/privacy" target="_blank" rel="noopener">{tc.dataConsent.privacyLabel}</Link>
+                  {tc.dataConsent.between}
+                  <Link href="/terms" target="_blank" rel="noopener">{tc.dataConsent.termsLabel}</Link>
+                  {tc.dataConsent.after}
+                </span>
               </label>
               <button type="submit" className="crat-button primary">{tc.submit}</button>
             </form>
