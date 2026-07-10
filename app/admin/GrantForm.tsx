@@ -7,8 +7,10 @@ const initialState: GrantActionState = { status: 'idle' }
 
 /** T5 (AUTH-15/F11): пароль показывается один раз — живёт только в памяти этого клиентского
  *  компонента (useActionState), никогда не уходит в query-string/cookie/БД. Перезагрузка страницы
- *  сбрасывает React-состояние → пароль пропадает, что и требуется. */
-export function GrantForm({ registrationId }: { registrationId: string }) {
+ *  сбрасывает React-состояние → пароль пропадает, что и требуется.
+ *  Ф7б T5 (REG-13): canGrant=false для PENDING_OPT_IN — кнопка disabled + подпись «сначала
+ *  подтверждение email» (UI-уровень; grantAccess дублирует проверку на сервере — not_confirmed). */
+export function GrantForm({ registrationId, canGrant }: { registrationId: string; canGrant: boolean }) {
   const [state, formAction, pending] = useActionState(grantAccessAction, initialState)
 
   if (state.status === 'granted' || state.status === 'granted_email_failed') {
@@ -26,6 +28,15 @@ export function GrantForm({ registrationId }: { registrationId: string }) {
 
   if (state.status === 'already') {
     return <p className="crat-muted">{t.admin.granted}</p>
+  }
+
+  if (state.status === 'not_confirmed' || !canGrant) {
+    return (
+      <div>
+        <button className="crat-button compact" type="button" disabled>{t.admin.grant}</button>
+        <p className="crat-muted">{t.admin.notConfirmedYet}</p>
+      </div>
+    )
   }
 
   return (

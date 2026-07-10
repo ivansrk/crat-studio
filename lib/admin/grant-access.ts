@@ -10,13 +10,19 @@ export type GrantResult =
   | { status: 'granted_email_failed'; plainPassword: string | null; email: string }
   | { status: 'already' }
   | { status: 'not_found' }
+  | { status: 'not_confirmed' } // Ф7б T5, REG-13: заявка PENDING_OPT_IN — email ещё не подтверждён
 
 /** ADM-03/04: выдаёт доступ по заявке — одна транзакция, письмо шлётся после её успеха.
  *  T5 (AUTH-15/F11): вместо upsert без пароля — createUserWithPassword (идемпотентно:
- *  повторная выдача НЕ перевыпускает пароль действующего юзера, REG-14). */
+ *  повторная выдача НЕ перевыпускает пароль действующего юзера, REG-14).
+ *  Ф7б Task 5: серверная проверка статуса — не только UI-блокировка кнопки (её можно обойти
+ *  прямым POST). PENDING_OPT_IN (email не подтверждён) → отказ; легаси-статусы NEW/RESUBMITTED
+ *  (заявки с прода до double opt-in, REG-15) и CONFIRMED — выдаём как раньше ([РЕШЕНИЕ АВТОРА]:
+ *  легаси-заявки нельзя ретроактивно требовать opt-in — они честные, просто до-opt-in-эпохи). */
 export async function grantAccess(registrationId: string, adminUserId: string): Promise<GrantResult> {
   const reg = await db.registration.findUnique({ where: { id: registrationId } })
   if (!reg) return { status: 'not_found' }
+  if (reg.status === 'PENDING_OPT_IN') return { status: 'not_confirmed' }
 
   let user: { id: string; email: string }
   let plainPassword: string | null

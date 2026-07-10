@@ -1,6 +1,7 @@
 import { db } from '@/lib/db'
 import { GrantForm } from './GrantForm'
 import { t } from '@/lib/i18n'
+import { formatDate } from '@/lib/i18n/format-date'
 
 export const dynamic = 'force-dynamic'
 export default async function Registrations() {
@@ -24,11 +25,16 @@ export default async function Registrations() {
               <td>{r.firstName} {r.lastName}</td>
               <td>{r.email}</td>
               <td>
-                {r.status === 'ENROLLED' ? t.admin.statusEnrolled : r.status === 'RESUBMITTED' ? t.admin.resubmitted : t.admin.statusNew}
+                {t.admin.regStatus[r.status]}
                 {r.submitCount > 1 && ` ×${r.submitCount}`}
+                {r.confirmedAt && ` · ${t.admin.confirmedAtLabel} ${formatDate(r.confirmedAt)}`}
                 {r.alreadyEnrolled && r.status !== 'ENROLLED' && ` · ${t.admin.alreadyEnrolled}`}
               </td>
-              <td>{r.status !== 'ENROLLED' && <GrantForm registrationId={r.id} />}</td>
+              <td>
+                {r.status !== 'ENROLLED' && (
+                  <GrantForm registrationId={r.id} canGrant={r.status !== 'PENDING_OPT_IN'} />
+                )}
+              </td>
             </tr>
           ))}
           </tbody>

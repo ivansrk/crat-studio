@@ -14,9 +14,12 @@ import { verifyPassword } from '@/lib/auth/password'
 
 type FakeUser = {
   id: string; email: string; firstName: string; lastName: string
-  phone: string | null; telegram: string | null; passwordHash: string | null
+  phone: string | null; telegram: string | null; whatsapp: string | null; passwordHash: string | null
 }
-type FakeReg = { id: string; email: string; firstName: string; lastName: string; phone: string | null; telegram: string | null }
+type FakeReg = {
+  id: string; email: string; firstName: string; lastName: string
+  phone: string | null; telegram: string | null; whatsapp: string | null; status: string
+}
 
 /** Фейковый tx с моками всех моделей, которые трогает grantAccess/createUserWithPassword/mintResetToken. */
 function fakeTx(existingUser: FakeUser | null) {
@@ -63,11 +66,15 @@ function setup(reg: FakeReg, existingUser: FakeUser | null, opts: { enrollmentEr
   return { tx, store, userCreate, userUpdate, enrollmentCreate, tokenCreate }
 }
 
-const reg: FakeReg = { id: 'reg-1', email: 'student@test.c', firstName: 'Игорь', lastName: 'Волков', phone: '+1', telegram: null }
+const reg: FakeReg = {
+  id: 'reg-1', email: 'student@test.c', firstName: 'Игорь', lastName: 'Волков',
+  phone: '+1', telegram: null, whatsapp: '+79991234567', status: 'CONFIRMED',
+}
 
 describe('grantAccess (ADM-03/04, AUTH-15, F11, D-028)', () => {
   beforeEach(() => {
     vi.mocked(sendEmail).mockClear()
+    vi.mocked(db.$transaction).mockClear()
   })
 
   it('заявка не найдена → not_found, транзакция не запускается', async () => {
@@ -87,6 +94,7 @@ describe('grantAccess (ADM-03/04, AUTH-15, F11, D-028)', () => {
     expect(result.email).toBe(reg.email)
     expect(store.user?.passwordHash).toBeTruthy()
     expect(await verifyPassword(result.plainPassword!, store.user!.passwordHash!)).toBe(true)
+    expect(store.user?.whatsapp).toBe(reg.whatsapp) // M1: whatsapp из заявки прокинут в User
 
     expect(sendEmail).toHaveBeenCalledOnce()
     const call = vi.mocked(sendEmail).mock.calls[0][0]
@@ -100,7 +108,7 @@ describe('grantAccess (ADM-03/04, AUTH-15, F11, D-028)', () => {
   it('повторная выдача юзеру с уже заданным паролем → письмо БЕЗ пароля, ссылка «задать пароль»', async () => {
     const existing: FakeUser = {
       id: 'u-existing', email: reg.email, firstName: reg.firstName, lastName: reg.lastName,
-      phone: reg.phone, telegram: reg.telegram, passwordHash: 'already-set-hash',
+      phone: reg.phone, telegram: reg.telegram, whatsapp: reg.whatsapp, passwordHash: 'already-set-hash',
     }
     const { userCreate, userUpdate } = setup(reg, existing)
     const result = await grantAccess(reg.id, 'admin-1')
@@ -117,6 +125,22 @@ describe('grantAccess (ADM-03/04, AUTH-15, F11, D-028)', () => {
     expect(call.html).not.toContain('already-set-hash')
     expect(call.html).toContain('/reset/') // ссылка «задать пароль» вместо показа старого пароля
     expect(call.payload).toEqual({})
+  })
+
+  it('Ф7б T5/REG-13: PENDING_OPT_IN (email не подтверждён) → not_confirmed, транзакция не запускается', async () => {
+    vi.mocked(db.registration.findUnique).mockResolvedValue({ ...reg, status: 'PENDING_OPT_IN' } as never)
+    const result = await grantAccess(reg.id, 'admin-1')
+    expect(result).toEqual({ status: 'not_confirmed' })
+    expect(db.$transaction).not.toHaveBeenCalled()
+    expect(sendEmail).not.toHaveBeenCalled()
+  })
+
+  it('Ф7б T5/REG-15: легаси-заявка NEW (с прода до double opt-in) → выдаётся как раньше', async () => {
+    const legacyReg = { ...reg, status: 'NEW' }
+    setup(legacyReg, null)
+    const result = await grantAccess(legacyReg.id, 'admin-1')
+    expect(result.status).toBe('granted')
+    expect(sendEmail).toHaveBeenCalledOnce()
   })
 
   it('гонка ADM-04 (двойная выдача, unique violation) → already, письмо не шлётся', async () => {

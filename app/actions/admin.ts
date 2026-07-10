@@ -18,6 +18,7 @@ export type GrantActionState =
   | { status: 'granted'; plainPassword: string | null; email: string }
   | { status: 'granted_email_failed'; plainPassword: string | null; email: string }
   | { status: 'already' }
+  | { status: 'not_confirmed' } // Ф7б T5, REG-13: серверная защита — PENDING_OPT_IN не выдаём, даже если кнопка была обойдена
 
 export async function grantAccessAction(_prevState: GrantActionState, formData: FormData): Promise<GrantActionState> {
   const admin = await requireAdmin()
