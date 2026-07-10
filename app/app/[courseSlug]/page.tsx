@@ -20,8 +20,8 @@ const PROJECT_STATUS_LABEL: Record<SubmissionStatus, string> = {
   APPROVED: t.project.statusApproved,
 }
 
-/** Ф7в T3: /app/{courseSlug} — курсо-зависимый кабинет (MC-04), перенос app/app/page.tsx
- *  с параметризацией. /app сам по себе остаётся Ф7в T4 (каталог/«Мои курсы»). */
+/** /app/{courseSlug} — курсо-зависимый кабинет (MC-04), перенос app/app/page.tsx
+ *  с параметризацией. /app сам по себе остаётся хабом (каталог/«Мои курсы»). */
 export default async function CourseCabinet({ params }: { params: Promise<{ courseSlug: string }> }) {
   const { courseSlug } = await params
   const entry = getCourse(courseSlug)
@@ -136,8 +136,8 @@ export default async function CourseCabinet({ params }: { params: Promise<{ cour
             <Link className="crat-button" href={`/app/${courseSlug}/project`}>{t.project.cabinetCta}</Link>
           </div>
 
-          {/* Ф4 T5: ссылка на каталог тренажёров (TRN-01/06) — рядом с блоком мини-проекта.
-              Тренажёры общие для кабинета (без courseSlug) — Ф7в T3 §5, не трогать /app/trainers. */}
+          {/* Ссылка на каталог тренажёров (TRN-01/06) — рядом с блоком мини-проекта.
+              Тренажёры общие для кабинета (без courseSlug), не трогать /app/trainers. */}
           <div className="crat-card cabinet-project">
             <div>
               <h2 className="crat-kicker">{t.trainers.catalogTitle}</h2>

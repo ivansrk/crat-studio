@@ -1,6 +1,6 @@
 import { permanentRedirect } from 'next/navigation'
 
-/** Ф7в T3 (MC-04/E-MC1): старый маршрут без courseSlug — 308 на курс ai-basics,
+/** MC-04/E-MC1: старый маршрут без courseSlug — 308 на курс ai-basics,
  *  query (?project=saved|submitted|incomplete|locked) переносится как есть. */
 export default async function LegacyProjectRedirect({ searchParams }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>

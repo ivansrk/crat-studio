@@ -11,7 +11,7 @@ import { t } from '@/lib/i18n'
 
 export const dynamic = 'force-dynamic'
 
-/** Ф7в T3: /app/{courseSlug}/lessons/{lessonId}/quiz — перенос
+/** /app/{courseSlug}/lessons/{lessonId}/quiz — перенос
  *  app/app/lessons/[lessonId]/quiz/page.tsx с параметризацией (MC-04). Логика не меняется. */
 export default async function QuizPage({ params, searchParams }: {
   params: Promise<{ courseSlug: string; lessonId: string }>; searchParams: Promise<{ attempt?: string; feedback?: string }>

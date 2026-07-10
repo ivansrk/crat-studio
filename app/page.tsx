@@ -17,10 +17,11 @@ import Image from 'next/image'
  * SITE-04 (Войти/В кабинет) — целиком в SiteHeader, hero-CTA не зависят от сессии.
  */
 export default function Home() {
-  const { course } = getCourse('ai-basics')! // Ф7в T3: заменить на courseSlug из маршрута
+  // Главная показывает первый курс литералом; при мультикаталоге на главной — переработать.
+  const { course } = getCourse('ai-basics')!
   const courseFacts = t.home.courseFacts
     .replace('{modules}', String(course.modules.length))
-    .replace('{lessons}', String(lessonCount('ai-basics'))) // Ф7в T3: заменить на courseSlug из маршрута
+    .replace('{lessons}', String(lessonCount('ai-basics')))
 
   return (
     <>

@@ -7,7 +7,8 @@ import { t } from '@/lib/i18n'
 
 async function requireStudent() {
   const user = await currentUser()
-  if (!user || !(await hasCourseAccess(user, 'ai-basics'))) redirect('/login') // Ф7в T3: из маршрута
+  // Тренажёры прибиты к ai-basics до Ф8 (как в app/app/trainers/) — не курсо-зависимая логика.
+  if (!user || !(await hasCourseAccess(user, 'ai-basics'))) redirect('/login')
   return user
 }
 

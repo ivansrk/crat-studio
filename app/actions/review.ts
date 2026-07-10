@@ -4,7 +4,7 @@ import { currentUser } from '@/lib/auth/current-user'
 import { getDueDeferred, answerDeferred } from '@/lib/progress/deferred'
 import { isValidChoice, type StoredAnswer } from '@/lib/progress/quiz-logic'
 
-/** Ф7в T3: /app/review остаётся БЕЗ courseSlug — due-блок (F19) выбирает самый давний
+/** /app/review остаётся БЕЗ courseSlug — due-блок (F19) выбирает самый давний
  *  отложенный вопрос ПО ВСЕМ курсам студента разом (deferred.ts getDueDeferred, без фильтра
  *  курса), так что единственный courseSlug в URL не мог бы однозначно выразить, какой курс
  *  сейчас показан. hasCourseAccess('ai-basics') здесь был латентным багом мультикурса

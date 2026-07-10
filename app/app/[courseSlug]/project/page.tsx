@@ -25,7 +25,7 @@ const BANNER: Record<string, string> = {
   locked: t.project.bannerLocked,
 }
 
-/** Ф7в T3: /app/{courseSlug}/project — перенос app/app/project/page.tsx с параметризацией
+/** /app/{courseSlug}/project — перенос app/app/project/page.tsx с параметризацией
  *  (MC-04/PROJ-01…06). Внутренняя страница кабинета — не crat-page/crat-section/crat-shell
  *  (это лендинговый каркас с хедером/футером), а простой main как у lessons/[lessonId]
  *  (гейт — app/app/layout.tsx). */

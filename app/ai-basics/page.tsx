@@ -25,7 +25,8 @@ export const metadata: Metadata = {
 export default async function Landing({ searchParams }: { searchParams: Promise<{ signup?: string }> }) {
   const { signup } = await searchParams
   const user = await currentUser()
-  const { course } = getCourse('ai-basics')! // Ф7в T3: заменить на courseSlug из маршрута
+  // Лендинг конкретного курса ai-basics — литерал корректен по смыслу маршрута.
+  const { course } = getCourse('ai-basics')!
   const notice = signup === 'invalid' || signup === 'rate' || signup === 'already' ? signup : undefined
 
   return (

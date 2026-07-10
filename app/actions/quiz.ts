@@ -8,7 +8,7 @@ import { recordAnswer } from '@/lib/progress'
 /** Ответ на вопрос квиз-шага (LES-07): каждый клик по варианту — отдельный POST.
  *  Идемпотентный повтор (двойной клик, ревью T2) тоже возвращает ok — студент видит то же
  *  пояснение обычным redirect'ом. Реальный сбой (чужая/завершённая попытка, out-of-order) → назад к уроку.
- *  Ф7в T3 (MC-04/07): courseSlug — из hidden input формы, но перепроверяется здесь
+ *  MC-04/07: courseSlug — из hidden input формы, но перепроверяется здесь
  *  (существует+опубликован+доступ) — форма не источник истины. */
 export async function answerAction(formData: FormData) {
   const courseSlug = String(formData.get('courseSlug'))

@@ -7,7 +7,7 @@ import { formatDate } from '@/lib/i18n/format-date'
 
 export const dynamic = 'force-dynamic'
 
-/** Ф7в T3: /app/{courseSlug}/certificate — перенос app/app/certificate/route.ts
+/** /app/{courseSlug}/certificate — перенос app/app/certificate/route.ts
  *  с параметризацией (MC-04). D-011: PDF не хранится — рендерится Playwright'ом на каждое
  *  скачивание. Только свой VALID-сертификат этого курса. */
 export async function GET(_request: Request, { params }: { params: Promise<{ courseSlug: string }> }) {

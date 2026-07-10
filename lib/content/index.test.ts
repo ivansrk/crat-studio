@@ -73,7 +73,7 @@ describe('nextLessonId(courseSlug, lessonId)', () => {
   })
 })
 
-describe('splitCourseCatalog (Ф7в T4, MC-03) — мои курсы vs каталог', () => {
+describe('splitCourseCatalog (MC-03) — мои курсы vs каталог', () => {
   it('enrolled slug уходит в mine, остальные — в others', () => {
     const { mine, others } = splitCourseCatalog(getCourses(), ['ai-basics'])
     expect(mine.map(c => c.slug)).toEqual(['ai-basics'])
@@ -91,7 +91,7 @@ describe('splitCourseCatalog (Ф7в T4, MC-03) — мои курсы vs ката
   })
 })
 
-describe('soleCourseRedirect (Ф7в T4) — редирект хаба на единственный курс', () => {
+describe('soleCourseRedirect — редирект хаба на единственный курс', () => {
   it('один мой курс и пустой каталог остальных → slug этого курса', () => {
     // реестр из одного курса (моделирует единственный курс в проде) — реальные фикстуры дают 2 (MC-08)
     const onlyCourse = getCourses().filter(c => c.slug === 'ai-basics')

@@ -13,7 +13,8 @@ function appUrl(): string {
  */
 export async function GET() {
   const base = appUrl()
-  const { course } = getCourse('ai-basics')! // Ф7в T3: заменить на courseSlug/цикл по всем опубликованным курсам
+  // Единственный публикуемый курс сайта; при мультикаталоге — цикл по всем опубликованным курсам.
+  const { course } = getCourse('ai-basics')!
   const articles = getArticles()
 
   const lines: string[] = []

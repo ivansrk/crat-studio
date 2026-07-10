@@ -1,6 +1,6 @@
 import { permanentRedirect } from 'next/navigation'
 
-/** Ф7в T3 (MC-04/E-MC1): старый маршрут без courseSlug — 308 на курс ai-basics,
+/** MC-04/E-MC1: старый маршрут без courseSlug — 308 на курс ai-basics,
  *  query (attempt/feedback) переносится как есть (ссылка на активную попытку в письме/закладке). */
 export default async function LegacyQuizRedirect({ params, searchParams }: {
   params: Promise<{ lessonId: string }>; searchParams: Promise<Record<string, string | string[] | undefined>>

@@ -10,7 +10,7 @@ import { ensureProgress, getLessonState } from '@/lib/progress'
 import { startQuizAction, togglePracticeAction, saveMissionAction } from '@/app/actions/lesson'
 import { t } from '@/lib/i18n'
 
-/** Ф7в T3: /app/{courseSlug}/lessons/{lessonId} — перенос app/app/lessons/[lessonId]/page.tsx
+/** /app/{courseSlug}/lessons/{lessonId} — перенос app/app/lessons/[lessonId]/page.tsx
  *  с параметризацией (MC-04). Логика не меняется. */
 export default async function LessonPage({ params }: { params: Promise<{ courseSlug: string; lessonId: string }> }) {
   const { courseSlug, lessonId } = await params

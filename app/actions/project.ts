@@ -6,7 +6,7 @@ import { getCourse } from '@/lib/content'
 import { saveDraft, submitProject } from '@/lib/project'
 import { PROJECT_FIELDS } from '@/lib/project/fields'
 
-/** Ф7в T3 (MC-04/07): courseSlug — из hidden input формы, перепроверяется здесь
+/** MC-04/07: courseSlug — из hidden input формы, перепроверяется здесь
  *  (существует+опубликован+доступ) — форма не источник истины. */
 async function requireStudent(courseSlug: string) {
   const user = await currentUser()

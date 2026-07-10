@@ -21,8 +21,8 @@ export default async function StudentProgress({ params }: { params: Promise<{ us
   const user = await db.user.findUnique({ where: { id: userId } })
   if (!user) notFound() // гейт админа — в app/admin/layout.tsx; здесь только валидность userId
 
-  // Ф7в T4 [РЕШЕНИЕ АВТОРА]: страница прогресса студента остаётся привязанной к ai-basics —
-  // единственному курсу с реальными студентами на Ф7в. Полный мультикурсовый вид (таблица
+  // [РЕШЕНИЕ АВТОРА]: страница прогресса студента остаётся привязанной к ai-basics —
+  // единственному курсу с реальными студентами. Полный мультикурсовый вид (таблица
   // прогресса по КАЖДОМУ enrollment) — дороже (N курсов × N таблиц на одной странице ради
   // курса без учащихся) и откладывается до Ф8+/появления второго активного курса.
   const [{ byLesson }, deferred, submission, certificate] = await Promise.all([

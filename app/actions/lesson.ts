@@ -7,7 +7,7 @@ import { startAttempt, setPractice } from '@/lib/progress'
 import { getCourse, getLesson } from '@/lib/content'
 import { db } from '@/lib/db'
 
-/** Ф7в T3 (MC-04/07): courseSlug приходит из formData (hidden input на странице), но
+/** MC-04/07: courseSlug приходит из formData (hidden input на странице), но
  *  ЗДЕСЬ перепроверяется — курс существует и опубликован, доступ есть — форма не источник
  *  истины (не доверять форме). */
 async function requireStudent(courseSlug: string) {
@@ -37,7 +37,7 @@ export async function togglePracticeAction(formData: FormData) {
 /** LES-14/CAB-02: личная миссия — редактируема из урока с mission_prompt и кабинета.
  *  mission_prompt — контент-флаг, урок может быть любым → returnTo валидируется по форме,
  *  а не по хардкоду 1.1 (против open redirect: только /app, курсовой кабинет или существующий
- *  урок ЭТОГО courseSlug — Ф7в T3). */
+ *  урок ЭТОГО courseSlug). */
 export async function saveMissionAction(formData: FormData) {
   const courseSlug = String(formData.get('courseSlug'))
   const user = await requireStudent(courseSlug)

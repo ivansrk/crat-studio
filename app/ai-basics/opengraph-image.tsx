@@ -11,7 +11,8 @@ export const contentType = 'image/png'
  * для пояснения про дефолтный шрифт satori). Заголовок — course.title из course.yaml.
  */
 export default function Image() {
-  const { course } = getCourse('ai-basics')! // Ф7в T3: заменить на courseSlug из маршрута
+  // OG-картинка лендинга конкретного курса ai-basics — литерал корректен по смыслу маршрута.
+  const { course } = getCourse('ai-basics')!
   return new ImageResponse(
     (
       <div
