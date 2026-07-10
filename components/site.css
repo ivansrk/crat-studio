@@ -34,6 +34,13 @@
   text-decoration: none;
   color: var(--paper);
 }
+/* impeccable minor: дефолтное синее кольцо браузера на логотипе (критика 2026-07-10) —
+   тот же фирменный красный outline, что у .crat-nav a/.crat-button/чекбоксов. */
+.site-brand:focus-visible {
+  outline: 2px solid var(--neon);
+  outline-offset: 2px;
+  border-radius: 8px;
+}
 
 .site-brand-text {
   display: flex;
@@ -268,12 +275,26 @@ main.crat-page {
    Firefox/Safari на момент внедрения — нет, см. отчёт T3). Без @supports секции
    просто видны сразу (свойства opacity/transform больше нигде не переопределены).
    Hero — свой fadeUp (fade-up.d1/d2/d3 на hero-copy), поэтому явно исключён:
-   у него уже есть заход, второй наложенный «вход секции» задваивал бы эффект. */
+   у него уже есть заход, второй наложенный «вход секции» задваивал бы эффект.
+   impeccable P1-2: селектор ограничен html.js (класс проставляет beforeInteractive-
+   скрипт в app/layout.tsx) — «reveal must enhance already-visible default»: без JS
+   (или пока скрипт не выполнился) секции остаются видимыми, а не opacity:0 навсегда,
+   как было в ститченных/headless-рендерах и на печати. */
 @supports (animation-timeline: view()) {
-  main.crat-home > .crat-section:not(.hero-section) {
+  html.js main.crat-home > .crat-section:not(.hero-section) {
     animation: fadeUp .7s cubic-bezier(.23, 1, .32, 1) both;
     animation-timeline: view();
     animation-range: entry 0% cover 20%;
+  }
+}
+
+/* impeccable P1-2: печать не проигрывает scroll-driven анимации — сбрасываем явно,
+   чтобы initial-кадр (opacity:0) не «застревал» статичным состоянием на печати. */
+@media print {
+  html.js main.crat-home > .crat-section:not(.hero-section) {
+    animation: none;
+    opacity: 1;
+    transform: none;
   }
 }
 
@@ -499,6 +520,21 @@ main.crat-page {
   100% { transform: translateX(20%); }
 }
 
+/* impeccable minor: подпись кадра (.hero-visual-mark) лежит поверх сгенерированной
+   картинки — на ярких кадрах (билборд/неон) mono-текст мог сливаться с фоном без
+   тёмной подложки. Отдельный элемент, а не ::before/::after — оба псевдоэлемента
+   на этом div уже заняты (.crat-noise::before, .crat-frame-gradient::before,
+   .horizon::after/.neon-line::after — см. lib/design/crat.css), новый ::after/::before
+   молча перезаписал бы их. z-index между свечением (1) и неоновым горизонтом (3). */
+.hero-visual-scrim {
+  position: absolute;
+  inset: auto 0 0 0;
+  height: 55%;
+  z-index: 2;
+  background: linear-gradient(to top, rgba(5, 5, 5, .85) 0%, rgba(5, 5, 5, .4) 60%, transparent 100%);
+  pointer-events: none;
+}
+
 .hero-visual-mark {
   position: relative;
   z-index: 4;
@@ -710,7 +746,8 @@ main.crat-page {
   }
 }
 
-/* автоматизации — T6: mono-список с display-цифрами вместо карточной сетки 2×2.
+/* автоматизации — T6: mono-список вместо карточной сетки 2×2 (Assessment A: display-
+   цифры 01–04 убраны — список не последовательность, разделяет только красная линия).
    Переиспользуется — тот же паттерн подошёл бы любому mono-перечню (не только автоматизациям). */
 
 .mono-list {
@@ -729,13 +766,9 @@ main.crat-page {
 .mono-list-row:first-child {
   border-top: 1px solid var(--line-soft);
 }
-.mono-list-num {
-  flex: none;
-  min-width: 2.5ch;
-  font-size: clamp(2rem, 7vw, 3.5rem);
-  line-height: 1;
-  opacity: .3;
-}
+/* impeccable Assessment A: .mono-list-num (display-цифры 01–04) убран из разметки —
+   номера читались как рефлекс, а не как последовательность шагов; правило удалено
+   как мёртвый код (единственный потребитель был в app/page.tsx). */
 .mono-list-text {
   margin: 0;
 }
@@ -848,6 +881,9 @@ main.crat-page {
 .ethics-manifesto-text {
   font-size: clamp(1.9rem, 3vw, 2.6rem);
   max-width: 30ch;
+  /* impeccable: тесная line-height 1.05 у .crat-display рассчитана на короткие
+     заголовки, не на связную прозу манифеста — детектор tight-leading 2026-07-10. */
+  line-height: 1.2;
 }
 .ethics-manifesto-sub {
   max-width: 45ch;

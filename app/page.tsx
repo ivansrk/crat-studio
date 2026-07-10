@@ -102,10 +102,12 @@ export default function Home() {
           <div className="crat-shell">
             <h2 className="crat-display">{t.home.automationSectionTitle}</h2>
             <p className="crat-muted section-intro">{t.home.automationSectionText}</p>
+            {/* impeccable Assessment A: display-цифры 01–04 убраны — список не последовательность
+                шагов, номера читались как рефлекс дизайна, а не смысл; красная линия-разделитель
+                (.mono-list-row border-bottom) остаётся единственным ритмическим элементом. */}
             <ul className="mono-list">
-              {t.home.automationCards.map((card, i) => (
+              {t.home.automationCards.map((card) => (
                 <li key={card} className="mono-list-row">
-                  <span className="mono-list-num crat-display" aria-hidden="true">{String(i + 1).padStart(2, '0')}</span>
                   <p className="mono-list-text">{card}</p>
                 </li>
               ))}

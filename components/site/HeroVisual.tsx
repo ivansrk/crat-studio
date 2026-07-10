@@ -25,6 +25,9 @@ export function HeroVisual({ src = '/images/hero-home.webp' }: { src?: string })
         className="crat-frame-img"
       />
       <span className="hero-visual-glow" aria-hidden="true" />
+      {/* impeccable minor: mono-подпись на ярком кадре (билборд/неон) могла слиться
+          с фоном без тёмной подложки снизу — см. .hero-visual-scrim в site.css. */}
+      <span className="hero-visual-scrim" aria-hidden="true" />
       <span className="crat-kicker hero-visual-mark">{t.header.sub}</span>
     </div>
   )

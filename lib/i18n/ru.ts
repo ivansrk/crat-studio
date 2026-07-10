@@ -451,10 +451,13 @@ export const ru = {
     kicker: 'Консультация',
     title: 'Консультация по внедрению ИИ',
     offerText: 'Разберём вашу задачу: где искусственный интеллект сэкономит время, какие рутинные процессы стоит автоматизировать и какая персональная AI-система нужна именно вам.',
+    // impeccable P1-3: конвенция обязательных полей с components/signup-form.tsx (звёздочки + пояснение над формой).
+    requiredNote: 'Поля со звёздочкой обязательны',
     fieldName: 'Имя',
     fieldContact: 'Контакт (email, телефон или Telegram)',
     fieldTopic: 'Направление',
-    fieldTopicPlaceholder: 'Выберите направление',
+    // impeccable minor: «Выберите направление» обрезался в select на 360px — короче. [текст на согласование]
+    fieldTopicPlaceholder: 'Направление',
     topicOptions: {
       optimization: 'Оптимизация процессов',
       automation: 'Автоматизация рутины',

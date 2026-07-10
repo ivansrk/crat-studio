@@ -13,6 +13,11 @@ export const metadata: Metadata = {
   alternates: { canonical: '/consult' },
 }
 
+// impeccable P1-3: конвенция обязательных полей с components/signup-form.tsx (звёздочки
+// у required-полей + пояснение над формой) — раньше /consult не показывал обязательность
+// полей визуально, хотя server action (consultAction) её требует.
+const Req = () => <span aria-hidden="true"> *</span>
+
 /**
  * Ф7б Task 8, CONS-01/02/05/06: публичная форма заявки на консультацию — точка входа с главной
  * (#contact) и из кабинета (MC-03, блок в app/app/page.tsx). Страница публична (доступна без
@@ -46,12 +51,13 @@ export default async function Consult({ searchParams }: { searchParams: Promise<
               {notice && (
                 <p role="alert" className="form-alert">{notice === 'rate' ? tc.rateLimited : tc.invalid}</p>
               )}
+              <p className="crat-muted">{tc.requiredNote}</p>
               <label>
-                <span>{tc.fieldName}</span>
+                <span>{tc.fieldName}<Req /></span>
                 <input name="name" required autoComplete="name" defaultValue={user ? `${user.firstName} ${user.lastName}`.trim() : ''} />
               </label>
               <label>
-                <span>{tc.fieldContact}</span>
+                <span>{tc.fieldContact}<Req /></span>
                 <input name="contact" required defaultValue={user?.email ?? ''} />
               </label>
               <label>
@@ -64,11 +70,13 @@ export default async function Consult({ searchParams }: { searchParams: Promise<
                 </select>
               </label>
               <label>
-                <span>{tc.fieldMessage}</span>
+                <span>{tc.fieldMessage}<Req /></span>
                 <textarea name="message" required maxLength={2000} rows={5} />
               </label>
               {/* M3 (ревью Ф7в, LEGAL-05): та же обязательная галка согласия, что в signup-form.tsx —
-                  без Consent-журнала (это не подписка, достаточно required-чекбокса по брифу). */}
+                  без Consent-журнала (это не подписка, достаточно required-чекбокса по брифу).
+                  impeccable P1-3: звёздочка добавлена и сюда — /consult отмечает обязательность
+                  явно (текст «(обязательно)» внутри dataConsent.after остаётся как есть). */}
               <label className="check">
                 <input type="checkbox" name="dataConsent" required />
                 <span>
@@ -77,6 +85,7 @@ export default async function Consult({ searchParams }: { searchParams: Promise<
                   {tc.dataConsent.between}
                   <Link href="/terms" target="_blank" rel="noopener">{tc.dataConsent.termsLabel}</Link>
                   {tc.dataConsent.after}
+                  <Req />
                 </span>
               </label>
               <button type="submit" className="crat-button primary">{tc.submit}</button>
