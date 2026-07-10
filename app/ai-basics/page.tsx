@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { getCourse } from '@/lib/content'
+import { getCourse, lessonCount } from '@/lib/content'
 import { currentUser } from '@/lib/auth/current-user'
 import { SignupForm } from '@/components/signup-form'
 import { t } from '@/lib/i18n'
@@ -28,6 +28,10 @@ export default async function Landing({ searchParams }: { searchParams: Promise<
   // Лендинг конкретного курса ai-basics — литерал корректен по смыслу маршрута.
   const { course } = getCourse('ai-basics')!
   const notice = signup === 'invalid' || signup === 'rate' || signup === 'already' ? signup : undefined
+  // Формат и условия (утверждён основателем): числа из getCourse/lessonCount, не хардкод.
+  const formatFacts = t.landing.formatModulesLessons
+    .replace('{modules}', String(course.modules.length))
+    .replace('{lessons}', String(lessonCount('ai-basics')))
 
   return (
     <>
@@ -55,7 +59,7 @@ export default async function Landing({ searchParams }: { searchParams: Promise<
         {/* Для кого */}
         <section className="crat-section">
           <div className="crat-shell">
-            <SectionLabel kicker={t.landing.courseLabel} />
+            <SectionLabel kicker={t.landing.forWhomKicker} />
             <h2 className="crat-display">{t.landing.forWhomTitle}</h2>
             <p className="crat-muted section-intro">{t.landing.forWhom}</p>
           </div>
@@ -64,7 +68,7 @@ export default async function Landing({ searchParams }: { searchParams: Promise<
         {/* Программа — модули из course.yaml, карточная сетка */}
         <section className="crat-section" id="program">
           <div className="crat-shell">
-            <SectionLabel kicker={t.landing.courseLabel} />
+            <SectionLabel kicker={t.landing.programKicker} />
             <h2 className="crat-display">{t.landing.programTitle}</h2>
             <div className="program-grid">
               {course.modules.map(m => (
@@ -88,7 +92,7 @@ export default async function Landing({ searchParams }: { searchParams: Promise<
         {/* Результат */}
         <section className="crat-section">
           <div className="crat-shell">
-            <SectionLabel kicker={t.landing.courseLabel} />
+            <SectionLabel kicker={t.landing.resultKicker} />
             <h2 className="crat-display">{t.landing.resultTitle}</h2>
             <p className="crat-muted section-intro">{t.landing.result}</p>
           </div>
@@ -97,9 +101,44 @@ export default async function Landing({ searchParams }: { searchParams: Promise<
         {/* Мини-проект и сертификат */}
         <section className="crat-section">
           <div className="crat-shell">
-            <SectionLabel kicker={t.landing.courseLabel} />
+            <SectionLabel kicker={t.landing.projectKicker} />
             <h2 className="crat-display">{t.landing.projectTitle}</h2>
             <p className="crat-muted section-intro">{t.landing.projectText}</p>
+          </div>
+        </section>
+
+        {/* Формат и условия (утверждён основателем): факты из course, БЕЗ карточек-коробок —
+            компактный список с красными линиями-разделителями (анти-дефолт). Цена/даты —
+            честная заглушка до фактуры от Ивана (TODO ниже), цифры не выдумываем. */}
+        <section className="crat-section">
+          <div className="crat-shell">
+            <SectionLabel kicker={t.landing.formatKicker} />
+            <h2 className="crat-display">{t.landing.formatTitle}</h2>
+            <ul className="format-facts">
+              <li className="format-fact">
+                <span className="crat-red-line" aria-hidden="true" />
+                {formatFacts}
+              </li>
+              <li className="format-fact">
+                <span className="crat-red-line" aria-hidden="true" />
+                {t.landing.formatOnline}
+              </li>
+              <li className="format-fact">
+                <span className="crat-red-line" aria-hidden="true" />
+                {t.landing.formatPractice}
+              </li>
+              <li className="format-fact">
+                <span className="crat-red-line" aria-hidden="true" />
+                {t.landing.formatProject}
+              </li>
+              <li className="format-fact">
+                <span className="crat-red-line" aria-hidden="true" />
+                {t.landing.formatCert}
+              </li>
+            </ul>
+            {/* TODO(Иван): факты по цене/датам старта — прислать; до тех пор честная
+                заглушка вместо выдуманной цифры (запрет из брифа §13). */}
+            <p className="crat-muted format-price-note">{t.landing.formatPriceNote}</p>
           </div>
         </section>
 
