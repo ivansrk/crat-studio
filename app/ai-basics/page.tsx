@@ -25,7 +25,7 @@ export default async function Landing({ searchParams }: { searchParams: Promise<
   const { signup } = await searchParams
   const user = await currentUser()
   const { course } = getContent()
-  const notice = signup === 'invalid' ? 'invalid' : signup === 'rate' ? 'rate' : undefined
+  const notice = signup === 'invalid' || signup === 'rate' || signup === 'already' ? signup : undefined
 
   return (
     <>

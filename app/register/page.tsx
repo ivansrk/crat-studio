@@ -17,6 +17,7 @@ export const metadata: Metadata = {
 export default async function Register({ searchParams }: { searchParams: Promise<{ signup?: string }> }) {
   const { signup } = await searchParams
   const user = await currentUser()
+  const notice = signup === 'invalid' || signup === 'rate' || signup === 'already' ? signup : undefined
   return (
     <>
       <SiteHeader />
@@ -27,7 +28,7 @@ export default async function Register({ searchParams }: { searchParams: Promise
             <h1 className="crat-display">{t.landing.signupTitle}</h1>
             {user
               ? <p><Link className="crat-button primary" href="/app">{t.home.toCabinet}</Link></p>
-              : <SignupForm returnTo="/register" showTitle={false} notice={signup === 'invalid' ? 'invalid' : signup === 'rate' ? 'rate' : undefined} />}
+              : <SignupForm returnTo="/register" showTitle={false} notice={notice} />}
           </div>
         </section>
       </main>
