@@ -14,10 +14,11 @@ export async function SiteHeader() {
     <header className="site-header">
       <div className="site-header-inner crat-shell">
         <Link href="/" className="site-brand">
+          {/* Название студии несёт сам логотип (решение Ивана 2026-07-10) — текстового
+              дубля «CRAT studio» рядом нет, только mono-подпись направлений. */}
           {/* eslint-disable-next-line @next/next/no-img-element -- статичный мелкий asset, next/image избыточен */}
-          <img src="/brand/logo.png" alt={t.header.logoAlt} width={44} height={44} className="site-brand-logo" />
+          <img src="/brand/logo.png" alt={t.header.logoAlt} width={84} height={84} className="site-brand-logo" />
           <span className="site-brand-text">
-            <span className="site-brand-name">{t.home.brand}</span>
             <span className="crat-kicker">{t.header.sub}</span>
           </span>
         </Link>
