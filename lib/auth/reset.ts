@@ -56,15 +56,20 @@ export type ConsumeResetResult =
   | { ok: false; reason: 'invalid' | 'used' | 'expired' }
 
 /** AUTH-04-аналог: атомарная одноразовость (updateMany WHERE usedAt IS NULL). Не создаёт
- *  сессию — reset-флоу заканчивается сменой пароля, не входом (F12). OPT_IN-токен на этом
- *  эндпоинте — invalid, эндпоинты разных purpose не взаимозаменяемы. */
+ *  сессию — reset-флоу заканчивается сменой пароля, не входом (F12). Токен другого purpose —
+ *  invalid, эндпоинты разных purpose не взаимозаменяемы.
+ *  Ф7б Task 4 (REG-13): expectedPurpose обобщает функцию под OPT_IN-подтверждение double opt-in
+ *  (lib/registration/confirm.ts) — минимально-инвазивно, ТРЕТЬИМ параметром (после client), чтобы
+ *  все существующие 2-арные вызовы (setPasswordViaToken и тесты) не менялись и продолжали
+ *  проверять PASSWORD_RESET по умолчанию. */
 export async function consumeResetToken(
   raw: string,
   client: Pick<PrismaClient, 'passwordResetToken'> = db,
+  expectedPurpose: ResetTokenPurpose = ResetTokenPurpose.PASSWORD_RESET,
 ): Promise<ConsumeResetResult> {
   const tokenHash = hashToken(raw)
   const token = await client.passwordResetToken.findUnique({ where: { tokenHash } })
-  if (!token || token.purpose !== ResetTokenPurpose.PASSWORD_RESET) return { ok: false, reason: 'invalid' }
+  if (!token || token.purpose !== expectedPurpose) return { ok: false, reason: 'invalid' }
   if (token.usedAt) return { ok: false, reason: 'used' }             // AUTH-05 / E-PWD3
   if (token.expiresAt < new Date()) return { ok: false, reason: 'expired' } // AUTH-06 / E-PWD3
   const claimed = await client.passwordResetToken.updateMany({ where: { id: token.id, usedAt: null }, data: { usedAt: new Date() } })
@@ -78,13 +83,16 @@ export type PeekResetResult = { status: 'ok' | 'used' | 'expired' | 'invalid' }
  *  Нужен отдельно от consumeResetToken: почтовые клиенты и боты открывают ссылку из письма
  *  на предпросмотр/сканирование ДО того, как человек её откроет — если бы GET жёг токен,
  *  реальный пользователь получал бы «ссылка использована» вместо формы. Гашение — только
- *  на POST через setPasswordViaToken (app/reset/[token]/page.tsx вызывает только эту функцию). */
+ *  на POST через setPasswordViaToken (app/reset/[token]/page.tsx вызывает только эту функцию).
+ *  Ф7б Task 4: expectedPurpose — тот же приём, что у consumeResetToken, для превью OPT_IN-ссылки
+ *  на GET /invite-confirm/{token} (app/invite-confirm/[token]/page.tsx) без её сжигания. */
 export async function peekResetToken(
   raw: string,
   client: Pick<PrismaClient, 'passwordResetToken'> = db,
+  expectedPurpose: ResetTokenPurpose = ResetTokenPurpose.PASSWORD_RESET,
 ): Promise<PeekResetResult> {
   const token = await client.passwordResetToken.findUnique({ where: { tokenHash: hashToken(raw) } })
-  if (!token || token.purpose !== ResetTokenPurpose.PASSWORD_RESET) return { status: 'invalid' }
+  if (!token || token.purpose !== expectedPurpose) return { status: 'invalid' }
   if (token.usedAt) return { status: 'used' }             // AUTH-05
   if (token.expiresAt < new Date()) return { status: 'expired' } // AUTH-06
   return { status: 'ok' }

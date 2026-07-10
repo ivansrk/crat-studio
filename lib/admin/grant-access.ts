@@ -1,11 +1,9 @@
 import { db } from '@/lib/db'
-import { sendEmail } from '@/lib/email'
-import { renderEmail, fillPlaceholders } from '@/lib/email/templates'
+import { sendWelcomeEmail } from '@/lib/email/welcome'
 import { createUserWithPassword } from '@/lib/auth/provision'
 import { mintResetToken } from '@/lib/auth/reset'
 import { ResetTokenPurpose } from '@/lib/generated/prisma/client'
 import { isUniqueViolation } from '@/lib/db-errors'
-import { t } from '@/lib/i18n'
 
 export type GrantResult =
   | { status: 'granted'; plainPassword: string | null; email: string }
@@ -52,16 +50,7 @@ export async function grantAccess(registrationId: string, adminUserId: string): 
   // записи, доставка fire-and-forget. Сбои доставки асинхронны и видны как FAILED в email_log (D-013),
   // кнопка переотправки — раздел «Письма» (T10).
   try {
-    const html = plainPassword !== null
-      ? renderEmail({
-          body: fillPlaceholders(t.email.welcomeBody, { email: user.email, password: plainPassword }),
-          buttonText: t.email.welcomeButton, buttonUrl: url,
-        })
-      : renderEmail({ body: t.email.welcomeBodyExisting, buttonText: t.email.welcomeButtonExisting, buttonUrl: url })
-    await sendEmail({
-      to: user.email, userId: user.id, type: 'WELCOME', subject: t.email.welcomeSubject, html,
-      payload: {}, // D-028: ни пароль, ни reset-url в email_log не попадают
-    })
+    await sendWelcomeEmail(user, plainPassword, url) // Ф7б Task 4: тело письма вынесено в lib/email/welcome.ts — переиспользуется авто-выдачей по инвайту
   } catch {
     return { status: 'granted_email_failed', plainPassword, email: user.email }
   }

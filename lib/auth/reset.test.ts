@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import {
-  mintResetToken, requestPasswordReset, consumeResetToken, setPasswordViaToken, RESET_TTL_MS,
+  mintResetToken, requestPasswordReset, consumeResetToken, peekResetToken, setPasswordViaToken, RESET_TTL_MS,
 } from './reset'
 import { verifyPassword } from './password'
 import { limiters } from './rate-limit'
@@ -179,6 +179,46 @@ describe('consumeResetToken (AUTH-04/05/06)', () => {
     const { client } = fakeClient({ token })
     expect((await consumeResetToken(raw, client)).ok).toBe(true)
     expect(await consumeResetToken(raw, client)).toEqual({ ok: false, reason: 'used' })
+  })
+
+  // Ф7б Task 4 (REG-13): expectedPurpose обобщает функцию под OPT_IN — 3-й параметр, дефолт
+  // PASSWORD_RESET, все тесты выше (2-арные вызовы) не изменились и продолжают проходить как есть.
+  it('expectedPurpose=OPT_IN: токен purpose=OPT_IN гасится успешно; тот же токен с дефолтным purpose → invalid', async () => {
+    const raw = 'raw-optin-consume'
+    const { hashToken } = await import('./tokens')
+    const token = makeToken({ tokenHash: hashToken(raw), purpose: ResetTokenPurpose.OPT_IN, userId: null })
+    const { client, store } = fakeClient({ token })
+
+    expect(await consumeResetToken(raw, client, ResetTokenPurpose.PASSWORD_RESET)).toEqual({ ok: false, reason: 'invalid' })
+    expect(store.token?.usedAt).toBeNull() // неверный purpose не гасит токен
+
+    expect(await consumeResetToken(raw, client, ResetTokenPurpose.OPT_IN)).toEqual({ ok: true, email: token.email, userId: null, tokenId: token.id })
+    expect(store.token?.usedAt).not.toBeNull()
+  })
+})
+
+describe('peekResetToken (T6, Ф7б Task 4)', () => {
+  it('дефолтный purpose (PASSWORD_RESET): ok/used/expired/invalid — не гасит токен', async () => {
+    const raw = 'raw-peek'
+    const { hashToken } = await import('./tokens')
+    const token = makeToken({ tokenHash: hashToken(raw) })
+    const { client, store } = fakeClient({ token })
+    expect(await peekResetToken(raw, client)).toEqual({ status: 'ok' })
+    expect(store.token?.usedAt).toBeNull() // GET-предпросмотр не жжёт токен
+  })
+
+  it('expectedPurpose=OPT_IN: OPT_IN-токен → ok; тот же токен с дефолтным purpose → invalid', async () => {
+    const raw = 'raw-peek-optin'
+    const { hashToken } = await import('./tokens')
+    const token = makeToken({ tokenHash: hashToken(raw), purpose: ResetTokenPurpose.OPT_IN })
+    const { client } = fakeClient({ token })
+    expect(await peekResetToken(raw, client)).toEqual({ status: 'invalid' }) // дефолт PASSWORD_RESET
+    expect(await peekResetToken(raw, client, ResetTokenPurpose.OPT_IN)).toEqual({ status: 'ok' })
+  })
+
+  it('неизвестный токен → invalid', async () => {
+    const { client } = fakeClient({ token: null })
+    expect(await peekResetToken('nope', client, ResetTokenPurpose.OPT_IN)).toEqual({ status: 'invalid' })
   })
 })
 

@@ -421,6 +421,17 @@ main.crat-page {
   margin-top: .5rem;
 }
 
+/* Ф7б Task 4: пароль показывается один раз на экране подтверждения (REG-13/D-033) — крупный
+   кегль обязателен для аудитории без техподготовки (базовое правило проекта, не только Ф5). */
+.password-once {
+  font-size: 2rem;
+  letter-spacing: .04em;
+  padding: .3rem .6rem;
+  border-radius: 8px;
+  background: var(--ink);
+  border: 1px solid var(--line-soft);
+}
+
 /* ---------- форма заявки (SignupForm, REG-03) ---------- */
 
 .signup-form { display: grid; gap: 1rem; max-width: var(--maxw-text); }
