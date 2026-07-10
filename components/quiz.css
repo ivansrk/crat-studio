@@ -32,3 +32,42 @@
 .quiz-fb-ok { background: color-mix(in srgb, var(--mint) 12%, transparent); }
 .quiz-fb-no { background: color-mix(in srgb, var(--neon) 10%, transparent); }
 .quiz-progress { color: var(--lavender); }
+
+/* T3 дизайн-аудита («сцена квиза»): страница SSR, каждый ответ — полная загрузка,
+   поэтому keyframes on load легитимны (без JS-классов пересчёта состояния). База
+   каждой анимации — обычный видимый/статичный вид ВНЕ keyframe (from{} задаёт
+   только временный старт кадра); глобальный глушитель prefers-reduced-motion
+   (app/globals.css, animation:none!important) убирает анимацию целиком — элемент
+   остаётся в своём обычном (видимом) состоянии мгновенно, без «застревания». */
+
+/* спотлайт-пятно вокруг вопроса — «свет включается» */
+@keyframes quizSpotlightIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.quiz-spotlight {
+  animation: quizSpotlightIn 400ms cubic-bezier(.23, 1, .32, 1) both;
+}
+
+/* варианты ответов — fadeUp со ступенчатой задержкой; в quiz.yaml максимум
+   4 варианта на вопрос — 4 nth-child правила с запасом. */
+@keyframes quizOptionIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.quiz-options > form {
+  animation: quizOptionIn 250ms cubic-bezier(.23, 1, .32, 1) both;
+}
+.quiz-options > form:nth-child(1) { animation-delay: 0ms; }
+.quiz-options > form:nth-child(2) { animation-delay: 40ms; }
+.quiz-options > form:nth-child(3) { animation-delay: 80ms; }
+.quiz-options > form:nth-child(4) { animation-delay: 120ms; }
+
+/* пояснение после ответа (LES-07) */
+@keyframes quizFbIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.quiz-fb {
+  animation: quizFbIn 200ms cubic-bezier(.23, 1, .32, 1) both;
+}

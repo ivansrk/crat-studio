@@ -63,6 +63,29 @@
   transform: translateX(-50%); /* центр фигурки на позиции left — внутри трека и на 0%, и на 100% */
 }
 
+/* T3 дизайн-аудита: красная линия прогресса поверх серой базы (border-bottom
+   .progress-track) — растёт от 0 до текущего прогресса при загрузке страницы.
+   --p (0..1) приходит тем же значением pct, что и left фигурки выше (page.tsx).
+   База уже равна конечному состоянию scaleX(var(--p)) — при animation:none
+   (глобальный глушитель prefers-reduced-motion) линия сразу в конечном виде;
+   keyframe без явного 100% берёт конечное значение из этой же базовой строки
+   (спека CSS Animations — «нейтральный» кадр), так что играет только «сверху». */
+.progress-fill {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -2px;
+  height: 2px;
+  background: var(--neon);
+  box-shadow: var(--neon-glow);
+  transform: scaleX(var(--p, 0));
+  transform-origin: left;
+  animation: progressFillIn 600ms cubic-bezier(.23, 1, .32, 1);
+}
+@keyframes progressFillIn {
+  from { transform: scaleX(0); }
+}
+
 /* CAB-02: миссия — crat-card. */
 .cabinet-mission {
   margin-bottom: 2rem;

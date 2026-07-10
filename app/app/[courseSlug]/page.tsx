@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import type { CSSProperties } from 'react'
 import { notFound, redirect } from 'next/navigation'
 import { getCourse, lessonCount } from '@/lib/content'
 import { currentUser } from '@/lib/auth/current-user'
@@ -81,6 +82,9 @@ export default async function CourseCabinet({ params }: { params: Promise<{ cour
               })}
             </div>
             <div className="progress-track">
+              {/* T3 дизайн-аудита: линия горизонта — та же величина pct, что и left
+                  фигурки ниже, только как коэффициент 0..1 для scaleX. */}
+              <span className="progress-fill" style={{ '--p': pct / 100 } as CSSProperties} aria-hidden />
               <span className="progress-figure" style={{ left: `${pct}%` }} aria-hidden>🚶</span>
             </div>
             <p className="crat-muted">{completedCount}/{total} · {t.cabinet.progressLabel}</p>

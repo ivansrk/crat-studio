@@ -346,7 +346,10 @@ input[type='radio']:checked {
   background: var(--neon);
   border-color: var(--neon);
 }
-input[type='checkbox']:checked::after {
+/* T3 дизайн-аудита («чекбокс-награда»): галочка — постоянный ::after (иначе
+   элемент, которого нет в unchecked-состоянии, нечего анимировать при появлении),
+   scale(.6)→1 + opacity при :checked, transition вместо мгновенного content-скачка. */
+input[type='checkbox']::after {
   content: '';
   position: absolute;
   left: 50%;
@@ -355,7 +358,13 @@ input[type='checkbox']:checked::after {
   height: .6rem;
   border: solid var(--ink);
   border-width: 0 2px 2px 0;
-  transform: translate(-50%, -50%) rotate(45deg);
+  opacity: 0;
+  transform: translate(-50%, -50%) rotate(45deg) scale(.6);
+  transition: transform .18s cubic-bezier(.23, 1, .32, 1), opacity .18s cubic-bezier(.23, 1, .32, 1);
+}
+input[type='checkbox']:checked::after {
+  opacity: 1;
+  transform: translate(-50%, -50%) rotate(45deg) scale(1);
 }
 input[type='radio']:checked::after {
   content: '';

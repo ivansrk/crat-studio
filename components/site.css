@@ -208,6 +208,15 @@
 }
 .article-card-cover img {
   object-fit: cover;
+  /* T3 дизайн-аудита: кинозум обложки (почерк мёртвого .cinematic-card — тот же
+     6s ease-out, только адресно на карточку статьи). */
+  transition: transform 6s ease-out;
+}
+/* hover:hover — тач держит :hover после тапа, зум «залипал» бы на мобильном. */
+@media (hover: hover) {
+  .article-card:hover .article-card-cover img {
+    transform: scale(1.08);
+  }
 }
 
 /* обложка в шапке статьи (Ф7в/D-038) — та же узкая колонка, что у остального текста статьи */
@@ -228,6 +237,20 @@ main.crat-home,
 main.crat-page {
   max-width: none;
   padding: 0;
+}
+
+/* T3 дизайн-аудита: вход секций главной при скролле — прогрессивное улучшение,
+   только там, где браузер понимает animation-timeline: view() (Chrome/Edge;
+   Firefox/Safari на момент внедрения — нет, см. отчёт T3). Без @supports секции
+   просто видны сразу (свойства opacity/transform больше нигде не переопределены).
+   Hero — свой fadeUp (fade-up.d1/d2/d3 на hero-copy), поэтому явно исключён:
+   у него уже есть заход, второй наложенный «вход секции» задваивал бы эффект. */
+@supports (animation-timeline: view()) {
+  main.crat-home > .crat-section:not(.hero-section) {
+    animation: fadeUp .7s cubic-bezier(.23, 1, .32, 1) both;
+    animation-timeline: view();
+    animation-range: entry 0% cover 20%;
+  }
 }
 
 .section-label {
@@ -844,6 +867,25 @@ main.crat-page {
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   border-top: 1px solid var(--line-soft);
+  /* T3 дизайн-аудита: вход снизу. Базовое правило = конечное состояние (виден),
+     @starting-style задаёт стартовый кадр «за экраном» в браузерах, что его
+     понимают (Chrome/Edge, Safari 17.4+) — без лишнего JS-рендера. Для
+     остальных (Firefox на момент внедрения) — fallback ниже: CookieBanner.tsx
+     помечает элемент data-mounted одним кадром позже монтирования, и до этого
+     момента :not([data-mounted]) выигрывает по специфичности над этим правилом,
+     держа тот же «за экраном» transform — переключение атрибута запускает тот
+     же transition. ResizeObserver-паддинг (CookieBanner.tsx) transform не задевает:
+     offsetHeight не меняется от translateY. */
+  transform: translateY(0);
+  transition: transform .32s cubic-bezier(.32, .72, 0, 1);
+}
+@starting-style {
+  .cookie-banner {
+    transform: translateY(100%);
+  }
+}
+.cookie-banner:not([data-mounted]) {
+  transform: translateY(100%);
 }
 .cookie-banner-inner {
   display: flex;

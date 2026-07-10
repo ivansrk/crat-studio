@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useRef, useSyncExternalStore } from 'react'
+import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
 import Link from 'next/link'
 import { t } from '@/lib/i18n'
 
@@ -42,6 +42,15 @@ function getServerSnapshot() {
 export function CookieBanner() {
   const acknowledged = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot)
   const ref = useRef<HTMLDivElement>(null)
+  // T3 (D-042): fallback для входа снизу в браузерах без @starting-style (site.css
+  // .cookie-banner) — один кадр после монтирования переключает атрибут, CSS-transition
+  // отрабатывает переход между «за экраном» и обычным положением сам.
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => {
+    if (acknowledged) return
+    const id = requestAnimationFrame(() => setMounted(true))
+    return () => cancelAnimationFrame(id)
+  }, [acknowledged])
 
   // Баннер фиксирован снизу — без резерва места он перекрывает последние пиксели страницы
   // (в частности, ссылки футера, включая /cookies — ревью нашло это на коротких страницах
@@ -78,7 +87,13 @@ export function CookieBanner() {
   if (acknowledged) return null
 
   return (
-    <div ref={ref} className="cookie-banner" role="complementary" aria-label={t.legal.banner.ariaLabel}>
+    <div
+      ref={ref}
+      className="cookie-banner"
+      data-mounted={mounted ? '' : undefined}
+      role="complementary"
+      aria-label={t.legal.banner.ariaLabel}
+    >
       <div className="cookie-banner-inner crat-shell">
         <p className="cookie-banner-text crat-muted">
           {t.legal.banner.text}{' '}
