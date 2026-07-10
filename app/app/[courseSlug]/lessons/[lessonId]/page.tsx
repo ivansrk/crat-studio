@@ -84,7 +84,13 @@ export default async function LessonPage({ params }: { params: Promise<{ courseS
         </form>
       </section>
 
-      {state.completed && <p>🎉 {t.lesson.completed}</p>}
+      {/* T5 дизайн-аудита: 🎉 → mono-статус с мятной чертой (дезэмодзификация). */}
+      {state.completed && (
+        <p className="status-badge-ready">
+          {t.lesson.completed}
+          <span className="crat-red-line crat-mint-line" aria-hidden />
+        </p>
+      )}
 
       {/* Миссия — ДО навигации по урокам (рефлексия до выхода из урока). mission_prompt —
           контент-флаг (сейчас только у 1.1), урок может быть любым → returnTo из lessonId.

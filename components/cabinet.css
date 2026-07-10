@@ -59,22 +59,37 @@
   margin-block: -.7rem;
 }
 
-/* CAB-01 бриф §9: «линия горизонта» — 4 модуля-«здания» + полоса прогресса с фигуркой. */
+/* CAB-01 бриф §9: «линия горизонта» — 4 модуля-«здания» + полоса прогресса с точкой света. */
 
 .horizon {
   margin: 1.75rem 0 2.5rem;
 }
 
+/* T5 дизайн-аудита: красное небо за силуэтами — виднеется в промежутке над
+   зданиями (align-items:flex-end — короткие здания оставляют пустоту сверху
+   строки, там и проступает небо); ::before, не фон .horizon-buildings, чтобы
+   не перекрывать бордеры/окна самих зданий (z-index не нужен — рисуется до
+   контента-детей в порядке покраски, здания непрозрачны и перекрывают его). */
 .horizon-buildings {
+  position: relative;
   display: flex;
   align-items: flex-end;
   gap: 1rem;
 }
+.horizon-buildings::before {
+  content: '';
+  position: absolute;
+  inset: -.75rem 0 0;
+  background: linear-gradient(to bottom, var(--red-dark) 8%, transparent 80%);
+  opacity: .55;
+  pointer-events: none;
+}
 
 .building {
+  position: relative;
   flex: 1 1 0;
   min-width: 0;
-  background: var(--bg-black);
+  background-color: var(--bg-black);
   border: 1px solid var(--line-soft);
   border-bottom: none;
   border-radius: 6px 6px 0 0;
@@ -82,7 +97,8 @@
   align-items: flex-start;
   justify-content: center;
   padding: .9rem .5rem;
-  transition: border-color .3s ease;
+  overflow: hidden;
+  transition: border-color .18s cubic-bezier(.23, 1, .32, 1);
 }
 /* силуэты разной высоты — сохраняется при любом статусе, высота не зависит от прогресса */
 .horizon-buildings > .building:nth-child(1) { height: clamp(4.5rem, 11vw, 6.5rem); }
@@ -90,9 +106,28 @@
 .horizon-buildings > .building:nth-child(3) { height: clamp(5.5rem, 13vw, 8rem); }
 .horizon-buildings > .building:nth-child(4) { height: clamp(7.5rem, 17vw, 11rem); }
 
+/* T5: сетка окон-точек — repeating-linear-gradient по обеим осям поверх
+   bg-black. Незавершённые (none/partial) — почти чёрные (едва тусклее фона),
+   завершённые — та же сетка с neon-примесью («зажглись» — бриф §9). */
+.building::before {
+  content: '';
+  position: absolute;
+  inset: .6rem .4rem;
+  background-image:
+    repeating-linear-gradient(to right, rgba(242, 233, 220, .05) 0 2px, transparent 2px 11px),
+    repeating-linear-gradient(to bottom, rgba(242, 233, 220, .05) 0 2px, transparent 2px 13px);
+  pointer-events: none;
+}
+.building-done::before {
+  background-image:
+    repeating-linear-gradient(to right, color-mix(in srgb, var(--neon) 55%, transparent) 0 2px, transparent 2px 11px),
+    repeating-linear-gradient(to bottom, color-mix(in srgb, var(--neon) 55%, transparent) 0 2px, transparent 2px 13px);
+}
+
 .building-done { border-color: var(--line-red); }
 
 .building-sign {
+  position: relative;
   font-family: var(--font-mono), monospace;
   text-transform: uppercase;
   font-size: var(--fs-small);
@@ -100,28 +135,88 @@
   text-align: center;
   color: var(--paper-muted); /* не начат */
 }
-/* пройден полностью и частично — обе вывески светятся неоном; пульс (red-glow, crat.css)
-   добавляется классом только для полностью пройденного модуля (ревью T6). */
-.building-sign-partial,
+/* начат, но не завершён — «в процессе» (тот же приём, что .lesson-status-progress),
+   без свечения: вывеска «зажигается» только у полностью пройденного модуля
+   (T5: почищено условие — раньше partial ошибочно светился как done). */
+.building-sign-partial {
+  color: var(--lavender);
+}
 .building-sign-done {
   color: var(--neon);
   text-shadow: 0 0 8px color-mix(in srgb, var(--neon) 55%, transparent);
 }
 
-/* CAB-01: полоса прогресса с фигуркой на «горизонте», под зданиями. */
+/* CAB-01: полоса прогресса с точкой света на «горизонте», под зданиями. */
 .progress-track {
   position: relative;
   height: 2.2rem;
   border-bottom: 2px solid var(--line-soft);
-  padding: 0 .9rem; /* запас под половину фигурки на краях 0%/100% (ревью T6) */
+  padding: 0 .9rem; /* запас под половину точки на краях 0%/100% (ревью T6) */
 }
+/* T5: фигурка-эмодзи 🚶 → точка света (радиальный градиент + neon-glow, без
+   стоковой метафоры). Центр кружка на линии прогресса. */
 .progress-figure {
   position: absolute;
-  bottom: 0;
+  bottom: -5px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, var(--paper), var(--neon) 60%, transparent 78%);
+  box-shadow: var(--neon-glow);
   /* T1: transition: left .6s ease — удалена (мёртвый код: left задаётся при SSR,
      клиентских перерисовок с изменением left нет, переход никогда не проигрывался). */
-  font-size: 1.6rem;
-  transform: translateX(-50%); /* центр фигурки на позиции left — внутри трека и на 0%, и на 100% */
+  transform: translateX(-50%); /* центр точки на позиции left — внутри трека и на 0%, и на 100% */
+}
+
+/* T5: мобильная замена сцены-зданий (≤540px, бриф §9 «360 не ломается») —
+   компактная горизонтальная полоса с 4 засечками модулей, та же красная линия
+   прогресса снизу + mono-подписи M1…M4. Разметка всегда в DOM (данные общие
+   с десктопной сценой — page.tsx считает статус один раз), видимость решает
+   медиа-запрос ниже. */
+.horizon-ticks {
+  display: none;
+}
+@media (max-width: 540px) {
+  .horizon-buildings {
+    display: none;
+  }
+  .horizon-ticks {
+    display: flex;
+    justify-content: space-between;
+    padding: 0 .9rem 1.5rem;
+  }
+  .horizon-tick {
+    display: grid;
+    justify-items: center;
+    gap: .35rem;
+  }
+  .horizon-tick-dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: var(--line-soft);
+    border: 1px solid var(--paper-muted);
+  }
+  .horizon-tick-done .horizon-tick-dot {
+    background: var(--neon);
+    border-color: var(--neon);
+    box-shadow: var(--neon-glow);
+  }
+  .horizon-tick-partial .horizon-tick-dot {
+    border-color: var(--lavender);
+  }
+  .horizon-tick-label {
+    font-family: var(--font-mono), monospace;
+    text-transform: uppercase;
+    font-size: var(--fs-small);
+    color: var(--paper-muted);
+  }
+  .horizon-tick-done .horizon-tick-label {
+    color: var(--neon);
+  }
+  .horizon-tick-partial .horizon-tick-label {
+    color: var(--lavender);
+  }
 }
 
 /* T3 дизайн-аудита: красная линия прогресса поверх серой базы (border-bottom
@@ -244,7 +339,31 @@ a.course-card {
   margin-bottom: 2.5rem;
 }
 
-/* Ф3 T7: блок сертификата в кабинете — номер + две кнопки (CERT-05/06). */
+/* T5 дизайн-аудита: спокойные mono-статусы (хаб + страница курса) — «на проверке»/
+   «сертификат готов» видны без похода в форму, но не читаются как тревога. */
+.status-badge-calm,
+.status-badge-ready {
+  font-family: var(--font-mono), monospace;
+  text-transform: uppercase;
+  font-size: var(--fs-small);
+  letter-spacing: .04em;
+  margin: .35rem 0 0;
+}
+.status-badge-calm { color: var(--lavender); }
+.status-badge-ready { color: var(--mint); }
+
+/* T5: «Нужны правки» — alert-карточка (не border-left-полоса, тот паттерн забанен,
+   см. mdx.css P2-2а — «красная линия» в системе CRAT всегда горизонтальная).
+   Переиспользует .crat-red-line как короткую линию-акцент под заголовком. */
+.alert-card {
+  border-color: var(--line-red);
+  background: color-mix(in srgb, var(--neon) 6%, transparent);
+}
+.alert-card-line {
+  margin: .4rem 0 .6rem;
+}
+
+/* Ф3 T7/T5: блок сертификата в кабинете — «Сертификат готов» + документ + кнопки (CERT-05/06). */
 .cabinet-cert {
   margin-bottom: 2.5rem;
 }
@@ -252,7 +371,58 @@ a.course-card {
   display: flex;
   flex-wrap: wrap;
   gap: .75rem;
+  margin-top: 1.25rem;
+}
+
+/* T5: сертификат-триумф — «кремовый документ» (--paper/--ink, а не тёмная карточка
+   сайта): двойная рамка border+outline-offset, печать CRAT (.crat-stamp) в углу. */
+.cert-document {
+  position: relative;
+  margin-top: 1rem;
+  background: var(--paper);
+  color: var(--ink);
+  border: 1px solid var(--ink);
+  outline: 1px solid color-mix(in srgb, var(--ink) 55%, transparent);
+  outline-offset: 6px;
+  border-radius: 4px;
+  padding: clamp(1.75rem, 6vw, 3rem) clamp(1.25rem, 5vw, 2.5rem);
+  display: grid;
+  gap: .35rem;
+  justify-items: center;
+  text-align: center;
+  box-shadow: 0 0 48px color-mix(in srgb, var(--neon) 20%, transparent);
+}
+.cert-document .crat-stamp {
+  position: absolute;
+  top: .75rem;
+  right: .75rem;
+}
+.cert-document-kicker {
+  color: color-mix(in srgb, var(--ink) 55%, transparent);
+}
+.cert-document-name {
+  font-family: var(--font-accent), serif;
+  font-size: clamp(1.9rem, 5vw, 3rem);
+  line-height: 1.1;
+  margin: .25rem 0;
+  overflow-wrap: anywhere;
+}
+.cert-document-course {
+  color: color-mix(in srgb, var(--ink) 70%, transparent);
+}
+.cert-document-number {
+  font-family: var(--font-mono), monospace;
+  letter-spacing: .08em;
+  color: var(--red-dark);
   margin-top: .5rem;
+}
+/* «Действителен» на /cert — рядом с документом, вне cream-фона (мята на чёрном). */
+.cert-valid-label {
+  color: var(--mint);
+  font-family: var(--font-mono), monospace;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  margin-top: 1rem;
 }
 
 /* Ф5-полировка: страница урока (/app/lessons/[id]) не имела своего класса —
@@ -325,6 +495,18 @@ a.course-card {
   flex-wrap: wrap;
   gap: 1rem;
 }
+/* T5 дизайн-аудита (П6): mono-номер поля 01–07 перед подписью — тот же порядок,
+   что PROJECT_FIELDS (lib/project/fields.ts). */
+.project-field-num {
+  font-family: var(--font-mono), monospace;
+  color: var(--paper-muted);
+  letter-spacing: .06em;
+}
+/* T5 (П6): комментарий проверяющего в alert-карточке — крупнее обычного текста,
+   не теряется рядом с формой. */
+.admin-comment-text {
+  font-size: 1.15em;
+}
 
 /* Ф4 T2: карточка повторения в кабинете (CAB-04…06) — заметный блок ВВЕРХУ, до миссии/уроков. */
 .cabinet-review {
@@ -375,7 +557,8 @@ a.course-card {
   border: 1px solid var(--line-soft);
   border-radius: 8px;
   cursor: pointer;
-  transition: border-color .3s ease;
+  /* T5: .3s ease → .18s cubic-bezier(.23,1,.32,1) — тот же почерк, что у остальных ховеров. */
+  transition: border-color .18s cubic-bezier(.23, 1, .32, 1);
 }
 .review-option:hover { border-color: var(--line-red); }
 .review-option input[type='radio'] {
@@ -442,4 +625,31 @@ a.trainer-card {
 
 .trainer-reply-text {
   white-space: pre-wrap;
+}
+
+/* T5 дизайн-аудита: «осталось N из 20» над формой — mono, тихо. */
+.trainer-remaining {
+  font-family: var(--font-mono), monospace;
+  text-transform: uppercase;
+  font-size: var(--fs-small);
+  color: var(--paper-muted);
+  letter-spacing: .04em;
+}
+/* Пример запроса в пустом состоянии — под textarea, до кнопки. */
+.trainer-example {
+  margin: 0;
+}
+.trainer-submit-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+/* «Модель отвечает…» — pending-лоадер рядом с кнопкой (role=status уже озвучивает). */
+.trainer-pending {
+  font-family: var(--font-mono), monospace;
+  text-transform: uppercase;
+  font-size: var(--fs-small);
+  color: var(--lavender);
+  letter-spacing: .04em;
 }

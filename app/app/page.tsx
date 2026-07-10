@@ -4,6 +4,7 @@ import { getCourses, lessonCount, splitCourseCatalog, soleCourseRedirect } from 
 import { currentUser } from '@/lib/auth/current-user'
 import { getCourseProgress } from '@/lib/progress'
 import { getDueDeferred } from '@/lib/progress/deferred'
+import { getCurrentSubmission } from '@/lib/project'
 import { db } from '@/lib/db'
 import { t } from '@/lib/i18n'
 
@@ -28,9 +29,20 @@ export default async function Cabinet() {
   const redirectSlug = soleCourseRedirect(mine, others)
   if (redirectSlug) redirect(`/app/${redirectSlug}`)
 
+  // T5 дизайн-аудита: статусы «Проект на проверке»/«Сертификат готов» — видны сразу на
+  // карточке курса хаба, без захода в сам курс. Два доп. запроса на курс — тот же
+  // компромисс, что и на странице курса (getCurrentSubmission/db.certificate.findFirst
+  // там же, «доп. запрос — приемлемо», T5-план); у студента обычно 1 курс.
   const myCourses = await Promise.all(mine.map(async entry => {
-    const { completedCount } = await getCourseProgress(user.id, entry.slug)
-    return { slug: entry.slug, title: entry.course.title, completedCount, total: lessonCount(entry.slug) }
+    const [{ completedCount }, submission, certificate] = await Promise.all([
+      getCourseProgress(user.id, entry.slug),
+      getCurrentSubmission(user.id, entry.slug),
+      db.certificate.findFirst({ where: { userId: user.id, courseSlug: entry.slug, status: 'VALID' } }),
+    ])
+    return {
+      slug: entry.slug, title: entry.course.title, completedCount, total: lessonCount(entry.slug),
+      submissionStatus: submission?.status, certIssued: !!certificate,
+    }
   }))
 
   // Ф4 T2/F19: due-блок повторения (CAB-04/06) — по всем курсам студента (без courseSlug — deferred.ts T2).
@@ -61,6 +73,12 @@ export default async function Cabinet() {
                   <Link key={c.slug} href={`/app/${c.slug}`} className="crat-card course-card">
                     <h3>{c.title}</h3>
                     <p className="crat-muted">{c.completedCount}/{c.total} · {t.cabinet.progressLabel}</p>
+                    {/* T5: сертификат важнее статуса проекта — если выдан, проект уже неактуален. */}
+                    {c.certIssued ? (
+                      <p className="status-badge-ready">{t.cabinet.certReady}</p>
+                    ) : c.submissionStatus === 'SUBMITTED' ? (
+                      <p className="status-badge-calm">{t.cabinet.projectUnderReview}</p>
+                    ) : null}
                   </Link>
                 ))}
               </div>

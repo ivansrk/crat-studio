@@ -1,17 +1,20 @@
 import { t } from '@/lib/i18n'
 
-const ICONS = { idea: '💡', warning: '⚠️', example: '🧭' } as const
-
+/** T5 дизайн-аудита: дезэмодзификация — 💡⚠️🧭 (стоковая метафора, запрещена
+ *  анти-дефолт-чеклистом skill'а) → mono-лейбл [ИДЕЯ]/[ВНИМАНИЕ]/[ПРИМЕР],
+ *  цвет = цвет рамки типа (mdx.css). Видимый текст, не aria-label — читается
+ *  и глазами, и скринридером одинаково, дублировать не нужно. */
 export function Callout({
   type = 'idea',
   children,
 }: {
-  type?: keyof typeof ICONS
+  type?: 'idea' | 'warning' | 'example'
   children: React.ReactNode
 }) {
   return (
-    <aside className={`mdx-callout mdx-callout-${type}`} aria-label={t.callout[type]}>
-      <span aria-hidden="true">{ICONS[type]}</span> {children}
+    <aside className={`mdx-callout mdx-callout-${type}`}>
+      <p className="mdx-callout-label">{t.callout[type]}</p>
+      {children}
     </aside>
   )
 }

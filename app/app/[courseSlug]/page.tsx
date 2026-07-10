@@ -66,26 +66,43 @@ export default async function CourseCabinet({ params }: { params: Promise<{ cour
           <h1 className="crat-display">{t.auth.cabinetTitle}</h1>
 
           {/* CAB-01 бриф §9: «линия горизонта» — 4 модуля-«здания» над полосой прогресса,
-              фигурка идёт по существующему pct; статус здания считается из byLesson (данные не меняются). */}
+              точка света идёт по существующему pct; статус здания считается из byLesson
+              (данные не меняются). Статус модуля посчитан один раз — из него рендерятся
+              ОБЕ сцены (десктопные здания + мобильные засечки ≤540px, cabinet.css). */}
           <section aria-label={t.cabinet.progressAria} className="horizon">
-            <div className="horizon-buildings">
-              {course.modules.map(m => {
+            {(() => {
+              const moduleStatuses = course.modules.map(m => {
                 const rows = m.lessons.map(l => byLesson.get(l.id))
                 const passedCount = rows.filter(r => isLessonPassed(r)).length
                 const started = rows.some(Boolean)
-                const status = passedCount === m.lessons.length ? 'done' : started ? 'partial' : 'none'
-                return (
-                  <div key={m.id} className={`building building-${status}`}>
-                    <span className={`building-sign building-sign-${status}${status === 'done' ? ' red-glow' : ''}`}>{m.title}</span>
+                const status = passedCount === m.lessons.length ? 'done' as const : started ? 'partial' as const : 'none' as const
+                return { id: m.id, title: m.title, status }
+              })
+              return (
+                <>
+                  <div className="horizon-buildings">
+                    {moduleStatuses.map(m => (
+                      <div key={m.id} className={`building building-${m.status}`}>
+                        <span className={`building-sign building-sign-${m.status}${m.status === 'done' ? ' red-glow' : ''}`}>{m.title}</span>
+                      </div>
+                    ))}
                   </div>
-                )
-              })}
-            </div>
+                  <div className="horizon-ticks" aria-hidden>
+                    {moduleStatuses.map(m => (
+                      <div key={m.id} className={`horizon-tick horizon-tick-${m.status}`}>
+                        <span className="horizon-tick-dot" />
+                        <span className="horizon-tick-label">M{m.id}</span>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )
+            })()}
             <div className="progress-track">
               {/* T3 дизайн-аудита: линия горизонта — та же величина pct, что и left
-                  фигурки ниже, только как коэффициент 0..1 для scaleX. */}
+                  точки света ниже, только как коэффициент 0..1 для scaleX. */}
               <span className="progress-fill" style={{ '--p': pct / 100 } as CSSProperties} aria-hidden />
-              <span className="progress-figure" style={{ left: `${pct}%` }} aria-hidden>🚶</span>
+              <span className="progress-figure" style={{ left: `${pct}%` }} aria-hidden />
             </div>
             <p className="crat-muted">{completedCount}/{total} · {t.cabinet.progressLabel}</p>
           </section>
@@ -131,11 +148,20 @@ export default async function CourseCabinet({ params }: { params: Promise<{ cour
             ))}
           </div>
 
-          {/* T5: статус мини-проекта + ссылка — после списка уроков (PROJ-01…06). */}
-          <div className="crat-card cabinet-project">
+          {/* T5: статус мини-проекта + ссылка — после списка уроков (PROJ-01…06).
+              SUBMITTED — спокойный mono-статус (ничего делать не нужно, не тревога);
+              NEEDS_CHANGES — alert-карточка с красной линией (не шёпот, П6 дизайн-аудита):
+              полный комментарий проверяющего — на самой странице проекта, здесь только
+              заметный статус-триггер, чтобы студент точно не пропустил. */}
+          <div className={`crat-card cabinet-project${projectSubmission?.status === 'NEEDS_CHANGES' ? ' alert-card' : ''}`}>
             <div>
               <h2 className="crat-kicker">{t.project.cabinetLinkLabel}</h2>
-              <p className="crat-muted">{projectStatusText}</p>
+              {projectSubmission?.status === 'NEEDS_CHANGES' && <span className="crat-red-line alert-card-line" aria-hidden />}
+              {projectSubmission?.status === 'SUBMITTED' ? (
+                <p className="status-badge-calm">{t.project.statusSubmittedTitle}</p>
+              ) : (
+                <p className="crat-muted">{projectStatusText}</p>
+              )}
             </div>
             <Link className="crat-button" href={`/app/${courseSlug}/project`}>{t.project.cabinetCta}</Link>
           </div>
@@ -144,11 +170,19 @@ export default async function CourseCabinet({ params }: { params: Promise<{ cour
               страницы (дублировали хаб /app) — остаются только там, курсовая страница
               теперь только про сам курс (модули/уроки/проект/сертификат). */}
 
-          {/* T7: блок сертификата — только при выданном VALID (CERT-01/05/06). */}
+          {/* T7/T5: блок сертификата — только при выданном VALID (CERT-01/05/06).
+              T5 дизайн-аудита: «сертификат-триумф» — кремовый документ (.cert-document)
+              вместо голого номера, печать CRAT, кнопки под документом. */}
           {certificate && (
             <div className="crat-card cabinet-cert">
-              <h2 className="crat-kicker">{t.cert.cabinetTitle}</h2>
-              <p className="cert-number">{certificate.number}</p>
+              <h2 className="crat-kicker">{t.cert.cabinetReadyTitle}</h2>
+              <div className="cert-document">
+                <span className="crat-stamp" aria-hidden />
+                <p className="crat-kicker cert-document-kicker">{t.cert.issuedTo}</p>
+                <p className="cert-document-name">{certificate.fullName ?? '—'}</p>
+                <p className="cert-document-course">{t.cert.completedCourse} «{certificate.courseTitle}»</p>
+                <p className="cert-document-number">{certificate.number}</p>
+              </div>
               <div className="cabinet-cert-actions">
                 <Link className="crat-button primary" href={`/app/${courseSlug}/certificate`}>{t.cert.downloadPdf}</Link>
                 <Link className="crat-button" href={`/cert/${certificate.number}`}>{t.cert.verifyPage}</Link>

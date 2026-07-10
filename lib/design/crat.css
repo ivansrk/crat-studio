@@ -271,6 +271,14 @@
   box-shadow: 0 0 24px rgba(187, 224, 92, .45);
 }
 
+/* T5 дизайн-аудита: мятный вариант — статус «сделано» без тревоги (замена 🎉,
+   «Урок пройден»/«Проект отправлен»), та же геометрия .crat-red-line. */
+.crat-mint-line {
+  background: var(--mint);
+  box-shadow: 0 0 24px rgba(127, 214, 180, .45);
+  margin-top: .4rem;
+}
+
 .crat-tag {
   font-family: var(--font-mono), monospace;
   text-transform: uppercase;

@@ -5,6 +5,7 @@ import { mintResetToken } from '@/lib/auth/reset'
 import { hashPassword } from '@/lib/auth/password'
 import { warsawDayStart } from '@/lib/trainers/limits'
 import { createInvite } from '@/lib/invite'
+import { checkAndIssueCertificate } from '@/lib/cert'
 import { ResetTokenPurpose } from '@/lib/generated/prisma/client'
 
 const SEED = (n: string) => `${n}@seed.crat.example`
@@ -215,13 +216,14 @@ const LESSON_ANSWERS: Record<string, number[]> = {
   '4.3': [1, 1, 0],
 }
 
-/** Ф3: дипломант с живым 12/12 (все LessonProgress/QuizResult/DeferredQuizState пишутся
- *  НАПРЯМУЮ через db.*, минуя lib/progress) + Submission SUBMITTED — «одна кнопка approve
- *  отделяет от сертификата». Так как recomputeCompletion (и, следовательно,
- *  checkAndIssueCertificate) вызывается только из lib/progress/lib/admin/review-project,
- *  а не из прямых upsert'ов в БД, сид сам сертификат НЕ выдаёт — это и есть smoke-сценарий
- *  Ивана: зайти в /admin/projects и нажать «Принять».
- *  student@ получает противоположный сценарий — NEEDS_CHANGES с комментарием админа. */
+/** Ф3/T5 дизайн-аудита: дипломант с живым 12/12 (все LessonProgress/QuizResult/
+ *  DeferredQuizState пишутся НАПРЯМУЮ через db.*, минуя lib/progress) + Submission
+ *  APPROVED + выданный Certificate — «сертификат-триумф» (кабинет, /cert, PDF) проверяем
+ *  смоуком без похода в /admin. Выдача — через checkAndIssueCertificate (lib/cert, ТОТ ЖЕ
+ *  код, что и боевая выдача): идемпотентная транзакция, номер — из настоящего
+ *  CertificateCounter (не хардкод), повторный `npm run seed` — no-op («already»).
+ *  Админ-ревью смоук (кнопка «Принять»/«На доработку») остаётся живым через student@
+ *  ниже — её Submission NEEDS_CHANGES с комментарием админа. */
 async function seedF3() {
   const diplomant = await db.user.upsert({
     where: { email: SEED('diplomant') },
@@ -267,12 +269,17 @@ async function seedF3() {
     })
   }
 
-  // Submission attempt 1 SUBMITTED — 7 осмысленных полей, готов к approve.
+  // Submission attempt 1 APPROVED — 7 осмысленных полей, состояние согласовано с 12/12
+  // выше (T5: раньше был SUBMITTED «на одну кнопку approve», теперь сразу выдан —
+  // см. докстринг функции про checkAndIssueCertificate ниже).
   await db.submission.upsert({
     where: { userId_courseSlug_attempt: { userId: diplomant.id, courseSlug: COURSE, attempt: 1 } },
-    update: {},
+    // update: существующие БД (сид гонялся до T5, когда статус был SUBMITTED) должны
+    // мигрировать на APPROVED повторным `npm run seed`, а не застрять в старом статусе —
+    // остальные поля (описание проекта) не меняются между версиями, трогать их не нужно.
+    update: { status: 'APPROVED', reviewedAt: now, adminComment: null },
     create: {
-      userId: diplomant.id, courseSlug: COURSE, attempt: 1, status: 'SUBMITTED', submittedAt: now,
+      userId: diplomant.id, courseSlug: COURSE, attempt: 1, status: 'APPROVED', submittedAt: now, reviewedAt: now,
       task: 'Составить план адаптации нового сотрудника отдела продаж на первую рабочую неделю',
       tool: 'ChatGPT (бесплатная версия)',
       prompt: 'Помоги составить план на первую неделю для нового менеджера по продажам: что изучить, с кем познакомиться, какие первые задачи дать',
@@ -282,6 +289,10 @@ async function seedF3() {
       application: 'Буду использовать этот план для адаптации каждого нового сотрудника отдела, подстраивая под роль',
     },
   })
+  // T5: выдача сертификата — тот же боевой код (lib/cert), идемпотентен (повторный
+  // прогон seed видит существующий VALID и возвращает 'already', номер не меняется).
+  const certResult = await checkAndIssueCertificate(diplomant.id, COURSE)
+  console.log(`[seed] сертификат дипломанта: ${certResult}`)
 
   // student@: NEEDS_CHANGES с комментарием — контраст со SUBMITTED-статусом дипломанта.
   const student = await db.user.findUniqueOrThrow({ where: { email: SEED('student') } })

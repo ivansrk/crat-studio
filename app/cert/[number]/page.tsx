@@ -37,16 +37,21 @@ export default async function CertPage({ params }: Props) {
                 <p className="crat-muted">{t.cert.revoked}</p>
               </>
             ) : (
-              // T2 дизайн-аудита (D-042): те же прожектор-лучи, что у «Квиз сдан» —
+              // T2/T5 дизайн-аудита (D-042): те же прожектор-лучи, что у «Квиз сдан» —
               // валидный сертификат тоже маленький триумф (site.css .shader-scope/.shader-content).
+              // T5: тот же документ-стиль, что в кабинете (.cert-document) + «Действителен» (мята) + печать.
               <div className="crat-card shader-scope">
                 <SectionShader variant="celebrate-rays" />
                 <div className="shader-content">
-                  <p className="cert-number">{cert.number}</p>
-                  <p className="crat-muted">{t.cert.issuedTo}</p>
-                  {/* fullName может быть null после GDPR-удаления (D-010/CERT-07) — номер и статус остаются проверяемыми. */}
-                  <h1 className="crat-display">{cert.fullName ?? '—'}</h1>
-                  <p className="crat-muted">{t.cert.completedCourse} «{cert.courseTitle}»</p>
+                  <div className="cert-document">
+                    <span className="crat-stamp" aria-hidden />
+                    <p className="crat-kicker cert-document-kicker">{t.cert.issuedTo}</p>
+                    {/* fullName может быть null после GDPR-удаления (D-010/CERT-07) — номер и статус остаются проверяемыми. */}
+                    <h1 className="crat-display cert-document-name">{cert.fullName ?? '—'}</h1>
+                    <p className="cert-document-course">{t.cert.completedCourse} «{cert.courseTitle}»</p>
+                    <p className="cert-document-number">{cert.number}</p>
+                  </div>
+                  <p className="cert-valid-label">{t.cert.validLabel}</p>
                   <p className="crat-muted">{t.cert.issuedOn}: {formatDate(cert.issuedAt)}</p>
                 </div>
               </div>

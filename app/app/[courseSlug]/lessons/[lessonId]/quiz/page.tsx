@@ -5,10 +5,10 @@ import { hasCourseAccess } from '@/lib/progress/access'
 import { db } from '@/lib/db'
 import { getCourse, getLesson } from '@/lib/content'
 import { nextQuestionIndex, QUIZ_TOTAL, type StoredAnswer } from '@/lib/progress/quiz-logic'
-import { answerAction } from '@/app/actions/quiz'
 import { startQuizAction } from '@/app/actions/lesson'
 import { t } from '@/lib/i18n'
 import { SectionShader } from '@/components/site/SectionShader'
+import { QuizAnswerForm } from './QuizAnswerForm'
 
 export const dynamic = 'force-dynamic'
 
@@ -57,6 +57,8 @@ export default async function QuizPage({ params, searchParams }: {
           {fbBlock}
           <h1 className="crat-display">{attempt.passed ? t.quiz.passedTitle : t.quiz.failedTitle}</h1>
           <p>{t.quiz.scoreLabel}: {attempt.score}/{attempt.total}</p>
+          {/* T5: печать-штамп рядом с прожектор-лучами — маленький триумф сдачи (site.css). */}
+          {attempt.passed && <span className="crat-stamp" aria-hidden />}
           {!attempt.passed && (
             <form action={startQuizAction}>
               <input type="hidden" name="courseSlug" value={courseSlug} />
@@ -79,23 +81,17 @@ export default async function QuizPage({ params, searchParams }: {
     <main className="quiz quiz-stage crat-noise">
       <h1 className="crat-muted quiz-lesson-title">{lesson.meta.title} — {t.quiz.title}</h1>
       {fbBlock}
-      {/* «Сцена с прожектором» (бриф §9): вопрос в световом пятне, варианты — crat-card. */}
+      {/* «Сцена с прожектором» (бриф §9): вопрос в световом пятне + конус сверху (quiz.css). */}
       <div className="quiz-spotlight">
-        <p className="quiz-progress">{t.quiz.questionLabel} {qi + 1}/{QUIZ_TOTAL}</p>
-        <h2>{q.question}</h2>
+        <p className="quiz-progress" aria-label={t.quiz.questionOfAria.replace('{n}', String(qi + 1)).replace('{total}', String(QUIZ_TOTAL))}>
+          <span aria-hidden>{String(qi + 1).padStart(2, '0')} / {String(QUIZ_TOTAL).padStart(2, '0')}</span>
+          <span className="crat-red-line quiz-progress-line" aria-hidden />
+        </p>
+        <h2 className="quiz-question">{q.question}</h2>
       </div>
-      <div className="quiz-options">
-        {q.options.map((opt, i) => (
-          <form key={i} action={answerAction}>
-            <input type="hidden" name="courseSlug" value={courseSlug} />
-            <input type="hidden" name="lessonId" value={lessonId} />
-            <input type="hidden" name="attemptId" value={attempt.id} />
-            <input type="hidden" name="questionIndex" value={qi} />
-            <input type="hidden" name="chosen" value={i} />
-            <button className="quiz-option crat-card" type="submit">{opt}</button>
-          </form>
-        ))}
-      </div>
+      {/* T5: двухшаговый ответ — radio + отдельная кнопка «Ответить» (QuizAnswerForm, client). */}
+      <QuizAnswerForm courseSlug={courseSlug} lessonId={lessonId} attemptId={attempt.id} questionIndex={qi} options={q.options} />
+      <p><Link className="reveal-line" href={`/app/${courseSlug}/lessons/${lessonId}`}>{t.quiz.backToLesson}</Link></p>
     </main>
   )
 }

@@ -13,6 +13,7 @@ export default function Accepted() {
           <div className="crat-shell">
             <SectionLabel kicker={t.landing.courseLabel} />
             <div className="crat-card accepted-card">
+              <span className="crat-stamp" aria-hidden />
               <h1 className="crat-display">{t.landing.acceptedTitle}</h1>
               <p className="crat-muted">{t.landing.acceptedBody}</p>
               <Link className="crat-button primary" href="/">{t.landing.backHome}</Link>

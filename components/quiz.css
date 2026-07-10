@@ -13,25 +13,89 @@
   font-weight: 400;
 }
 
-/* световое пятно вокруг вопроса */
+/* T5 дизайн-аудита: сцена квиза — вертикальная виньетка держит взгляд в центре,
+   там, где спотлайт и конус (ниже). inset-тень уважает border-radius самого
+   .quiz-stage автоматически (клип по боксу), overflow:hidden не нужен. */
+.quiz-stage {
+  box-shadow: inset 0 0 120px 40px var(--bg-void);
+}
+
+/* световое пятно вокруг вопроса — T5: 7% → 12–14%, крупнее (90%×цельная высота
+   блока, не узкий эллипс), + конус сверху (::before) поверх того же пятна —
+   имитация прожектора, бьющего вертикально сверху вниз (бриф §9). */
 .quiz-spotlight {
   position: relative;
   margin: 1.5rem 0 2rem;
   padding: 1.75rem clamp(1rem, 4vw, 2rem);
   border-radius: 16px;
-  background: radial-gradient(ellipse at center, color-mix(in srgb, var(--paper) 7%, transparent), transparent 72%);
+  overflow: hidden;
+  background: radial-gradient(ellipse 92% 100% at center top, color-mix(in srgb, var(--paper) 13%, transparent), transparent 78%);
 }
-.quiz-spotlight h2 { margin: .5rem 0 0; }
+/* конус прожектора: трапеция, сужающаяся кверху (clip-path), над тем же пятном. */
+.quiz-spotlight::before {
+  content: '';
+  position: absolute;
+  top: -55%;
+  left: 50%;
+  width: 46%;
+  height: 165%;
+  background: linear-gradient(to bottom, color-mix(in srgb, var(--paper) 18%, transparent) 0%, transparent 72%);
+  clip-path: polygon(44% 0%, 56% 0%, 100% 100%, 0% 100%);
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+.quiz-spotlight > * {
+  position: relative;
+}
+.quiz-question {
+  font-family: var(--font-accent), serif;
+  font-size: clamp(1.8rem, 3vw, 2.4rem);
+  line-height: 1.15;
+  margin: .6rem 0 0;
+}
 
-.quiz-options { display: grid; gap: .8rem; }
-/* карточка-вариант — crat-card (background/border/hover: line-red) задаёт стиль,
-   тут структурные правила кнопки-контейнера + color (crat-card его не задаёт,
-   а у <button> свой браузерный дефолт — без этого текст варианта не читается на тёмном фоне). */
-.quiz-option { display: block; text-align: left; font: inherit; color: var(--paper); cursor: pointer; width: 100%; }
+/* T5: «01 / 03» — mono-kicker вместо прозы «Вопрос 1/3», короткая красная
+   черта под номером (та же .crat-red-line, компактнее). */
+.quiz-progress {
+  font-family: var(--font-mono), monospace;
+  letter-spacing: .08em;
+  color: var(--lavender);
+}
+.quiz-progress-line {
+  width: 1.6rem;
+  height: 2px;
+  margin-top: .5rem;
+}
+
+/* T5: варианты — radio, стилизованные как прежние карточки-кнопки (тот же
+   рисунок, что .review-option в кабинете: рамка + hover line-red). */
+.quiz-options-list { display: grid; gap: .8rem; margin-bottom: 1.25rem; }
+.quiz-option {
+  display: flex;
+  align-items: flex-start;
+  gap: .75rem;
+  padding: .9rem 1.1rem;
+  border: 1px solid var(--line-soft);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--paper) 4%, transparent);
+  cursor: pointer;
+  transition: border-color .18s cubic-bezier(.23, 1, .32, 1);
+}
+.quiz-option:hover { border-color: var(--line-red); }
+.quiz-option input[type='radio'] {
+  width: 1.3rem;
+  height: 1.3rem;
+  margin: .15rem 0 0;
+  accent-color: var(--neon);
+  flex: none;
+}
+.quiz-option-checked { border-color: var(--neon); box-shadow: var(--neon-glow); }
+.quiz-answer-submit { justify-self: start; }
+.quiz-answer-submit:disabled { opacity: .5; cursor: not-allowed; box-shadow: none; }
+
 .quiz-fb { padding: 1rem 1.25rem; border-radius: 8px; margin: 1rem 0; }
 .quiz-fb-ok { background: color-mix(in srgb, var(--mint) 12%, transparent); }
 .quiz-fb-no { background: color-mix(in srgb, var(--neon) 10%, transparent); }
-.quiz-progress { color: var(--lavender); }
 
 /* T3 дизайн-аудита («сцена квиза»): страница SSR, каждый ответ — полная загрузка,
    поэтому keyframes on load легитимны (без JS-классов пересчёта состояния). База

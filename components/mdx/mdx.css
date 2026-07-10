@@ -10,6 +10,23 @@
 .mdx-callout-warning { border-color: color-mix(in srgb, var(--lavender) 48%, transparent); background: color-mix(in srgb, var(--lavender) 9%, transparent); }
 .mdx-callout-example { border-color: color-mix(in srgb, var(--mint) 48%, transparent); background: color-mix(in srgb, var(--mint) 9%, transparent); }
 
+/* T5 дизайн-аудита: mono-лейбл вместо эмодзи-иконки (Callout.tsx) — цвет = цвет
+   рамки своего типа, скобки как у .crat-tag (lib/design/crat.css), но не сам
+   класс — там фиксированный lavender, здесь цвет должен меняться по типу. */
+.mdx-callout-label {
+  display: block;
+  font-family: var(--font-mono), monospace;
+  text-transform: uppercase;
+  font-size: var(--fs-small);
+  letter-spacing: .06em;
+  margin: 0 0 .5rem;
+}
+.mdx-callout-label::before { content: '['; }
+.mdx-callout-label::after { content: ']'; }
+.mdx-callout-idea .mdx-callout-label { color: var(--neon); }
+.mdx-callout-warning .mdx-callout-label { color: var(--lavender); }
+.mdx-callout-example .mdx-callout-label { color: var(--mint); }
+
 .mdx-video { position: relative; aspect-ratio: 16 / 9; }
 .mdx-video iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; border-radius: 8px; }
 

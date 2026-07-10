@@ -61,23 +61,40 @@ export default async function ProjectPage({ params, searchParams }: {
       )}
 
       {submission?.status === 'SUBMITTED' && (
-        <p className="crat-card">{t.project.statusSubmittedTitle} — {t.project.statusSubmittedBody}</p>
+        <div className="crat-card">
+          <p className="status-badge-calm">{t.project.statusSubmittedTitle}</p>
+          <p>{t.project.statusSubmittedBody}</p>
+        </div>
       )}
+      {/* T5 дизайн-аудита: 🎉 → mono-статус с мятной чертой (тот же приём, что «Урок пройден»). */}
       {submission?.status === 'APPROVED' && (
-        <p className="crat-card">🎉 {t.project.statusApprovedTitle} {t.project.statusApprovedBody}</p>
+        <div className="crat-card">
+          <p className="status-badge-ready">
+            {t.project.statusApprovedTitle}
+            <span className="crat-red-line crat-mint-line" aria-hidden />
+          </p>
+          <p>{t.project.statusApprovedBody}</p>
+        </div>
       )}
+      {/* T5 дизайн-аудита (П6): alert-карточка с красной линией — комментарий проверяющего
+          крупно, до самой формы (не «шёпот» цветом текста, как раньше .form-alert). Подсветку
+          конкретного поля не делаем — номер поля из свободного текста комментария не
+          парсится надёжно ([РЕШЕНИЕ АВТОРА], см. отчёт задачи). */}
       {submission?.status === 'NEEDS_CHANGES' && submission.adminComment && (
-        <div className="crat-card form-alert" role="alert">
-          <h2>{t.project.adminCommentTitle}</h2>
-          <p>{submission.adminComment}</p>
+        <div className="crat-card alert-card" role="alert">
+          <h2 className="crat-kicker">{t.project.adminCommentTitle}</h2>
+          <span className="crat-red-line alert-card-line" aria-hidden />
+          <p className="admin-comment-text">{submission.adminComment}</p>
         </div>
       )}
 
+      {/* T5 (П6): поля пронумерованы mono 01–07 — тот же порядок, что PROJECT_FIELDS/форма. */}
       {readOnly ? (
         <div className="crat-card project-form">
-          {PROJECT_FIELDS.map(field => (
+          {PROJECT_FIELDS.map((field, i) => (
             <label key={field}>
-              {FIELD_LABEL[field]}
+              <span className="project-field-num" aria-hidden>{String(i + 1).padStart(2, '0')}</span>
+              {' '}{FIELD_LABEL[field]}
               <textarea defaultValue={submission?.[field] ?? ''} disabled readOnly />
             </label>
           ))}
@@ -85,9 +102,10 @@ export default async function ProjectPage({ params, searchParams }: {
       ) : (
         <form className="crat-card project-form">
           <input type="hidden" name="courseSlug" value={courseSlug} />
-          {PROJECT_FIELDS.map(field => (
+          {PROJECT_FIELDS.map((field, i) => (
             <label key={field}>
-              {FIELD_LABEL[field]}
+              <span className="project-field-num" aria-hidden>{String(i + 1).padStart(2, '0')}</span>
+              {' '}{FIELD_LABEL[field]}
               <textarea name={field} defaultValue={submission?.[field] ?? ''} />
             </label>
           ))}

@@ -140,6 +140,10 @@
 .site-footer-brand p {
   margin: .3rem 0 0;
 }
+.site-footer-stamp {
+  --stamp-size: 68px;
+  margin-top: 1rem;
+}
 
 .site-footer-email {
   display: inline-block;
@@ -582,6 +586,56 @@ main.crat-page {
   margin: 0 0 .75rem;
 }
 
+/* ---------- «Печать CRAT» — почтовый штамп (T5 дизайн-аудита) ----------
+   Чисто CSS-элемент: генерируемый текст (латинский вордмарк, не пользовательская
+   строка — тот же принцип, что у тегов команды tags:['education','AI',…],
+   бриф §11 — ru.ts не нужен) + рамка + маска «непропечатанности» (несколько
+   смещённых радиальных вырезов по краям — неровный оттиск, не идеальный
+   прямоугольник). mask-composite:intersect — современные браузеры; без
+   поддержки маска просто не применяется, штамп остаётся чистым квадратом
+   (не критично — тот же уровень деградации, что у @starting-style баннера).
+   Разместить: /ai-basics/accepted, финал квиза (сдан), сертификат, футер. */
+.crat-stamp {
+  --stamp-size: 92px;
+  display: inline-block;
+  width: var(--stamp-size);
+  height: var(--stamp-size);
+  flex-shrink: 0;
+  border: 1px solid currentColor;
+  border-radius: 3px;
+  color: var(--neon);
+  opacity: .65;
+  transform: rotate(-5deg);
+  mask-image:
+    radial-gradient(circle at 13% 18%, transparent 5px, #000 6.5px),
+    radial-gradient(circle at 87% 82%, transparent 5px, #000 6.5px),
+    radial-gradient(circle at 84% 15%, transparent 3.5px, #000 5px);
+  mask-composite: intersect;
+  -webkit-mask-image:
+    radial-gradient(circle at 13% 18%, transparent 5px, #000 6.5px),
+    radial-gradient(circle at 87% 82%, transparent 5px, #000 6.5px),
+    radial-gradient(circle at 84% 15%, transparent 3.5px, #000 5px);
+}
+.crat-stamp::before {
+  content: 'CRAT ·\A STUDIO';
+  white-space: pre-line;
+  display: flex;
+  height: 100%;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  font-family: var(--font-mono), monospace;
+  text-transform: uppercase;
+  font-size: .64rem;
+  line-height: 1.5;
+  letter-spacing: .05em;
+}
+/* Футер (SiteFooter): тише — line-soft вместо неона, без наклона-акцента на светящийся неон. */
+.crat-stamp-muted {
+  color: var(--line-soft);
+  opacity: 1;
+}
+
 /* узкий экран: display-кегль ломал «профессиональной» посреди слова — умеренный размер, слова целые */
 @media (max-width: 480px) {
   .course-card h3 {
@@ -833,6 +887,14 @@ main.crat-page {
 .signup-form.crat-card:hover { transform: none; border-color: var(--line-soft); }
 .signup-form .crat-button { justify-self: start; }
 .form-alert { color: var(--neon); }
+
+/* /app/account (T5 дизайн-аудита, П8): собственный email + подсказка к полю пароля. */
+.account-email {
+  margin: -.5rem 0 1.5rem;
+}
+.field-hint {
+  margin-top: -.15rem;
+}
 
 /* ---------- юр-страницы /privacy /terms /cookies (Ф7в T5, LEGAL-01…02) ---------- */
 

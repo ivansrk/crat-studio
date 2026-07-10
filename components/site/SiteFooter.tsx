@@ -10,6 +10,7 @@ export function SiteFooter() {
           <span className="site-brand-name">{t.home.brand}</span>
           <p className="crat-muted">{t.footer.tagline}</p>
           <p className="crat-muted">{t.footer.directions}</p>
+          <span className="crat-stamp crat-stamp-muted site-footer-stamp" aria-hidden />
         </div>
         <nav className="crat-nav site-nav" aria-label={t.footer.navAria}>
           <Link href="/#course">{t.footer.navCourses}</Link>
