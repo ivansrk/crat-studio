@@ -8,6 +8,10 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${base}/ai-basics`, changeFrequency: 'weekly', priority: 0.9 },
     { url: `${base}/register`, changeFrequency: 'weekly', priority: 0.5 },
     { url: `${base}/articles`, changeFrequency: 'weekly', priority: 0.8 },
+    // Ф7в T5, LEGAL-01: юр-страницы — низкий приоритет/редкие изменения, но должны быть в sitemap.
+    { url: `${base}/privacy`, changeFrequency: 'yearly', priority: 0.2 },
+    { url: `${base}/terms`, changeFrequency: 'yearly', priority: 0.2 },
+    { url: `${base}/cookies`, changeFrequency: 'yearly', priority: 0.2 },
     ...getArticles().map(({ meta }) => ({
       url: `${base}/articles/${meta.slug}`,
       lastModified: new Date(meta.date),

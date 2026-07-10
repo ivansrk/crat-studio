@@ -31,7 +31,16 @@ export function SignupForm({ notice, returnTo, showTitle = true, inviteToken }: 
       <label><span>{t.landing.phone}<Req /></span><input name="phone" type="tel" required autoComplete="tel" /></label>
       <label>{t.landing.telegram}<input name="telegram" /></label>
       <label>{t.landing.whatsapp}<input name="whatsapp" /></label>
-      <label className="check"><input type="checkbox" name="dataConsent" required /> {t.landing.dataConsent}</label>
+      <label className="check">
+        <input type="checkbox" name="dataConsent" required />
+        <span>
+          {t.landing.dataConsent.before}
+          <Link href="/privacy">{t.landing.dataConsent.privacyLabel}</Link>
+          {t.landing.dataConsent.between}
+          <Link href="/terms">{t.landing.dataConsent.termsLabel}</Link>
+          {t.landing.dataConsent.after}
+        </span>
+      </label>
       <label className="check"><input type="checkbox" name="wantsNewsletter" /> {t.landing.newsletterConsent}</label>
       <button type="submit" className="crat-button primary">{t.landing.submit}</button>
     </form>

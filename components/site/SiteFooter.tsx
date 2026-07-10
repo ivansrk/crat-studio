@@ -18,7 +18,15 @@ export function SiteFooter() {
           <Link href="/#team">{t.footer.navTeam}</Link>
           <Link href="/articles">{t.footer.navArticles}</Link>
         </nav>
-        <a className="crat-muted site-footer-email" href={`mailto:${t.footer.contactEmail}`}>{t.footer.contactEmail}</a>
+        <div className="site-footer-legal-col">
+          <a className="crat-muted site-footer-email" href={`mailto:${t.footer.contactEmail}`}>{t.footer.contactEmail}</a>
+          {/* LEGAL-03: ссылки на юр-страницы — этот футер общий для всех публичных страниц. */}
+          <nav className="crat-nav site-nav site-footer-legal" aria-label={t.footer.legalNavAria}>
+            <Link href="/privacy">{t.footer.navPrivacy}</Link>
+            <Link href="/terms">{t.footer.navTerms}</Link>
+            <Link href="/cookies">{t.footer.navCookies}</Link>
+          </nav>
+        </div>
       </div>
     </footer>
   )

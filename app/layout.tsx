@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import Script from 'next/script'
 import { accent, body, mono } from './fonts'
 import { t } from '@/lib/i18n'
+import { CookieBanner } from '@/components/CookieBanner'
 import './globals.css'
 
 export const metadata: Metadata = {
@@ -18,6 +19,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="ru" className={`${accent.variable} ${body.variable} ${mono.variable}`}>
       <body>
         {children}
+        {/* LEGAL-04/06, D-037: информационный баннер на всех страницах сайта (публичных и кабинета). */}
+        <CookieBanner />
         {plausibleDomain && (
           <Script defer data-domain={plausibleDomain} src="https://plausible.io/js/script.js" strategy="afterInteractive" />
         )}

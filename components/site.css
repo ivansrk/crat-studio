@@ -106,6 +106,23 @@
   text-decoration: none;
 }
 
+/* Ф7в T5, LEGAL-03: колонка email + юр-ссылки, справа в футере. */
+.site-footer-legal-col {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: .35rem;
+  min-width: 0;
+}
+.site-footer-legal {
+  gap: 1rem 1.25rem;
+}
+@media (max-width: 480px) {
+  .site-footer-legal-col {
+    align-items: flex-start;
+  }
+}
+
 @media (max-width: 480px) {
   .site-header-inner,
   .site-footer-inner {
@@ -570,3 +587,66 @@ main.crat-page {
 .signup-form.crat-card:hover { transform: none; border-color: var(--line-soft); }
 .signup-form .crat-button { justify-self: start; }
 .form-alert { color: var(--neon); }
+
+/* ---------- юр-страницы /privacy /terms /cookies (Ф7в T5, LEGAL-01…02) ---------- */
+
+.legal-notice {
+  display: inline-block;
+  color: var(--neon);
+  border: 1px solid var(--line-red);
+  border-radius: 8px;
+  padding: .6rem 1rem;
+}
+
+.legal-sections {
+  display: grid;
+  gap: 2rem;
+  margin-top: 2rem;
+}
+.legal-sections h2 {
+  font-family: var(--font-accent), serif;
+  font-size: 1.5rem;
+  margin: 0 0 .5rem;
+}
+
+/* ---------- CookieBanner (Ф7в T5, LEGAL-04/06, D-037) ---------- */
+
+.cookie-banner {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 30;
+  background: color-mix(in srgb, var(--bg-deep) 94%, transparent);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-top: 1px solid var(--line-soft);
+}
+.cookie-banner-inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: .75rem 1.5rem;
+  padding-block: 1rem;
+}
+.cookie-banner-text {
+  margin: 0;
+  flex: 1 1 260px;
+  min-width: 0;
+}
+/* тач-таргет ≥44px на инлайн-ссылке «Подробнее», тот же приём, что у .crat-nav a. */
+.cookie-banner-text a {
+  display: inline-block;
+  padding-block: .5rem;
+  margin-block: -.5rem;
+}
+@media (max-width: 480px) {
+  .cookie-banner-inner {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .cookie-banner-inner .crat-button {
+    justify-content: center;
+  }
+}
