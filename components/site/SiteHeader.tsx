@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { currentUser } from '@/lib/auth/current-user'
 import { t } from '@/lib/i18n'
+import { NavLink } from '@/components/site/NavLink'
 
 /**
  * Липкая тихая шапка публичных страниц (SITE-07, бриф §7.1).
@@ -27,10 +28,10 @@ export async function SiteHeader() {
           <Link href="/#automation">{t.footer.navAutomation}</Link>
           <Link href="/#studio">{t.footer.navStudio}</Link>
           <Link href="/#team">{t.footer.navTeam}</Link>
-          <Link href="/articles">{t.footer.navArticles}</Link>
+          <NavLink href="/articles">{t.footer.navArticles}</NavLink>
           {user
-            ? <Link href="/app">{t.home.toCabinet}</Link>
-            : <Link href="/login">{t.footer.login}</Link>}
+            ? <NavLink href="/app">{t.home.toCabinet}</NavLink>
+            : <NavLink href="/login">{t.footer.login}</NavLink>}
         </nav>
       </div>
     </header>

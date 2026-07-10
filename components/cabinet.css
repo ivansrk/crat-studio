@@ -66,20 +66,11 @@
 .cabinet-mission {
   margin-bottom: 2rem;
 }
+/* impeccable P1-1: базовый тёмный стиль textarea теперь глобальный (lib/design/crat.css) —
+   здесь остаётся только отступ, специфичный для этого блока. */
 .cabinet-mission textarea {
-  width: 100%;
-  min-height: 6rem;
-  background: var(--ink);
-  color: var(--paper);
-  border: 1px solid var(--line-soft);
-  border-radius: 8px;
-  padding: .8rem 1rem;
-  font: inherit;
   margin-top: .5rem;
-  transition: border-color .3s ease;
 }
-.cabinet-mission textarea:hover { border-color: var(--line-red); }
-.cabinet-mission textarea:focus-visible { outline: 2px solid var(--neon); outline-offset: 2px; }
 
 /* CAB-03: список модулей/уроков — карточка на модуль, строки уроков со статус-label. */
 .cabinet-modules {
@@ -226,21 +217,8 @@ a.course-card {
   display: grid;
   gap: .4rem;
 }
-.project-form textarea {
-  width: 100%;
-  min-height: 6rem;
-  background: var(--ink);
-  color: var(--paper);
-  border: 1px solid var(--line-soft);
-  border-radius: 8px;
-  padding: .8rem 1rem;
-  font: inherit;
-  resize: vertical;
-  transition: border-color .3s ease;
-}
-.project-form textarea:hover { border-color: var(--line-red); }
-.project-form textarea:focus-visible { outline: 2px solid var(--neon); outline-offset: 2px; }
-.project-form textarea:disabled { opacity: .75; cursor: default; }
+/* impeccable P1-1: базовый тёмный стиль/hover/focus/disabled textarea — глобальный
+   (lib/design/crat.css), точечных правил здесь больше не нужно. */
 .project-form-actions {
   display: flex;
   flex-wrap: wrap;
@@ -355,20 +333,11 @@ a.trainer-card {
   display: grid;
   gap: .75rem;
 }
+/* impeccable P1-1: базовый тёмный стиль — глобальный (lib/design/crat.css); здесь
+   только своя высота (запрос длиннее миссии/проекта). */
 .trainer-form textarea {
-  width: 100%;
   min-height: 8rem;
-  background: var(--ink);
-  color: var(--paper);
-  border: 1px solid var(--line-soft);
-  border-radius: 8px;
-  padding: .8rem 1rem;
-  font: inherit;
-  resize: vertical;
-  transition: border-color .3s ease;
 }
-.trainer-form textarea:hover { border-color: var(--line-red); }
-.trainer-form textarea:focus-visible { outline: 2px solid var(--neon); outline-offset: 2px; }
 
 .trainer-reply-text {
   white-space: pre-wrap;

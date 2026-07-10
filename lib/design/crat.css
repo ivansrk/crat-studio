@@ -279,6 +279,17 @@
 .crat-nav a:focus-visible {
   background-size: 100% 2px;
 }
+/* impeccable minor: дефолтное синее кольцо браузера на nav-ссылках (критика
+   2026-07-10) — тот же брендовый красный outline, что у .crat-button/чекбоксов. */
+.crat-nav a:focus-visible {
+  outline: 2px solid var(--neon);
+  outline-offset: 2px;
+}
+/* impeccable minor: подсветка текущего раздела (NavLink, aria-current="page"). */
+.crat-nav a[aria-current='page'] {
+  color: var(--neon);
+  background-size: 100% 2px;
+}
 
 /* ---------- form controls: чекбоксы/радио в системе CRAT (Ф5-полировка) ----------
    Нативный OS-дефолт (белый квадрат/кружок) не вписывается в чёрно-красную
@@ -329,6 +340,59 @@ input[type='checkbox']:focus-visible,
 input[type='radio']:focus-visible {
   outline: 2px solid var(--neon);
   outline-offset: 2px;
+}
+
+/* ---------- form controls: select/textarea в системе CRAT (impeccable P1-1) ----------
+   Нативный OS-дефолт (белый фон, системный шрифт, синяя стрелка select) выпадал из
+   тёмной палитры — тот же стиль поля, что у .signup-form input (components/site.css),
+   но глобально, тегом, а не точечным классом: любой select/textarea сайта (форма
+   консультации, миссия в кабинете, мини-проект, тренажёр, комментарий админа) уже
+   тёмный без дополнительной разметки. */
+select,
+textarea {
+  width: 100%;
+  background: var(--ink);
+  color: var(--paper);
+  border: 1px solid var(--line-soft);
+  border-radius: 8px;
+  padding: .8rem 1rem;
+  font: inherit;
+  font-size: var(--fs-base);
+  transition: border-color .3s ease;
+}
+textarea {
+  min-height: 6rem;
+  resize: vertical;
+}
+select:hover,
+textarea:hover {
+  border-color: var(--line-red);
+}
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--neon);
+  outline-offset: 2px;
+}
+select:disabled,
+textarea:disabled {
+  opacity: .75;
+  cursor: default;
+}
+/* Своя стрелка вместо системной: appearance:none + inline SVG (цвет = --paper-muted
+   #BEB8AD, hex захардкожен — data-URI не читает CSS-переменные; держать в синхроне
+   с lib/design/tokens.css при смене токена). */
+select {
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+  padding-right: 2.75rem;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='9' viewBox='0 0 14 9'%3E%3Cpath d='M1 1l6 6 6-6' stroke='%23BEB8AD' stroke-width='2' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 1rem center;
+  background-size: .9rem;
+}
+select::-ms-expand {
+  display: none;
 }
 
 /* ---------- animations (CSS-only, бриф §6) ---------- */
