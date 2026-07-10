@@ -1,7 +1,6 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { currentUser } from '@/lib/auth/current-user'
-import { hasCourseAccess } from '@/lib/progress/access'
 import { getDueDeferred } from '@/lib/progress/deferred'
 import { getLesson } from '@/lib/content'
 import { db } from '@/lib/db'
@@ -15,7 +14,12 @@ export const dynamic = 'force-dynamic'
 /** Ф4 T2: /app/review — форма отложенного блока (CAB-04…06).
  *  Без ?done: getDueDeferred → форма на 3 вопроса. С ?done={id}: результат читается ИЗ БД
  *  (не из query — score в query можно подделать), пояснения — из quiz.deferred ?? questions
- *  урока, как при сдаче (D-012). */
+ *  урока, как при сдаче (D-012).
+ *  Ф7в T3: сознательно остаётся БЕЗ courseSlug в маршруте — due-блок выбирает самый давний
+ *  отложенный вопрос по ВСЕМ курсам студента (F19, без фильтра курса в deferred.ts), так что
+ *  единственный courseSlug в URL не мог бы однозначно выразить показанный курс; per-course
+ *  доступ проверять здесь нечем (getDueDeferred сам решает, что показать), проверка
+ *  hasCourseAccess('ai-basics') была латентным багом мультикурса — убрана. */
 export default async function ReviewPage({ searchParams }: {
   searchParams: Promise<{ done?: string; error?: string }>
 }) {
@@ -24,7 +28,6 @@ export default async function ReviewPage({ searchParams }: {
   // паттерн из app/app/page.tsx/lessons/[lessonId].
   const user = await currentUser()
   if (!user) redirect('/login')
-  if (!(await hasCourseAccess(user, 'ai-basics'))) redirect('/app') // Ф7в T3: из маршрута; сам due-блок ниже — по всем курсам (F19)
 
   if (done) {
     const state = await db.deferredQuizState.findFirst({ where: { id: done, userId: user.id } })
