@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
-import { getContent, lessonCount } from '@/lib/content'
+import { getCourse, lessonCount } from '@/lib/content'
 import { currentUser } from '@/lib/auth/current-user'
 import { hasCourseAccess } from '@/lib/progress/access'
 import { getCourseProgress } from '@/lib/progress'
@@ -40,9 +40,9 @@ export default async function Cabinet() {
     )
   }
 
-  const { course } = getContent()
+  const { course } = getCourse('ai-basics')! // Ф7в T3: заменить на courseSlug из маршрута
   const { byLesson, completedCount } = await getCourseProgress(user.id)
-  const total = lessonCount() // знаменатель «N/12» из course.yaml, не хардкод (ревью T6)
+  const total = lessonCount('ai-basics') // знаменатель «N/12» из course.yaml, не хардкод (ревью T6); Ф7в T3: courseSlug из маршрута
   const pct = Math.min(100, (completedCount / total) * 100)
   // Ф4 T2: due-блок повторения (CAB-04/06) — один запрос, без кэша (план); показывается ВВЕРХУ кабинета.
   const dueReview = await getDueDeferred(user.id)

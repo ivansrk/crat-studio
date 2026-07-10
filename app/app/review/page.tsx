@@ -29,7 +29,7 @@ export default async function ReviewPage({ searchParams }: {
   if (done) {
     const state = await db.deferredQuizState.findFirst({ where: { id: done, userId: user.id } })
     if (!state || !state.answeredAt) redirect('/app') // не найден/чужой/ещё не отвечен — нечего показывать
-    const lesson = getLesson(state.lessonId)
+    const lesson = getLesson('ai-basics', state.lessonId) // Ф7в T3: заменить на courseSlug из маршрута
     if (!lesson) redirect('/app') // урок пропал после сдачи (E10) — нечего показывать
     const questions = lesson.quiz.deferred ?? lesson.quiz.questions
     const answers = (state.answers as StoredAnswer[] | null) ?? []

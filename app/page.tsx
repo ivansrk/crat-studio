@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { getContent, lessonCount } from '@/lib/content'
+import { getCourse, lessonCount } from '@/lib/content'
 import { t } from '@/lib/i18n'
 import { SiteHeader } from '@/components/site/SiteHeader'
 import { SiteFooter } from '@/components/site/SiteFooter'
@@ -16,10 +16,10 @@ import { JsonLd, organizationSchema } from '@/components/site/JsonLd'
  * SITE-04 (Войти/В кабинет) — целиком в SiteHeader, hero-CTA не зависят от сессии.
  */
 export default function Home() {
-  const { course } = getContent()
+  const { course } = getCourse('ai-basics')! // Ф7в T3: заменить на courseSlug из маршрута
   const courseFacts = t.home.courseFacts
     .replace('{modules}', String(course.modules.length))
-    .replace('{lessons}', String(lessonCount()))
+    .replace('{lessons}', String(lessonCount('ai-basics'))) // Ф7в T3: заменить на courseSlug из маршрута
 
   return (
     <>

@@ -110,3 +110,31 @@ describe('loadCourse', () => {
     expect(warnings).toMatch(/deferred.*7 дней.*D-012/)
   })
 })
+
+describe('published (MC-02, D-036)', () => {
+  it('поле отсутствует в course.yaml — published по умолчанию true', () => {
+    const c = loadCourse(fx('valid-course'))
+    expect(c.published).toBe(true)
+  })
+  it('published: false в course.yaml — published false, без ошибок', () => {
+    const c = loadCourse(fx('published-false'))
+    expect(c.published).toBe(false)
+    expect(c.issues.filter(i => i.level === 'error')).toHaveLength(0)
+  })
+  it('published не boolean — error-issue, без исключения', () => {
+    const c = loadCourse(fx('invalid-published'))
+    const msgs = c.issues.filter(i => i.level === 'error').map(i => i.message).join('\n')
+    expect(msgs).toMatch(/published/)
+  })
+})
+
+describe('CourseContent.slug (MC-01)', () => {
+  it('slug = имени каталога курса, даже когда course.yaml сломан', () => {
+    const c = loadCourse(fx('nope'))
+    expect(c.slug).toBe('nope')
+  })
+  it('slug = имени каталога для валидного курса', () => {
+    const c = loadCourse(fx('valid-course'))
+    expect(c.slug).toBe('valid-course')
+  })
+})

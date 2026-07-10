@@ -12,7 +12,7 @@ const DEFERRED_DAYS_MS = 7 * 24 * 60 * 60 * 1000 // LES-13
  *  подделанный lessonId в POST не плодит мусор (startAttempt/setPractice тоже идут через ensureProgress).
  *  Легитимно недостижимо (страница урока проверяет getLesson раньше) → throw, ловит error boundary. */
 export async function ensureProgress(userId: string, lessonId: string) {
-  if (!getLesson(lessonId)) throw new Error(`unknown lesson: ${lessonId}`)
+  if (!getLesson(COURSE, lessonId)) throw new Error(`unknown lesson: ${lessonId}`)
   return db.lessonProgress.upsert({
     where: { userId_courseSlug_lessonId: { userId, courseSlug: COURSE, lessonId } },
     update: {},
@@ -44,7 +44,7 @@ export type AnswerOutcome =
 export async function recordAnswer(userId: string, lessonId: string, attemptId: string, questionIndex: number, chosen: number): Promise<AnswerOutcome> {
   const attempt = await db.quizResult.findFirst({ where: { id: attemptId, userId, lessonId } })
   if (!attempt) return { ok: false, reason: 'not_found' }
-  const lesson = getLesson(lessonId)
+  const lesson = getLesson(COURSE, lessonId)
   if (!lesson) return { ok: false, reason: 'not_found' } // битый/удалённый урок — не путать с bad_option (ревью T2)
   const answers = (attempt.answers as StoredAnswer[] | null) ?? []
 

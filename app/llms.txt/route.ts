@@ -1,4 +1,4 @@
-import { getArticles, getContent } from '@/lib/content'
+import { getArticles, getCourse } from '@/lib/content'
 import { t } from '@/lib/i18n'
 
 export const revalidate = 3600
@@ -13,7 +13,7 @@ function appUrl(): string {
  */
 export async function GET() {
   const base = appUrl()
-  const { course } = getContent()
+  const { course } = getCourse('ai-basics')! // Ф7в T3: заменить на courseSlug/цикл по всем опубликованным курсам
   const articles = getArticles()
 
   const lines: string[] = []

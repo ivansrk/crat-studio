@@ -1,7 +1,7 @@
 import { db } from '@/lib/db'
 import { getCourseProgress } from '@/lib/progress'
 import { isLessonPassed } from '@/lib/progress/quiz-logic'
-import { lessonCount, getContent } from '@/lib/content'
+import { lessonCount, getCourse } from '@/lib/content'
 import { nextCertNumber } from './number'
 import { renderCertificatePdf } from './pdf'
 import { sendEmail } from '@/lib/email'
@@ -9,7 +9,7 @@ import { renderEmail } from '@/lib/email/templates'
 import { formatDate } from '@/lib/i18n/format-date'
 import { t } from '@/lib/i18n'
 
-const COURSE = 'ai-basics'
+const COURSE = 'ai-basics' // Ф7в T3: заменить на courseSlug через сигнатуры (MC-05)
 
 /** CERT-01/02: живое 12/12 (D-029) И текущий Submission APPROVED. */
 export async function isEligible(userId: string): Promise<boolean> {
@@ -17,11 +17,11 @@ export async function isEligible(userId: string): Promise<boolean> {
     getCourseProgress(userId),
     db.submission.findFirst({ where: { userId, courseSlug: COURSE }, orderBy: { attempt: 'desc' } }),
   ])
-  const all = getContent().course.modules.flatMap(m => m.lessons.map(l => l.id))
+  const all = getCourse(COURSE)!.course.modules.flatMap(m => m.lessons.map(l => l.id))
   const passed = all.filter(id => isLessonPassed(byLesson.get(id))).length
   // Инвариант: после APPROVED новые попытки не создаются (PROJ-06, enforced в lib/project) —
   // current всегда остаётся APPROVED.
-  return passed === lessonCount() && current?.status === 'APPROVED'
+  return passed === lessonCount(COURSE) && current?.status === 'APPROVED'
 }
 
 /** Идемпотентная выдача (E12): транзакция «нет VALID → номер FOR UPDATE → insert».
@@ -30,7 +30,7 @@ export async function checkAndIssueCertificate(userId: string): Promise<'issued'
   if (!(await isEligible(userId))) return 'not_eligible'
   const user = await db.user.findUnique({ where: { id: userId } })
   if (!user) return 'not_eligible'
-  const courseTitle = getContent().course.title
+  const courseTitle = getCourse(COURSE)!.course.title
 
   let issuedNumber: string | null = null
   await db.$transaction(async tx => {

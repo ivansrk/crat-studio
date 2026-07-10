@@ -34,7 +34,7 @@ export async function getDueDeferred(userId: string): Promise<DueDeferred | null
   let remaining: DeferredRow[] = rows
   let picked = pickDueDeferred(remaining, now)
   while (picked) {
-    const lesson = getLesson(picked.lessonId)
+    const lesson = getLesson(COURSE, picked.lessonId)
     if (lesson) {
       const questions = lesson.quiz.deferred ?? lesson.quiz.questions
       return { deferred: picked, lessonId: picked.lessonId, lessonTitle: lesson.meta.title, questions }

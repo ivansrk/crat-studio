@@ -18,7 +18,7 @@ export default async function QuizPage({ params, searchParams }: {
   const { attempt: attemptId, feedback } = await searchParams
   const user = await currentUser()
   if (!user || !(await hasCourseAccess(user))) redirect('/login')
-  const lesson = getLesson(lessonId)
+  const lesson = getLesson('ai-basics', lessonId) // Ф7в T3: заменить на courseSlug из маршрута
   if (!lesson) notFound()
   if (!attemptId) redirect(`/app/lessons/${lessonId}`) // LES-10: прямой заход — назад, новая попытка только кнопкой
 

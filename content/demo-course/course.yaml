@@ -1,0 +1,8 @@
+slug: demo-course
+title: "Демо-курс"
+published: false
+modules:
+  - id: 1
+    title: "Модуль 1. Знакомство"
+    lessons:
+      - { id: "1.1", title: "Первый урок" }

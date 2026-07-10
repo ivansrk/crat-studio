@@ -18,12 +18,12 @@ export default async function LessonPage({ params }: { params: Promise<{ lessonI
   if (!user) redirect('/login')
   if (!(await hasCourseAccess(user))) redirect('/app')
 
-  const lesson = getLesson(lessonId)
+  const lesson = getLesson('ai-basics', lessonId) // Ф7в T3: заменить на courseSlug из маршрута
   if (!lesson) return <main><p>{t.lesson.unavailable}</p></main>
   await ensureProgress(user.id, lessonId) // только для валидного урока — битые/несуществующие не создают LessonProgress
   const state = await getLessonState(user.id, lessonId)
-  const base = assetBase(lesson)
-  const next = nextLessonId(lessonId)
+  const base = assetBase('ai-basics', lesson) // Ф7в T3: заменить на courseSlug из маршрута
+  const next = nextLessonId('ai-basics', lessonId) // Ф7в T3: заменить на courseSlug из маршрута
   return (
     <main className="lesson-page">
       <h1 className="crat-display">{lesson.meta.title}</h1>

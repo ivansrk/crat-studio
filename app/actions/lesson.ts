@@ -37,6 +37,7 @@ export async function saveMissionAction(formData: FormData) {
   await db.user.update({ where: { id: user.id }, data: { mission: mission || null } })
   const returnTo = String(formData.get('returnTo') ?? '/app')
   const LESSONS = '/app/lessons/'
-  const ok = returnTo === '/app' || (returnTo.startsWith(LESSONS) && !!getLesson(returnTo.slice(LESSONS.length)))
+  // Ф7в T3: заменить на courseSlug из маршрута
+  const ok = returnTo === '/app' || (returnTo.startsWith(LESSONS) && !!getLesson('ai-basics', returnTo.slice(LESSONS.length)))
   redirect(ok ? returnTo : '/app')
 }

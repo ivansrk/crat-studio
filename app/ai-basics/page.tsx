@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { getContent } from '@/lib/content'
+import { getCourse } from '@/lib/content'
 import { currentUser } from '@/lib/auth/current-user'
 import { SignupForm } from '@/components/signup-form'
 import { t } from '@/lib/i18n'
@@ -24,7 +24,7 @@ export const metadata: Metadata = {
 export default async function Landing({ searchParams }: { searchParams: Promise<{ signup?: string }> }) {
   const { signup } = await searchParams
   const user = await currentUser()
-  const { course } = getContent()
+  const { course } = getCourse('ai-basics')! // Ф7в T3: заменить на courseSlug из маршрута
   const notice = signup === 'invalid' || signup === 'rate' || signup === 'already' ? signup : undefined
 
   return (

@@ -9,27 +9,38 @@ import { animationIds } from '@/lib/design/animations/registry'
 export function loadCourse(courseDir: string): CourseContent {
   const issues: ContentIssue[] = []
   const lessons = new Map<string, Lesson>()
+  const dirSlug = path.basename(courseDir) // MC-01: реестр в lib/content/index.ts ключуется по каталогу, не по course.slug
   const empty: CourseYaml = { slug: '', title: '', modules: [] }
 
   const courseYamlPath = path.join(courseDir, 'course.yaml')
   if (!fs.existsSync(courseYamlPath)) {
     issues.push({ level: 'error', message: `course.yaml не найден: ${courseYamlPath}` })
-    return { course: empty, lessons, issues, loadedAt: new Date() }
+    return { slug: dirSlug, published: true, course: empty, lessons, issues, loadedAt: new Date() }
   }
   let parsed: unknown
   try {
     parsed = yaml.loadAll(fs.readFileSync(courseYamlPath, 'utf8'))[0]
   } catch (e) {
     issues.push({ level: 'error', message: `course.yaml не парсится: ${(e as Error).message}` })
-    return { course: empty, lessons, issues, loadedAt: new Date() }
+    return { slug: dirSlug, published: true, course: empty, lessons, issues, loadedAt: new Date() }
   }
   if (!isPlainObject(parsed)) {
     issues.push({ level: 'error', message: 'course.yaml пуст или не является объектом' })
-    return { course: empty, lessons, issues, loadedAt: new Date() }
+    return { slug: dirSlug, published: true, course: empty, lessons, issues, loadedAt: new Date() }
   }
   const course = parsed as CourseYaml
-  if (course.slug !== path.basename(courseDir))
-    issues.push({ level: 'error', message: `slug "${course.slug}" ≠ каталогу "${path.basename(courseDir)}"` })
+  if (course.slug !== dirSlug)
+    issues.push({ level: 'error', message: `slug "${course.slug}" ≠ каталогу "${dirSlug}"` })
+
+  // MC-02: published необязателен в course.yaml — аддитивное поле контракта (D-036).
+  // Отсутствует → true (обратная совместимость с курсами без флага). Не-boolean — ошибка контента.
+  let published = true
+  if (course.published !== undefined) {
+    if (typeof course.published !== 'boolean')
+      issues.push({ level: 'error', message: `published должен быть true/false, получено: ${JSON.stringify(course.published)}` })
+    else
+      published = course.published
+  }
 
   const seen = new Set<string>()
   const expectedDirs = new Set<string>()
@@ -43,7 +54,7 @@ export function loadCourse(courseDir: string): CourseContent {
     }
   }
   warnOrphanLessonDirs(courseDir, expectedDirs, issues)
-  return { course, lessons, issues, loadedAt: new Date() }
+  return { slug: dirSlug, published, course, lessons, issues, loadedAt: new Date() }
 }
 
 /** Warning §6: каталог урока на диске без записи в course.yaml — игнорируется, но не молча. */

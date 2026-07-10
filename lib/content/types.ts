@@ -5,7 +5,11 @@ export type LessonMeta = {
   duration_min?: number; cheatsheet?: boolean; mission_prompt?: boolean
 }
 export type LessonRef = { id: string; title: string }
-export type CourseYaml = { slug: string; title: string; modules: { id: number; title: string; lessons: LessonRef[] }[] }
+export type CourseYaml = {
+  slug: string; title: string
+  published?: boolean // MC-02: необязателен; отсутствует → true (обратная совместимость, D-036)
+  modules: { id: number; title: string; lessons: LessonRef[] }[]
+}
 export type Lesson = {
   meta: LessonMeta; moduleId: number
   dir: string            // абсолютный путь каталога урока
@@ -14,6 +18,8 @@ export type Lesson = {
 }
 export type ContentIssue = { level: 'error' | 'warning'; lessonId?: string; message: string }
 export type CourseContent = {
+  slug: string                   // = имени каталога content/{slug} (MC-01), не путать с course.slug
+  published: boolean             // из course.yaml, по умолчанию true (MC-02, D-036)
   course: CourseYaml
   lessons: Map<string, Lesson>   // только валидные; битые перечислены в issues
   issues: ContentIssue[]

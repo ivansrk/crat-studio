@@ -3,12 +3,14 @@ export async function register() {
     // Двойная защита контракта «загрузка контента не бросает»: даже если
     // загрузчик всё же кинет, старт приложения не падает — только лог.
     try {
-      const { getContent, articleIssues } = await import('./lib/content')
-      const { issues } = getContent()
-      for (const i of issues.filter(i => i.level === 'error'))
-        console.error(`[content] ${i.lessonId ? i.lessonId + ' ' : ''}${i.message}`)
-      const warnings = issues.filter(i => i.level === 'warning').length
-      if (warnings > 0) console.warn(`[content] предупреждений: ${warnings}`)
+      // MC-08: валидация по ВСЕМ курсам реестра content/*, не только ai-basics — slug в каждой строке лога.
+      const { getCourses, articleIssues } = await import('./lib/content')
+      for (const course of getCourses()) {
+        for (const i of course.issues.filter(i => i.level === 'error'))
+          console.error(`[content] ${course.slug} ${i.lessonId ? i.lessonId + ' ' : ''}${i.message}`)
+        const warnings = course.issues.filter(i => i.level === 'warning').length
+        if (warnings > 0) console.warn(`[content] ${course.slug} предупреждений: ${warnings}`)
+      }
 
       const artIssues = articleIssues()
       for (const i of artIssues.filter(i => i.level === 'error'))

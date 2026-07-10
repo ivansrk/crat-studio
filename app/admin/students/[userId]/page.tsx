@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation'
 import { db } from '@/lib/db'
-import { getContent } from '@/lib/content'
+import { getCourse } from '@/lib/content'
 import { getCourseProgress } from '@/lib/progress'
 import { isLessonPassed } from '@/lib/progress/quiz-logic'
 import { getCurrentSubmission } from '@/lib/project'
@@ -27,7 +27,8 @@ export default async function StudentProgress({ params }: { params: Promise<{ us
     getCurrentSubmission(userId),
     db.certificate.findFirst({ where: { userId, status: { in: ['VALID', 'REVOKED'] } }, orderBy: { issuedAt: 'desc' } }),
   ])
-  const lessons = getContent().course.modules.flatMap(m => m.lessons) // все 12 строк всегда (ADM-05)
+  // Ф7в T3: заменить на courseSlug из маршрута
+  const lessons = getCourse('ai-basics')!.course.modules.flatMap(m => m.lessons) // все 12 строк всегда (ADM-05)
 
   return (
     <main className="admin-wide">

@@ -1,5 +1,5 @@
 import { ImageResponse } from 'next/og'
-import { getContent } from '@/lib/content'
+import { getCourse } from '@/lib/content'
 import { t } from '@/lib/i18n'
 
 export const alt = 'CRAT studio — курс'
@@ -11,7 +11,7 @@ export const contentType = 'image/png'
  * для пояснения про дефолтный шрифт satori). Заголовок — course.title из course.yaml.
  */
 export default function Image() {
-  const { course } = getContent()
+  const { course } = getCourse('ai-basics')! // Ф7в T3: заменить на courseSlug из маршрута
   return new ImageResponse(
     (
       <div

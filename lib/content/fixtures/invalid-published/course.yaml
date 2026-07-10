@@ -1,0 +1,4 @@
+slug: invalid-published
+title: "Курс с некорректным published"
+published: "yes"
+modules: []
