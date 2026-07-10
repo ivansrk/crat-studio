@@ -7,6 +7,7 @@ import { t } from '@/lib/i18n'
 import { SiteHeader } from '@/components/site/SiteHeader'
 import { SiteFooter } from '@/components/site/SiteFooter'
 import { SectionLabel } from '@/components/site/SectionLabel'
+import { HeroVisual } from '@/components/site/HeroVisual'
 import { JsonLd, courseSchema } from '@/components/site/JsonLd'
 
 export const metadata: Metadata = {
@@ -34,16 +35,19 @@ export default async function Landing({ searchParams }: { searchParams: Promise<
       <main className="crat-page">
         {/* Hero (бриф §8) */}
         <section className="crat-section hero-section">
-          <div className="crat-shell">
-            <span className="crat-kicker fade-up d1">{t.landing.courseLabel}</span>
-            <span className="crat-red-line fade-up d1" aria-hidden="true" />
-            <h1 className="crat-display fade-up d2">{course.title}</h1>
-            <p className="crat-muted hero-subtitle fade-up d2">{t.landing.heroSubtitle}</p>
-            <div className="hero-cta-row fade-up d3">
-              {user
-                ? <Link href="/app" className="crat-button primary">{t.home.toCabinet}</Link>
-                : <a href="#signup" className="crat-button primary">{t.landing.signupTitle}</a>}
+          <div className="crat-shell hero-grid">
+            <div className="hero-copy">
+              <span className="crat-kicker fade-up d1">{t.landing.courseLabel}</span>
+              <span className="crat-red-line fade-up d1" aria-hidden="true" />
+              <h1 className="crat-display fade-up d2">{course.title}</h1>
+              <p className="crat-muted hero-subtitle fade-up d2">{t.landing.heroSubtitle}</p>
+              <div className="hero-cta-row fade-up d3">
+                {user
+                  ? <Link href="/app" className="crat-button primary">{t.home.toCabinet}</Link>
+                  : <a href="#signup" className="crat-button primary">{t.landing.signupTitle}</a>}
+              </div>
             </div>
+            <HeroVisual src="/images/hero-course.webp" />
           </div>
         </section>
 

@@ -8,6 +8,7 @@ import { SectionLabel } from '@/components/site/SectionLabel'
 import { DirectionCard } from '@/components/site/DirectionCard'
 import { TeamCard } from '@/components/site/TeamCard'
 import { JsonLd, organizationSchema } from '@/components/site/JsonLd'
+import Image from 'next/image'
 
 /**
  * Главная — редакционный монтаж CRAT (SITE-01/07/08/09, бриф §7).
@@ -52,18 +53,21 @@ export default function Home() {
                 kicker={t.home.educationKicker}
                 title={t.home.educationTitle}
                 text={t.home.educationText}
+                image="/images/dir-education.webp"
               />
               <DirectionCard
                 num="02"
                 kicker={t.home.automationKicker}
                 title={t.home.automationTitle}
                 text={t.home.automationText}
+                image="/images/dir-automation.webp"
               />
               <DirectionCard
                 num="03"
                 kicker={t.home.creativeKicker}
                 title={t.home.creativeTitle}
                 text={t.home.creativeText}
+                image="/images/dir-creative.webp"
               />
             </div>
           </div>
@@ -105,10 +109,18 @@ export default function Home() {
             <h2 className="crat-display">{t.home.creativeSectionTitle}</h2>
             <p className="crat-muted section-intro">{t.home.creativeSectionText}</p>
             <div className="studio-grid">
-              <div className="crat-visual-frame horizon neon-line crat-noise studio-frame-a" aria-hidden="true" />
-              <div className="crat-visual-frame spot-mint studio-frame-b" aria-hidden="true" />
-              <div className="crat-visual-frame neon-line crat-noise studio-frame-c" aria-hidden="true" />
-              <div className="crat-visual-frame crat-noise studio-frame-d" aria-hidden="true" />
+              <div className="crat-visual-frame crat-noise studio-frame-a" aria-hidden="true">
+                <Image src="/images/studio-1.webp" alt="" fill sizes="(max-width: 760px) 100vw, 50vw" className="crat-frame-img" />
+              </div>
+              <div className="crat-visual-frame crat-noise studio-frame-b" aria-hidden="true">
+                <Image src="/images/studio-2.webp" alt="" fill sizes="(max-width: 760px) 100vw, 25vw" className="crat-frame-img" />
+              </div>
+              <div className="crat-visual-frame crat-noise studio-frame-c" aria-hidden="true">
+                <Image src="/images/studio-3.webp" alt="" fill sizes="(max-width: 760px) 100vw, 25vw" className="crat-frame-img" />
+              </div>
+              <div className="crat-visual-frame crat-noise studio-frame-d" aria-hidden="true">
+                <Image src="/images/studio-4.webp" alt="" fill sizes="(max-width: 760px) 100vw, 50vw" className="crat-frame-img" />
+              </div>
             </div>
           </div>
         </section>

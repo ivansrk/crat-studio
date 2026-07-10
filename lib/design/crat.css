@@ -17,6 +17,15 @@
   padding-block: clamp(4rem, 10vh, 7rem);
 }
 
+/* MUBI-кадры (DSN-06): больше воздуха между секциями и крупнее заголовки —
+   только на десктопе, чтобы не раздувать мобильный скролл (UX-01 про кегль,
+   не про воздух). Разметка секций не меняется, только классы. */
+@media (min-width: 1024px) {
+  .crat-section {
+    padding-block: clamp(6rem, 13vh, 9rem);
+  }
+}
+
 /* ---------- typography helpers ---------- */
 
 .crat-kicker {
@@ -33,6 +42,13 @@
   font-size: clamp(2.4rem, 6vw, 4.2rem);
   line-height: 1.05;
   margin: 0;
+}
+
+/* MUBI-кадры (DSN-06): заголовки секций крупнее на десктопе. */
+@media (min-width: 1024px) {
+  .crat-display {
+    font-size: clamp(2.6rem, 5vw, 4.8rem);
+  }
 }
 
 .crat-muted {
@@ -63,12 +79,22 @@
   outline: 2px solid var(--neon);
   outline-offset: 2px;
 }
+/* Свет-слой (DSN-01, референс wolfai.be): слоёное свечение вместо одиночной
+   тени + hover-bloom (тени интенсивнее + лёгкий scale). Только primary —
+   вторичные кнопки остаются тихими (бриф §3). */
 .crat-button.primary {
   border-color: var(--neon);
-  box-shadow: 0 0 12px color-mix(in srgb, var(--neon) 25%, transparent);
+  box-shadow:
+    0 0 0 1px rgba(255, 75, 58, .48),
+    0 0 24px rgba(255, 75, 58, .45),
+    0 0 64px rgba(255, 75, 58, .25);
 }
 .crat-button.primary:hover {
-  box-shadow: var(--neon-glow);
+  box-shadow:
+    0 0 0 1px rgba(255, 75, 58, .7),
+    0 0 32px rgba(255, 75, 58, .6),
+    0 0 88px rgba(255, 75, 58, .38);
+  transform: scale(1.02);
 }
 .crat-button.secondary {
   background: transparent;
@@ -135,6 +161,7 @@
   height: 2px;
   background: var(--neon);
   box-shadow: var(--neon-glow);
+  z-index: 3;
 }
 
 .crat-visual-frame.spot-mint {
@@ -148,6 +175,16 @@
   height: 1px;
   background: var(--neon);
   box-shadow: var(--neon-glow);
+  z-index: 3;
+}
+
+/* ---------- фото внутри crat-visual-frame (Ф7в/D-038) ----------
+   next/image fill рендерит <img> обычным потомком поверх CSS-фона рамки;
+   явный z-index держит фото под зерном/горизонтом/неоновой линией, которые
+   остаются декоративным слоем поверх картинки (бриф §7.2 обновлён). */
+.crat-frame-img {
+  object-fit: cover;
+  z-index: 0;
 }
 
 /* ---------- noise / grain ---------- */
@@ -162,6 +199,27 @@
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   opacity: .06;
   pointer-events: none;
+  z-index: 2;
+}
+
+/* ---------- frame-gradient: тонкая градиентная рамка (DSN-04) ----------
+   padding-1px рамка через маску (без лишней обёртки в DOM): виден только
+   1px-контур по periметру, background-clip/mask вырезает середину. */
+.crat-frame-gradient {
+  position: relative;
+}
+.crat-frame-gradient::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  padding: 1px;
+  border-radius: inherit;
+  background: linear-gradient(160deg, var(--line-red), transparent 65%);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  z-index: 5;
 }
 
 /* ---------- misc marks ---------- */

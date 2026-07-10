@@ -194,21 +194,90 @@ main.crat-page {
   padding: 1.25rem;
 }
 
-.hero-visual-mark {
-  position: relative;
+/* DSN-05: медленный сдвиг фонового свечения поверх картинки, деликатно
+   (mix-blend-mode: screen — добавляет свет, не перекрывает фото). Глобальный
+   глушитель prefers-reduced-motion (app/globals.css) убирает анимацию сам. */
+.hero-visual-glow {
+  position: absolute;
+  inset: -20%;
   z-index: 1;
+  background: linear-gradient(
+    120deg,
+    color-mix(in srgb, var(--red-blood) 55%, transparent),
+    transparent 40%,
+    color-mix(in srgb, var(--neon) 30%, transparent),
+    transparent 75%
+  );
+  background-size: 220% 220%;
+  animation: heroGlowShift 45s linear infinite;
+  mix-blend-mode: screen;
+  pointer-events: none;
 }
 
-/* три направления */
+@keyframes heroGlowShift {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 200% 50%; }
+}
+
+.hero-visual-mark {
+  position: relative;
+  z-index: 4;
+}
+
+/* три направления — карточки-постеры (Ф7в/D-038, бриф §7.3) */
 
 .direction-grid {
   margin-top: 2rem;
 }
 
 .direction-card {
+  position: relative;
+  overflow: hidden;
+  aspect-ratio: 16 / 9;
+  display: flex;
+  align-items: flex-end;
+  padding: 0;
+}
+@media (min-width: 700px) {
+  .direction-card {
+    aspect-ratio: 4 / 5;
+  }
+}
+
+.direction-card-img {
+  z-index: 0;
+  object-fit: cover;
+  transition: transform 1.2s ease;
+}
+.direction-card:hover .direction-card-img,
+.direction-card:focus-within .direction-card-img {
+  transform: scale(1.04);
+}
+
+/* градиент снизу для читаемости текста поверх фото — сильнее внизу, где текст,
+   но не до прозрачности вверху: у части фото (напр. неоновая полоса на dir-education)
+   яркий свет попадает и в верхнюю треть карточки, где сидит номер/kicker (ревью
+   Ф7в: "01 EDUCATION" терялся на неоновой линии) — минимум 35% затемнения везде. */
+.direction-card-scrim {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: linear-gradient(
+    to top,
+    rgba(5, 5, 5, .95) 0%,
+    rgba(5, 5, 5, .75) 45%,
+    rgba(5, 5, 5, .4) 100%
+  );
+  pointer-events: none;
+}
+
+.direction-card-body {
+  position: relative;
+  z-index: 2;
   display: grid;
   gap: .6rem;
-  align-content: start;
+  padding: 2rem;
+  text-shadow: 0 1px 8px rgba(0, 0, 0, .85);
 }
 
 .direction-card-num {
@@ -292,11 +361,17 @@ main.crat-page {
 @media (max-width: 760px) {
   .studio-grid {
     grid-template-columns: 1fr;
+    /* grid-template-rows тоже сбрасываем: иначе унаследованный
+       "repeat(2, minmax(160px, auto))" и старые grid-area: a/b/c/d (ниже)
+       ссылаются на несуществующие именованные линии — Ф7в-ревью нашло
+       гигантский пустой промежуток перед последним кадром на 360px. */
+    grid-template-rows: none;
     grid-template-areas: none;
   }
   .studio-grid .crat-visual-frame {
     aspect-ratio: 16 / 9;
     height: auto;
+    grid-area: auto;
   }
 }
 
