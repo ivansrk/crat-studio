@@ -356,6 +356,12 @@ export const ru = {
     pagerAria: 'Навигация по урокам',
     missionTitle: 'Моя личная миссия',
     missionHint: 'Зачем я учусь работать с ИИ — своими словами',
+    // Ревью T4-T5 m5: компактный чек-лист «квиз/практика» под заголовком урока
+    // (mono-строка, без эмодзи — символы через checklistDoneMark/checklistPendingMark).
+    checklistQuizLabel: 'квиз',
+    checklistPracticeLabel: 'практика',
+    checklistDoneMark: '✓',
+    checklistPendingMark: '–',
   },
   quiz: {
     title: 'Проверка',
@@ -393,6 +399,9 @@ export const ru = {
     // видны сразу, без захода в курс (спокойный mono-тон, не тревога).
     projectUnderReview: 'Проект на проверке',
     certReady: 'Сертификат готов',
+    // Ревью T4-T5 M1: бейдж NEEDS_CHANGES на карточке курса хаба (раньше показывался
+    // только на курсовой странице /app/{slug}) — та же alert-карточка, что и там.
+    projectNeedsChanges: 'Нужны правки в проекте',
     // T4 дизайн-аудита: липкая шапка кабинета (CabinetHeader) — единственный источник
     // ссылок «Аккаунт»/«Выйти» в кабинете, страницы больше не дублируют их у себя.
     headerHomeAria: 'В кабинет',

@@ -172,7 +172,10 @@ export default async function CourseCabinet({ params }: { params: Promise<{ cour
 
           {/* T7/T5: блок сертификата — только при выданном VALID (CERT-01/05/06).
               T5 дизайн-аудита: «сертификат-триумф» — кремовый документ (.cert-document)
-              вместо голого номера, печать CRAT, кнопки под документом. */}
+              вместо голого номера, печать CRAT, кнопки под документом.
+              Ревью T4-T5 m6: GodRays (SectionShader celebrate-rays) сознательно только на
+              /cert и финале квиза — в кабинете документ сам является праздником, лучи за
+              уже светлым cream-документом со штампом перегрузили бы блок. */}
           {certificate && (
             <div className="crat-card cabinet-cert">
               <h2 className="crat-kicker">{t.cert.cabinetReadyTitle}</h2>

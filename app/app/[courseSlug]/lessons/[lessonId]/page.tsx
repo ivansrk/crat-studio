@@ -43,6 +43,20 @@ export default async function LessonPage({ params }: { params: Promise<{ courseS
     <main className="lesson-page">
       {positionText && <p className="lesson-position crat-kicker">{positionText}</p>}
       <h1 className="crat-display">{lesson.meta.title}</h1>
+      {/* Ревью T4-T5 m5: компактный чек-лист «квиз/практика» под заголовком — план T5 требовал
+          его, реализован не был. Мята = сделано, приглушённый (унаследован от .crat-kicker) —
+          нет; символы вместо эмодзи (crat-design: emoji в UI запрещены). */}
+      <p className="lesson-checklist crat-kicker">
+        {t.lesson.checklistQuizLabel}{' '}
+        <span className={state.quizPassed ? 'lesson-checklist-done' : undefined}>
+          {state.quizPassed ? t.lesson.checklistDoneMark : t.lesson.checklistPendingMark}
+        </span>
+        {' · '}
+        {t.lesson.checklistPracticeLabel}{' '}
+        <span className={state.practiceDone ? 'lesson-checklist-done' : undefined}>
+          {state.practiceDone ? t.lesson.checklistDoneMark : t.lesson.checklistPendingMark}
+        </span>
+      </p>
       {lesson.meta.video_id
         ? <Video kinescope={lesson.meta.video_id} />
         : <p className="mdx-trainer-stub">{t.lesson.videoSoon}</p>}

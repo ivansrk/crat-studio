@@ -437,7 +437,7 @@ async function main() {
   await seedF2()
   console.log('[seed v2] прогресс/попытки/брошенный квиз готовы')
   await seedF3()
-  console.log('[seed v3] дипломант 12/12 + SUBMITTED, needs_changes студенту готовы')
+  console.log('[seed v3] дипломант 12/12 + APPROVED + сертификат, needs_changes студенту готовы')
   await seedF4()
   console.log('[seed v4] повторение к сдаче, тренажёр 19/20')
   await seedF7b()

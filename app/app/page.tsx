@@ -70,7 +70,14 @@ export default async function Cabinet() {
             ) : (
               <div className="cabinet-course-grid">
                 {myCourses.map(c => (
-                  <Link key={c.slug} href={`/app/${c.slug}`} className="crat-card course-card">
+                  // Ревью T4-T5 M1: NEEDS_CHANGES не имел ветки на хабе (только на странице курса) —
+                  // студент видел «пусто» вместо тревоги, что проект вернули на доработку. Та же
+                  // alert-карточка + красная линия, что на /app/{slug} (см. cabinet.css .alert-card).
+                  <Link
+                    key={c.slug}
+                    href={`/app/${c.slug}`}
+                    className={`crat-card course-card${c.submissionStatus === 'NEEDS_CHANGES' && !c.certIssued ? ' alert-card' : ''}`}
+                  >
                     <h3>{c.title}</h3>
                     <p className="crat-muted">{c.completedCount}/{c.total} · {t.cabinet.progressLabel}</p>
                     {/* T5: сертификат важнее статуса проекта — если выдан, проект уже неактуален. */}
@@ -78,6 +85,11 @@ export default async function Cabinet() {
                       <p className="status-badge-ready">{t.cabinet.certReady}</p>
                     ) : c.submissionStatus === 'SUBMITTED' ? (
                       <p className="status-badge-calm">{t.cabinet.projectUnderReview}</p>
+                    ) : c.submissionStatus === 'NEEDS_CHANGES' ? (
+                      <>
+                        <span className="crat-red-line alert-card-line" aria-hidden />
+                        <p className="crat-muted">{t.cabinet.projectNeedsChanges}</p>
+                      </>
                     ) : null}
                   </Link>
                 ))}

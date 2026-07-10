@@ -397,6 +397,18 @@ a.course-card {
   top: .75rem;
   right: .75rem;
 }
+/* Ревью T4-T5 M2: на ≤540px штамп (92px, absolute top/right .75rem) наезжал на
+   центрированный кикер «ВЫДАН» (первая строка документа, замер — 27×27px пересечения
+   getBoundingClientRect, и в кабинете, и на /cert). Меньший штамп (64px) + запас сверху
+   под него — кикер начинается ниже нижнего края штампа, пересечение = 0. */
+@media (max-width: 540px) {
+  .cert-document .crat-stamp {
+    --stamp-size: 64px;
+  }
+  .cert-document {
+    padding-top: 5.5rem;
+  }
+}
 .cert-document-kicker {
   color: color-mix(in srgb, var(--ink) 55%, transparent);
 }
@@ -445,6 +457,15 @@ a.course-card {
    сокращаем grid-gap каркаса (1.5rem) до плотной подписи. */
 .lesson-position {
   margin-bottom: -1rem;
+}
+/* Ревью T4-T5 m5: чек-лист «квиз ✓/– · практика ✓/–» сразу под заголовком — тот же приём,
+   что у .lesson-position (отрицательный margin схлопывает grid-gap 1.5rem каркаса .lesson-page
+   до плотной подписи); отступ ДО следующего блока (видео) остаётся полным grid-gap. */
+.lesson-checklist {
+  margin-top: -1rem;
+}
+.lesson-checklist-done {
+  color: var(--mint);
 }
 
 /* T4 дизайн-аудита: компактная пара ссылок навигации по урокам внизу страницы —

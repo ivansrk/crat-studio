@@ -18,7 +18,12 @@ export async function answerAction(formData: FormData) {
   const lessonId = String(formData.get('lessonId'))
   const attemptId = String(formData.get('attemptId'))
   const questionIndex = Number(formData.get('questionIndex'))
-  const chosen = Number(formData.get('chosen'))
+  // Ревью T4-T5 m4: radio required — браузерная валидация, но не серверная защита; прямой
+  // POST без chosen раньше давал Number(null) = 0, записывая ложный ответ «вариант 0».
+  // Отсутствующий/пустой chosen → назад на тот же вопрос квиза, ответ не пишем.
+  const raw = formData.get('chosen')
+  if (raw === null || raw === '') redirect(`/app/${courseSlug}/lessons/${lessonId}/quiz?attempt=${attemptId}`)
+  const chosen = Number(raw)
   const r = await recordAnswer(user.id, courseSlug, lessonId, attemptId, questionIndex, chosen)
   if (!r.ok) redirect(`/app/${courseSlug}/lessons/${lessonId}`) // чужая/завершённая попытка → назад к уроку (новая начнётся кнопкой)
   redirect(`/app/${courseSlug}/lessons/${lessonId}/quiz?attempt=${attemptId}&feedback=${questionIndex}`)
