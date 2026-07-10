@@ -16,7 +16,7 @@ type FakeToken = {
   purpose: ResetTokenPurpose; expiresAt: Date; usedAt: Date | null; createdAt: Date
 }
 
-/** Клиент с моками user/passwordResetToken — тот же приём DI, что login.test.ts/mintLoginUrl:
+/** Клиент с моками user/passwordResetToken — тот же приём DI, что login.test.ts:
  *  client: Pick<PrismaClient, ...> = db, без vi.mock('@/lib/db'). */
 function fakeClient(opts: { user?: FakeUser | null; token?: FakeToken | null } = {}) {
   const store: { user: FakeUser | null; token: FakeToken | null } = { user: opts.user ?? null, token: opts.token ?? null }

@@ -1,7 +1,6 @@
 import { db } from '@/lib/db'
 import { sendEmail } from '@/lib/email'
 import { renderEmail } from '@/lib/email/templates'
-import { mintLoginUrl } from '@/lib/auth/magic-link' // хелпер из T8-фикса D-028
 import { mintResetToken } from '@/lib/auth/reset' // T5: переотправка WELCOME — пароль невоспроизводим (только хэш)
 import { ResetTokenPurpose } from '@/lib/generated/prisma/client'
 import { t } from '@/lib/i18n'
@@ -56,24 +55,10 @@ export async function resendFromLog(emailLogId: string): Promise<ResendResult> {
     })
     return 'sent'
   }
-  // Исчерпывающий switch по типу: будущие типы НЕ переотправлять молча login-ссылкой.
-  let body: string
-  switch (log.type) {
-    case 'MAGIC_LINK': body = t.email.magicLinkBody; break
-    case 'ACCESS_GRANTED': body = t.email.accessBody; break
-    default: return 'unsupported_type'
-  }
-  let url: string
-  try {
-    url = await mintLoginUrl(log.toEmail) // D-028: всегда свежий токен
-  } catch (e) {
-    if (e instanceof Error && e.message === 'user not found') return 'user_gone' // GDPR-удалённый адресат
-    throw e
-  }
-  await sendEmail({
-    to: log.toEmail, userId: log.userId, type: log.type, subject: log.subject,
-    html: renderEmail({ body, buttonText: t.email.magicLinkButton, buttonUrl: url }),
-    payload: {},
-  })
-  return 'sent'
+  // T6 (Ф7а, D-031): MAGIC_LINK и ACCESS_GRANTED — оба сняты вместе с magic-link-входом
+  // (mintLoginUrl больше не существует); переотправка этих исторических записей email_log
+  // невозможна и не нужна (сама выдача доступа теперь всегда идёт через WELCOME, T5).
+  // CERTIFICATE/WELCOME обработаны выше; PASSWORD_RESET/DOUBLE_OPT_IN/CONSULTATION — без
+  // адресной переотправки (D-028: свежий токен запрашивается заново самим пользователем).
+  return 'unsupported_type'
 }

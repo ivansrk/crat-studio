@@ -11,8 +11,8 @@ vi.mock('./password', async (importOriginal) => {
 
 type FakeUser = { id: string; email: string; passwordHash: string | null }
 
-/** Клиент с моком findUnique — без vi.mock('@/lib/db'), тем же приёмом, что mintLoginUrl
- *  использует для инъекции в magic-link.ts (client: Pick<PrismaClient, 'user'> = db). */
+/** Клиент с моком findUnique — без vi.mock('@/lib/db'), тем же приёмом, что mintResetToken
+ *  использует для инъекции в reset.ts (client: Pick<PrismaClient, 'user'> = db). */
 function fakeClient(user: FakeUser | null) {
   const findUnique = vi.fn().mockResolvedValue(user)
   const client = { user: { findUnique } } as unknown as Pick<PrismaClient, 'user'>

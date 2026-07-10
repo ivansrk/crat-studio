@@ -70,6 +70,24 @@ export async function consumeResetToken(
   return { ok: true, email: token.email, userId: token.userId, tokenId: token.id }
 }
 
+export type PeekResetResult = { status: 'ok' | 'used' | 'expired' | 'invalid' }
+
+/** T6: GET-предпросмотр reset-ссылки — НИКОГДА не гасит токен (findUnique, не updateMany).
+ *  Нужен отдельно от consumeResetToken: почтовые клиенты и боты открывают ссылку из письма
+ *  на предпросмотр/сканирование ДО того, как человек её откроет — если бы GET жёг токен,
+ *  реальный пользователь получал бы «ссылка использована» вместо формы. Гашение — только
+ *  на POST через setPasswordViaToken (app/reset/[token]/page.tsx вызывает только эту функцию). */
+export async function peekResetToken(
+  raw: string,
+  client: Pick<PrismaClient, 'passwordResetToken'> = db,
+): Promise<PeekResetResult> {
+  const token = await client.passwordResetToken.findUnique({ where: { tokenHash: hashToken(raw) } })
+  if (!token || token.purpose !== ResetTokenPurpose.PASSWORD_RESET) return { status: 'invalid' }
+  if (token.usedAt) return { status: 'used' }             // AUTH-05
+  if (token.expiresAt < new Date()) return { status: 'expired' } // AUTH-06
+  return { status: 'ok' }
+}
+
 export type SetPasswordResult = { ok: true } | { ok: false; reason: 'invalid' | 'used' | 'expired' | 'weak' | 'no_user' }
 
 /** AUTH-17: задаёт новый пароль по reset-токену. Валидация длины (≥8) — ДО гашения токена:

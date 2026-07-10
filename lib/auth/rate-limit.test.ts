@@ -44,11 +44,11 @@ describe('RateLimiter', () => {
 })
 
 describe('limiters', () => {
-  it('magicLinkIp существует с лимитом 10 (SEC-03, ревью T8)', () => {
-    const key = 'mlip:test-limit-check'
+  it('resetIp существует с лимитом 10 (SEC-03-аналог, T6: заменил magicLinkIp вместе со снятием magic-link)', () => {
+    const key = 'rstip:test-limit-check'
     const t = 5_000_000
-    for (let i = 0; i < 10; i++) expect(limiters.magicLinkIp.allow(key, t + i)).toBe(true)
-    expect(limiters.magicLinkIp.allow(key, t + 10)).toBe(false)
+    for (let i = 0; i < 10; i++) expect(limiters.resetIp.allow(key, t + i)).toBe(true)
+    expect(limiters.resetIp.allow(key, t + 10)).toBe(false)
   })
   it('loginEmail существует с лимитом 10/15мин (AUTH-20)', () => {
     const key = 'le:test-limit-check'

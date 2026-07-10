@@ -148,7 +148,10 @@ export default async function Cabinet() {
             </div>
           )}
 
-          <form action={logoutAction}><button className="crat-button" type="submit">{t.auth.logout}</button></form>
+          <div className="cabinet-account-row">
+            <Link className="crat-button" href="/app/account">{t.auth.accountNavLabel}</Link>
+            <form action={logoutAction}><button className="crat-button" type="submit">{t.auth.logout}</button></form>
+          </div>
         </div>
       </section>
     </main>

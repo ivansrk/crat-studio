@@ -22,7 +22,7 @@ export type ProvisionResult = {
  *  plainPassword=null; контактные поля тоже не перезаписываем — только на создании.
  *  Если юзера нет или passwordHash=null (D-034: старые юзеры до Ф7а) — генерируем пароль
  *  (D-033) и хэшируем (D-032). Открытый пароль живёт только в возврате — ни в БД, ни в логах.
- *  tx-совместимость: client — тот же Pick-паттерн, что mintLoginUrl/mintResetToken (передавайте
+ *  tx-совместимость: client — тот же Pick-паттерн, что mintResetToken (передавайте
  *  транзакционный tx, чтобы provisioning был частью вызывающей транзакции). */
 export async function createUserWithPassword(
   input: ProvisionInput,

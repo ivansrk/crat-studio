@@ -1,4 +1,6 @@
 import { createHmac, timingSafeEqual } from 'node:crypto'
+import { cookies } from 'next/headers'
+import { sessionSecret } from './secret'
 
 export const SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000 // 30 дней (AUTH-07)
 export const SESSION_COOKIE = 'crat_session'
@@ -25,4 +27,18 @@ export function verifySession(value: string | undefined, secret: string, now = D
     if (typeof uid !== 'string' || typeof exp !== 'number' || exp < now) return null
     return uid
   } catch { return null }
+}
+
+/** T6 (Ф7а): единая точка установки сессионной cookie — раньше её инлайнил /auth/[token]/route.ts
+ *  (magic-link, снят D-031), теперь вызывается из app/actions/login.ts после attemptLogin(ok:true).
+ *  httpOnly/Secure/SameSite=Lax — AUTH-07. */
+export async function setSessionCookie(userId: string): Promise<void> {
+  const jar = await cookies()
+  jar.set(SESSION_COOKIE, signSession(userId, sessionSecret()), {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    maxAge: SESSION_TTL_MS / 1000,
+    path: '/',
+  })
 }

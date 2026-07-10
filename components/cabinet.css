@@ -138,6 +138,13 @@
   margin-top: .5rem;
 }
 
+/* T6 (Ф7а): строка «Аккаунт» + «Выйти» внизу кабинета — те же отступы, что у cabinet-cert-actions. */
+.cabinet-account-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .75rem;
+}
+
 /* Ф5-полировка: страница урока (/app/lessons/[id]) не имела своего класса —
    попадала под общий main{padding:2rem 1rem} вместо системного отступа
    остальных страниц кабинета (тот же паттерн, что .project-page/.review-page). */

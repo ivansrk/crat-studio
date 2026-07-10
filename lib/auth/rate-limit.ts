@@ -21,13 +21,10 @@ export class RateLimiter {
 const g = globalThis as unknown as { __rl?: Record<string, RateLimiter> }
 g.__rl ??= {
   registration: new RateLimiter(5, 60 * 60 * 1000), // REG-07: 5/час/IP
-  magicLink: new RateLimiter(3, 15 * 60 * 1000),    // AUTH-08: 3/15мин/email
-  magicLinkIp: new RateLimiter(10, 15 * 60 * 1000), // SEC-03: 10/15мин/IP — против перебора многих email
   loginEmail: new RateLimiter(10, 15 * 60 * 1000),  // AUTH-20: 10/15мин/email — перебор пароля
   loginIp: new RateLimiter(20, 15 * 60 * 1000),     // AUTH-20: 20/15мин/IP — перебор многих email
-  // Ф7а T4: отдельные лимитеры reset-флоу — те же параметры, что у magicLink/magicLinkIp
-  // (magic-link уходит целиком в Task 6, поэтому не переименовываем и не переиспользуем
-  // magicLink/magicLinkIp — они пока нужны живым /auth-роутам).
+  // T6 (Ф7а, D-031): magicLink/magicLinkIp сняты вместе с magic-link-входом — reset-флоу (F12)
+  // живёт на своих лимитерах с теми же параметрами.
   resetEmail: new RateLimiter(3, 15 * 60 * 1000),   // AUTH-08-аналог: 3/15мин/email
   resetIp: new RateLimiter(10, 15 * 60 * 1000),     // SEC-03-аналог: 10/15мин/IP
 }

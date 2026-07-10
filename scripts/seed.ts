@@ -1,6 +1,6 @@
 import { syncAdmins } from '@/lib/auth/sync-admins'
 import { db } from '@/lib/db'
-import { newToken, hashToken, MAGIC_TTL_MS } from '@/lib/auth/magic-link'
+import { mintResetToken } from '@/lib/auth/reset'
 import { warsawDayStart } from '@/lib/trainers/limits'
 
 const SEED = (n: string) => `${n}@seed.crat.example`
@@ -63,22 +63,24 @@ async function seedF1() {
     { type: 'NEWSLETTER', granted: true, userId: student.id },
   ])
 
-  // Готовые magic-link URL в stdout (docs/seed.md «Вход студентом без почты») — Resend не нужен
+  // T6 (Ф7а, D-031): magic-link-вход снят — печатаем reset-ссылки («задать пароль») в stdout
+  // (docs/seed.md «Вход студентом без почты») вместо ссылок входа. Resend не нужен.
   for (const email of [
     SEED('student'),
     ...(process.env.ADMIN_EMAILS ?? '').split(',').map((e) => e.trim().toLowerCase()).filter(Boolean),
   ]) {
-    await printMagicLink(email, 'v1')
+    await printResetLink(email, 'v1')
   }
 }
 
-/** Общий механизм печати magic-link (переиспользуется seedF1/seedF3, docs/seed.md «Вход без почты»). */
-async function printMagicLink(email: string, version: string) {
+/** Общий механизм печати reset-ссылки (переиспользуется seedF1/seedF3, docs/seed.md «Вход без почты»).
+ *  Отклонение от Task 6 (не переделывать логику seed — это Task 8): seed-юзеры создаются БЕЗ
+ *  passwordHash (как и раньше), поэтому смысл ссылки для них сейчас — «задать пароль», не «войти». */
+async function printResetLink(email: string, version: string) {
   const user = await db.user.findUnique({ where: { email } })
   if (!user) return
-  const raw = newToken()
-  await db.passwordResetToken.create({ data: { tokenHash: hashToken(raw), email, userId: user.id, expiresAt: new Date(Date.now() + MAGIC_TTL_MS) } })
-  console.log(`[seed ${version}] вход для ${email}: ${process.env.APP_URL ?? 'http://localhost:3000'}/auth/${raw}`)
+  const { url } = await mintResetToken(email)
+  console.log(`[seed ${version}] задать пароль для ${email}: ${url}`)
 }
 
 const COURSE = 'ai-basics'
@@ -277,7 +279,7 @@ async function seedF3() {
     },
   })
 
-  await printMagicLink(SEED('diplomant'), 'v3')
+  await printResetLink(SEED('diplomant'), 'v3')
 }
 
 /** Ф4: у student@ — бэкдейт урока 1.1 (пройден ≥7 дней назад, LES-13) и dueAt его
