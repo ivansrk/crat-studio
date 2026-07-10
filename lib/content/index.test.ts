@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest'
 import {
   getCourses, getCourse, getLesson, contentErrors, nextLessonId, lessonCount,
   assetBase, getArticles, getArticle, articleIssues,
+  splitCourseCatalog, soleCourseRedirect,
 } from './index'
 
 describe('реестр курсов (MC-01/02/08)', () => {
@@ -69,6 +70,41 @@ describe('nextLessonId(courseSlug, lessonId)', () => {
   })
   it('null для единственного урока демо-курса', () => {
     expect(nextLessonId('demo-course', '1.1')).toBeNull()
+  })
+})
+
+describe('splitCourseCatalog (Ф7в T4, MC-03) — мои курсы vs каталог', () => {
+  it('enrolled slug уходит в mine, остальные — в others', () => {
+    const { mine, others } = splitCourseCatalog(getCourses(), ['ai-basics'])
+    expect(mine.map(c => c.slug)).toEqual(['ai-basics'])
+    expect(others.map(c => c.slug)).toEqual(['demo-course'])
+  })
+  it('без enrollments — mine пуст, others = весь реестр', () => {
+    const { mine, others } = splitCourseCatalog(getCourses(), [])
+    expect(mine).toEqual([])
+    expect(others.map(c => c.slug)).toEqual(getCourses().map(c => c.slug))
+  })
+  it('мои курсы исключены из каталога даже при нескольких enrollments', () => {
+    const { mine, others } = splitCourseCatalog(getCourses(), ['ai-basics', 'demo-course'])
+    expect(mine.map(c => c.slug)).toEqual(['ai-basics', 'demo-course'])
+    expect(others).toEqual([])
+  })
+})
+
+describe('soleCourseRedirect (Ф7в T4) — редирект хаба на единственный курс', () => {
+  it('один мой курс и пустой каталог остальных → slug этого курса', () => {
+    // реестр из одного курса (моделирует единственный курс в проде) — реальные фикстуры дают 2 (MC-08)
+    const onlyCourse = getCourses().filter(c => c.slug === 'ai-basics')
+    const { mine, others } = splitCourseCatalog(onlyCourse, ['ai-basics'])
+    expect(soleCourseRedirect(mine, others)).toBe('ai-basics')
+  })
+  it('один мой курс, но каталог остальных непуст (demo-course «Скоро») → null (хаб нужен)', () => {
+    const { mine, others } = splitCourseCatalog(getCourses(), ['ai-basics'])
+    expect(soleCourseRedirect(mine, others)).toBeNull()
+  })
+  it('нет моих курсов → null', () => {
+    const { mine, others } = splitCourseCatalog(getCourses(), [])
+    expect(soleCourseRedirect(mine, others)).toBeNull()
   })
 })
 

@@ -1,56 +1,41 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
-import { getCourse, lessonCount } from '@/lib/content'
+import { getCourses, lessonCount, splitCourseCatalog, soleCourseRedirect } from '@/lib/content'
 import { currentUser } from '@/lib/auth/current-user'
-import { hasCourseAccess } from '@/lib/progress/access'
 import { getCourseProgress } from '@/lib/progress'
-import { isLessonPassed } from '@/lib/progress/quiz-logic'
 import { getDueDeferred } from '@/lib/progress/deferred'
 import { logoutAction } from '@/app/actions/logout'
-import { saveMissionAction } from '@/app/actions/lesson'
-import { getCurrentSubmission } from '@/lib/project'
 import { db } from '@/lib/db'
 import { t } from '@/lib/i18n'
-import type { SubmissionStatus } from '@/lib/generated/prisma/client'
 
-const PROJECT_STATUS_LABEL: Record<SubmissionStatus, string> = {
-  DRAFT: t.project.statusDraft,
-  SUBMITTED: t.project.statusSubmitted,
-  NEEDS_CHANGES: t.project.statusNeedsChanges,
-  APPROVED: t.project.statusApproved,
-}
+// Ф7в T4 (MC-03): единственный published-курс с публичным лендингом в MVP — /ai-basics.
+// Будущие курсы без лендинга получают карточку без ссылки («скоро подробности», зафиксировано
+// в отчёте T4) — конвенция /{slug} для будущих лендингов пока не заведена (нет ни одного примера).
+const COURSE_LANDING: Record<string, string> = { 'ai-basics': '/ai-basics' }
 
+/** Ф7в T4, MC-03: /app — хаб «Мои курсы» + каталог остальных курсов + консультации/повторение.
+ *  Курсовые вещи (миссия, горизонт-прогресс, модули/уроки, мини-проект, сертификат) живут на
+ *  /app/{courseSlug} (T3) — хаб их НЕ дублирует. Единственный enrollment и пустой каталог
+ *  остальных курсов → редирект сразу на /app/{slug} (soleCourseRedirect), без лишнего клика. */
 export default async function Cabinet() {
   // currentUser не null после layout-гейта (app/app/layout.tsx), но TS этого не знает —
   // на всякий случай (истёкшая сессия между рендерами) отправляем на /login, а не падаем.
   const user = await currentUser()
   if (!user) redirect('/login')
 
-  if (!(await hasCourseAccess(user, 'ai-basics'))) { // Ф7в T4: каталог/«Мои курсы» заменит хардкод ai-basics
-    return (
-      <main className="crat-page">
-        <section className="crat-section">
-          <div className="crat-shell">
-            <h1 className="crat-display">{t.auth.cabinetTitle}</h1>
-            <p className="crat-muted">{t.cabinet.noAccess}</p>
-            <form action={logoutAction}><button className="crat-button" type="submit">{t.auth.logout}</button></form>
-          </div>
-        </section>
-      </main>
-    )
-  }
+  const enrollments = await db.enrollment.findMany({ where: { userId: user.id } })
+  const { mine, others } = splitCourseCatalog(getCourses(), enrollments.map(e => e.courseSlug))
 
-  const { course } = getCourse('ai-basics')! // Ф7в T4: каталог/«Мои курсы» заменит хардкод ai-basics
-  const { byLesson, completedCount } = await getCourseProgress(user.id, 'ai-basics') // Ф7в T4
-  const total = lessonCount('ai-basics') // знаменатель «N/12» из course.yaml, не хардкод (ревью T6); Ф7в T4
-  const pct = Math.min(100, (completedCount / total) * 100)
-  // Ф4 T2/F19: due-блок повторения (CAB-04/06) — по всем курсам студента (без courseSlug — deferred.ts T2),
-  // один запрос, без кэша (план); показывается ВВЕРХУ кабинета.
+  const redirectSlug = soleCourseRedirect(mine, others)
+  if (redirectSlug) redirect(`/app/${redirectSlug}`)
+
+  const myCourses = await Promise.all(mine.map(async entry => {
+    const { completedCount } = await getCourseProgress(user.id, entry.slug)
+    return { slug: entry.slug, title: entry.course.title, completedCount, total: lessonCount(entry.slug) }
+  }))
+
+  // Ф4 T2/F19: due-блок повторения (CAB-04/06) — по всем курсам студента (без courseSlug — deferred.ts T2).
   const dueReview = await getDueDeferred(user.id)
-  const projectSubmission = await getCurrentSubmission(user.id, 'ai-basics') // Ф7в T4; T5: доп. запрос — приемлемо (план)
-  const projectStatusText = projectSubmission ? PROJECT_STATUS_LABEL[projectSubmission.status] : t.project.statusNone
-  // T7: один findFirst — есть ли действующий сертификат (CERT-06/D-011: PDF по требованию, не хранится).
-  const certificate = await db.certificate.findFirst({ where: { userId: user.id, courseSlug: 'ai-basics', status: 'VALID' } })
 
   return (
     <main className="crat-page">
@@ -58,29 +43,6 @@ export default async function Cabinet() {
         <div className="crat-shell">
           <h1 className="crat-display">{t.auth.cabinetTitle}</h1>
 
-          {/* CAB-01 бриф §9: «линия горизонта» — 4 модуля-«здания» над полосой прогресса,
-              фигурка идёт по существующему pct; статус здания считается из byLesson (данные не меняются). */}
-          <section aria-label={t.cabinet.progressAria} className="horizon">
-            <div className="horizon-buildings">
-              {course.modules.map(m => {
-                const rows = m.lessons.map(l => byLesson.get(l.id))
-                const passedCount = rows.filter(r => isLessonPassed(r)).length
-                const started = rows.some(Boolean)
-                const status = passedCount === m.lessons.length ? 'done' : started ? 'partial' : 'none'
-                return (
-                  <div key={m.id} className={`building building-${status}`}>
-                    <span className={`building-sign building-sign-${status}${status === 'done' ? ' red-glow' : ''}`}>{m.title}</span>
-                  </div>
-                )
-              })}
-            </div>
-            <div className="progress-track">
-              <span className="progress-figure" style={{ left: `${pct}%` }} aria-hidden>🚶</span>
-            </div>
-            <p className="crat-muted">{completedCount}/{total} · {t.cabinet.progressLabel}</p>
-          </section>
-
-          {/* Ф4 T2: повторение приоритетно — сразу после прогресса, до миссии и уроков (CAB-04…06). */}
           {dueReview && (
             <div className="crat-card cabinet-review">
               <h2 className="crat-kicker">{t.review.kicker}</h2>
@@ -90,47 +52,59 @@ export default async function Cabinet() {
             </div>
           )}
 
-          <div className="crat-card cabinet-mission">
-            <h2>{t.lesson.missionTitle}</h2>
-            <p className="crat-muted">{t.lesson.missionHint}</p>
-            <form action={saveMissionAction}>
-              <input type="hidden" name="courseSlug" value="ai-basics" /> {/* Ф7в T4: каталог заменит хардкод */}
-              <input type="hidden" name="returnTo" value="/app" />
-              <textarea name="mission" defaultValue={user.mission ?? ''} />
-              <p><button className="crat-button" type="submit">{t.lesson.save}</button></p>
-            </form>
-          </div>
-
-          <div className="cabinet-modules">
-            {course.modules.map(m => (
-              <div key={m.id} className="crat-card module-card">
-                <h3 className="crat-kicker module-card-title">{m.title}</h3>
-                <ul className="module-lessons">{m.lessons.map(l => {
-                  const p = byLesson.get(l.id)
-                  const passed = isLessonPassed(p)
-                  const statusClass = passed ? 'lesson-status-done' : p ? 'lesson-status-progress' : 'lesson-status-none'
-                  const statusText = passed ? `✓ ${t.cabinet.statusDone}` : p ? t.cabinet.statusInProgress : t.cabinet.statusNotStarted
-                  return (
-                    <li key={l.id} className="module-lesson-row">
-                      <Link className="reveal-line" href={`/app/ai-basics/lessons/${l.id}`}>{l.id} · {l.title}</Link>
-                      <span className={`module-lesson-status ${statusClass}`}>{statusText}</span>
-                    </li>
-                  )
-                })}</ul>
+          <section aria-label={t.cabinet.myCoursesAria} className="cabinet-hub-section">
+            <h2 className="crat-kicker">{t.cabinet.myCourses}</h2>
+            {myCourses.length === 0 ? (
+              <p className="crat-muted">{t.cabinet.noCourses}</p>
+            ) : (
+              <div className="cabinet-course-grid">
+                {myCourses.map(c => (
+                  <Link key={c.slug} href={`/app/${c.slug}`} className="crat-card course-card">
+                    <h3>{c.title}</h3>
+                    <p className="crat-muted">{c.completedCount}/{c.total} · {t.cabinet.progressLabel}</p>
+                  </Link>
+                ))}
               </div>
-            ))}
-          </div>
+            )}
+          </section>
 
-          {/* T5: статус мини-проекта + ссылка — после списка уроков (PROJ-01…06). */}
-          <div className="crat-card cabinet-project">
-            <div>
-              <h2 className="crat-kicker">{t.project.cabinetLinkLabel}</h2>
-              <p className="crat-muted">{projectStatusText}</p>
-            </div>
-            <Link className="crat-button" href="/app/ai-basics/project">{t.project.cabinetCta}</Link>
-          </div>
+          {others.length > 0 && (
+            <section aria-label={t.cabinet.catalogAria} className="cabinet-hub-section">
+              <h2 className="crat-kicker">{t.cabinet.catalog}</h2>
+              <div className="cabinet-course-grid">
+                {others.map(entry => {
+                  if (!entry.published) {
+                    // E-MC3/MC-02: неопубликованный курс — карточка «Скоро», без ссылки.
+                    return (
+                      <div key={entry.slug} className="crat-card course-card course-card-soon">
+                        <h3>{entry.course.title}</h3>
+                        <span className="course-card-badge">{t.cabinet.comingSoon}</span>
+                      </div>
+                    )
+                  }
+                  const landing = COURSE_LANDING[entry.slug]
+                  if (!landing) {
+                    // published, но лендинга пока нет (только ai-basics имеет /ai-basics) — карточка без ссылки.
+                    return (
+                      <div key={entry.slug} className="crat-card course-card course-card-soon">
+                        <h3>{entry.course.title}</h3>
+                        <p className="crat-muted">{t.cabinet.catalogDetailsSoon}</p>
+                      </div>
+                    )
+                  }
+                  return (
+                    <Link key={entry.slug} href={landing} className="crat-card course-card">
+                      <h3>{entry.course.title}</h3>
+                      <p className="crat-muted">{lessonCount(entry.slug)} {t.cabinet.catalogLessonsLabel}</p>
+                      <span className="crat-button">{t.cabinet.catalogLearnMore}</span>
+                    </Link>
+                  )
+                })}
+              </div>
+            </section>
+          )}
 
-          {/* Ф4 T5: ссылка на каталог тренажёров (TRN-01/06) — рядом с блоком мини-проекта. */}
+          {/* Ф4 T5: ссылка на каталог тренажёров (TRN-01/06) — общие для всех курсов кабинета. */}
           <div className="crat-card cabinet-project">
             <div>
               <h2 className="crat-kicker">{t.trainers.catalogTitle}</h2>
@@ -146,18 +120,6 @@ export default async function Cabinet() {
             </div>
             <Link className="crat-button" href="/consult">{t.consult.cabinetCta}</Link>
           </div>
-
-          {/* T7: блок сертификата — только при выданном VALID (CERT-01/05/06). */}
-          {certificate && (
-            <div className="crat-card cabinet-cert">
-              <h2 className="crat-kicker">{t.cert.cabinetTitle}</h2>
-              <p className="cert-number">{certificate.number}</p>
-              <div className="cabinet-cert-actions">
-                <Link className="crat-button primary" href="/app/ai-basics/certificate">{t.cert.downloadPdf}</Link>
-                <Link className="crat-button" href={`/cert/${certificate.number}`}>{t.cert.verifyPage}</Link>
-              </div>
-            </div>
-          )}
 
           <div className="cabinet-account-row">
             <Link className="crat-button" href="/app/account">{t.auth.accountNavLabel}</Link>

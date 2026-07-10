@@ -72,6 +72,23 @@ export function lessonCount(courseSlug: string): number {
   return c.course.modules.reduce((n, m) => n + m.lessons.length, 0)
 }
 
+/** Ф7в T4 (MC-03): разбивает реестр курсов на «мои» (по Enrollment.courseSlug пользователя)
+ *  и «остальные» (каталог хаба /app) — стабильный порядок getCourses() (slug asc) в обеих группах. */
+export function splitCourseCatalog(courses: CourseContent[], enrolledSlugs: string[]): { mine: CourseContent[]; others: CourseContent[] } {
+  const enrolled = new Set(enrolledSlugs)
+  return {
+    mine: courses.filter(c => enrolled.has(c.slug)),
+    others: courses.filter(c => !enrolled.has(c.slug)),
+  }
+}
+
+/** Ф7в T4: ровно один «мой» курс и пустой каталог остальных (ни одного другого курса в реестре) —
+ *  хаб показывать нечего, редиректим сразу на единственный курс (без лишнего клика). Возвращает
+ *  его slug или null, если условие не выполнено (несколько курсов/enrollments или есть каталог). */
+export function soleCourseRedirect(mine: CourseContent[], others: CourseContent[]): string | null {
+  return mine.length === 1 && others.length === 0 ? mine[0].slug : null
+}
+
 /** Следующий урок по course.yaml курса или null для последнего/неизвестного курса/урока. */
 export function nextLessonId(courseSlug: string, lessonId: string): string | null {
   const c = getCourse(courseSlug)

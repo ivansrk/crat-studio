@@ -238,6 +238,16 @@ export const ru = {
     statusDone: 'пройден',
     statusInProgress: 'в процессе',
     statusNotStarted: 'не начат',
+    // Ф7в T4, MC-03: хаб /app — «Мои курсы» + каталог остальных курсов. [текст на согласование]
+    myCourses: 'Мои курсы',
+    myCoursesAria: 'Мои курсы',
+    noCourses: 'У вас пока нет курсов — доступ выдаёт администратор, мы напишем вам, когда всё будет готово.',
+    catalog: 'Другие курсы',
+    catalogAria: 'Каталог курсов',
+    catalogLessonsLabel: 'уроков в курсе',
+    catalogLearnMore: 'Подробнее о курсе',
+    catalogDetailsSoon: 'Скоро подробности',
+    comingSoon: 'Скоро',
   },
   // Ф4 T2: блок «3 вопроса на 2 минуты» (CAB-04…06) — карточка в кабинете + /app/review.
   review: {

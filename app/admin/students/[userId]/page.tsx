@@ -21,13 +21,16 @@ export default async function StudentProgress({ params }: { params: Promise<{ us
   const user = await db.user.findUnique({ where: { id: userId } })
   if (!user) notFound() // гейт админа — в app/admin/layout.tsx; здесь только валидность userId
 
+  // Ф7в T4 [РЕШЕНИЕ АВТОРА]: страница прогресса студента остаётся привязанной к ai-basics —
+  // единственному курсу с реальными студентами на Ф7в. Полный мультикурсовый вид (таблица
+  // прогресса по КАЖДОМУ enrollment) — дороже (N курсов × N таблиц на одной странице ради
+  // курса без учащихся) и откладывается до Ф8+/появления второго активного курса.
   const [{ byLesson }, deferred, submission, certificate] = await Promise.all([
-    getCourseProgress(userId, 'ai-basics'), // Ф7в T3: из маршрута
+    getCourseProgress(userId, 'ai-basics'),
     db.deferredQuizState.findMany({ where: { userId }, orderBy: { dueAt: 'asc' } }), // по всем курсам студента (F19) — без courseSlug
-    getCurrentSubmission(userId, 'ai-basics'), // Ф7в T3: из маршрута
+    getCurrentSubmission(userId, 'ai-basics'),
     db.certificate.findFirst({ where: { userId, status: { in: ['VALID', 'REVOKED'] } }, orderBy: { issuedAt: 'desc' } }),
   ])
-  // Ф7в T3: заменить на courseSlug из маршрута
   const lessons = getCourse('ai-basics')!.course.modules.flatMap(m => m.lessons) // все 12 строк всегда (ADM-05)
 
   return (
