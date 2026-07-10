@@ -57,7 +57,8 @@
 .progress-figure {
   position: absolute;
   bottom: 0;
-  transition: left .6s ease;
+  /* T1: transition: left .6s ease — удалена (мёртвый код: left задаётся при SSR,
+     клиентских перерисовок с изменением left нет, переход никогда не проигрывался). */
   font-size: 1.6rem;
   transform: translateX(-50%); /* центр фигурки на позиции left — внутри трека и на 0%, и на 100% */
 }

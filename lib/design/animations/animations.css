@@ -1,7 +1,5 @@
-.anim-neon-pulse { animation: neonPulse 2.4s ease-in-out infinite; }
+/* T1: 2.4s → 4s — реже дышит, спокойнее для бесконечного акцента в тексте урока. */
+.anim-neon-pulse { animation: neonPulse 4s ease-in-out infinite; }
 @keyframes neonPulse { 0%, 100% { text-shadow: none; } 50% { text-shadow: var(--neon-glow); } }
-
-.anim-float-up { animation: floatUp 3s ease-in-out infinite alternate; }
-@keyframes floatUp { from { transform: translateY(0); } to { transform: translateY(-8px); } }
 
 /* prefers-reduced-motion гасится глобально в app/globals.css */

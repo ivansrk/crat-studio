@@ -189,7 +189,8 @@
 .article-card h2 {
   text-decoration-color: var(--line-red);
   text-underline-offset: .25em;
-  transition: text-decoration-color .3s ease;
+  /* T1: .3s → .18s, кривая cubic-bezier(.23,1,.32,1) как у остальных underline-reveal. */
+  transition: text-decoration-color .18s cubic-bezier(.23, 1, .32, 1);
 }
 .article-card:hover h2,
 .article-card:focus-visible h2 {
@@ -330,11 +331,22 @@ main.crat-page {
 
 /* DSN-05: медленный сдвиг фонового свечения поверх картинки, деликатно
    (mix-blend-mode: screen — добавляет свет, не перекрывает фото). Глобальный
-   глушитель prefers-reduced-motion (app/globals.css) убирает анимацию сам. */
+   глушитель prefers-reduced-motion (app/globals.css) убирает анимацию сам.
+   T1 (санация): раньше двигался background-position на самом элементе — это
+   репэйнт на каждый кадр. Теперь двигается transform:translateX широкого
+   (220%) слоя ::before — визуально тот же диагональный дрейф света, но
+   GPU-композиция. Внешний .crat-visual-frame уже overflow:hidden — обрезает
+   вылет слоя, отдельный overflow здесь не нужен. */
 .hero-visual-glow {
   position: absolute;
   inset: -20%;
   z-index: 1;
+  pointer-events: none;
+}
+.hero-visual-glow::before {
+  content: '';
+  position: absolute;
+  inset: 0 -60%;
   background: linear-gradient(
     120deg,
     color-mix(in srgb, var(--red-blood) 55%, transparent),
@@ -342,15 +354,14 @@ main.crat-page {
     color-mix(in srgb, var(--neon) 30%, transparent),
     transparent 75%
   );
-  background-size: 220% 220%;
-  animation: heroGlowShift 45s linear infinite;
   mix-blend-mode: screen;
-  pointer-events: none;
+  animation: heroGlowShift 45s linear infinite;
+  will-change: transform;
 }
 
 @keyframes heroGlowShift {
-  0% { background-position: 0% 50%; }
-  100% { background-position: 200% 50%; }
+  0% { transform: translateX(-20%); }
+  100% { transform: translateX(20%); }
 }
 
 .hero-visual-mark {
