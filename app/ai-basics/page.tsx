@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { getCourse, lessonCount } from '@/lib/content'
+import { getCourse, getLesson, lessonCount, lessonExcerpt } from '@/lib/content'
 import { currentUser } from '@/lib/auth/current-user'
 import { SignupForm } from '@/components/signup-form'
 import { t } from '@/lib/i18n'
@@ -29,6 +29,13 @@ export default async function Landing({ searchParams }: { searchParams: Promise<
   // Лендинг конкретного курса ai-basics — литерал корректен по смыслу маршрута.
   const { course } = getCourse('ai-basics')!
   const notice = signup === 'invalid' || signup === 'rate' || signup === 'already' ? signup : undefined
+  // T7 дизайн-аудита (Б.6): «Выдержка из урока» — реальный текст урока 1.1 (lessonExcerpt
+  // читает сырой lesson.mdx статично при билде). excerptFallback — честная деградация,
+  // если в будущем контенте абзац не распарсится (см. lib/content/index.ts lessonExcerpt).
+  const excerpt = lessonExcerpt('ai-basics', '1.1')
+  const excerptText = excerpt?.text ?? t.landing.excerptFallback
+  const excerptLessonTitle = excerpt?.lessonTitle ?? getLesson('ai-basics', '1.1')?.meta.title ?? ''
+  const excerptCaption = t.landing.excerptCaption.replace('{title}', excerptLessonTitle)
   // Формат и условия (утверждён основателем): числа из getCourse/lessonCount, не хардкод.
   const formatFacts = t.landing.formatModulesLessons
     .replace('{modules}', String(course.modules.length))
@@ -94,21 +101,36 @@ export default async function Landing({ searchParams }: { searchParams: Promise<
           </div>
         </section>
 
-        {/* Результат */}
+        {/* «Выдержка из урока» (T7 дизайн-аудита, Б.6) — реальный текст урока 1.1,
+            кадр-цитата между Программой и Результатом. */}
         <section className="crat-section">
           <div className="crat-shell">
-            <SectionLabel kicker={t.landing.resultKicker} />
-            <h2 className="crat-display">{t.landing.resultTitle}</h2>
-            <p className="crat-muted section-intro">{t.landing.result}</p>
+            <SectionLabel kicker={t.landing.excerptKicker} />
+            <div className="lesson-excerpt crat-visual-frame crat-noise">
+              <p className="lesson-excerpt-text crat-em">{excerptText}</p>
+              <span className="lesson-excerpt-caption crat-kicker">{excerptCaption}</span>
+            </div>
           </div>
         </section>
 
-        {/* Мини-проект и сертификат */}
-        <section className="crat-section">
+        {/* Результат + Мини-проект и сертификат — один разворот (T7, Б.6): 2 колонки,
+            resultTitle/projectTitle остаются подзаголовками колонок. */}
+        <section className="crat-section" id="result">
           <div className="crat-shell">
-            <SectionLabel kicker={t.landing.projectKicker} />
-            <h2 className="crat-display">{t.landing.projectTitle}</h2>
-            <p className="crat-muted section-intro">{t.landing.projectText}</p>
+            <SectionLabel kicker={t.landing.resultProjectKicker} />
+            <h2 className="crat-display">{t.landing.resultProjectTitle}</h2>
+            <div className="result-project-grid">
+              <div className="result-project-col">
+                <span className="crat-kicker">{t.landing.resultKicker}</span>
+                <h3 className="crat-display result-project-heading">{t.landing.resultTitle}</h3>
+                <p className="crat-muted">{t.landing.result}</p>
+              </div>
+              <div className="result-project-col">
+                <span className="crat-kicker">{t.landing.projectKicker}</span>
+                <h3 className="crat-display result-project-heading">{t.landing.projectTitle}</h3>
+                <p className="crat-muted">{t.landing.projectText}</p>
+              </div>
+            </div>
           </div>
         </section>
 

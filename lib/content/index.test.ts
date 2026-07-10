@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import {
   getCourses, getCourse, getLesson, contentErrors, nextLessonId, prevLessonId, lessonPosition, lessonCount,
-  assetBase, getArticles, getArticle, articleIssues,
+  assetBase, getArticles, getArticle, articleIssues, lessonExcerpt,
   splitCourseCatalog, soleCourseRedirect,
 } from './index'
 
@@ -96,6 +96,22 @@ describe('lessonPosition(courseSlug, lessonId) — T4 дизайн-аудита'
   it('null для неизвестного курса/урока', () => {
     expect(lessonPosition('ai-basics', '9.9')).toBeNull()
     expect(lessonPosition('unknown', '1.1')).toBeNull()
+  })
+})
+
+describe('lessonExcerpt(courseSlug, lessonId) — T7 дизайн-аудита («Выдержка из урока»)', () => {
+  it('первый содержательный абзац урока 1.1, без заголовка и mdx-компонентов', () => {
+    const excerpt = lessonExcerpt('ai-basics', '1.1')
+    expect(excerpt).not.toBeNull()
+    expect(excerpt!.lessonTitle).toBe(getLesson('ai-basics', '1.1')!.meta.title)
+    expect(excerpt!.text).not.toMatch(/^#/)
+    expect(excerpt!.text).not.toMatch(/[<>]/)
+    expect(excerpt!.text).not.toMatch(/заглушка для разработки/)
+    expect(excerpt!.text.startsWith('Когда мы слышим слово')).toBe(true)
+  })
+  it('null для неизвестного курса/урока', () => {
+    expect(lessonExcerpt('unknown', '1.1')).toBeNull()
+    expect(lessonExcerpt('ai-basics', '9.9')).toBeNull()
   })
 })
 

@@ -59,7 +59,11 @@ export default async function LessonPage({ params }: { params: Promise<{ courseS
       </p>
       {lesson.meta.video_id
         ? <Video kinescope={lesson.meta.video_id} />
-        : <p className="mdx-trainer-stub">{t.lesson.videoSoon}</p>}
+        : (
+          <div className="crat-visual-frame horizon crat-noise lesson-video-stub">
+            <p className="lesson-video-stub-text crat-kicker">{t.lesson.videoSoon}</p>
+          </div>
+        )}
       <div className="lesson-mdx">
         <MDXRemote source={lesson.mdx} components={mdxComponents(base)} />
       </div>

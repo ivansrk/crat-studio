@@ -55,6 +55,9 @@ export default async function ArticlePage({ params }: Props) {
         )}
         <p className="crat-kicker">{t.articles.kicker} · {formatDate(new Date(article.meta.date))}</p>
         <h1 className="crat-display">{article.meta.title}</h1>
+        {/* T7 дизайн-аудита (Б.6): лид статьи — meta.description раньше выводился только
+            в <meta name="description">, в теле статьи отсутствовал. */}
+        <p className="article-lead crat-em">{article.meta.description}</p>
         <MDXRemote source={article.mdx} components={mdxComponents(base)} />
       </main>
       <SiteFooter />

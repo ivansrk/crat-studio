@@ -37,6 +37,4 @@
 
 .mdx-download { display: inline-block; border: 1px solid var(--neon); box-shadow: var(--neon-glow); padding: .75rem 1.5rem; border-radius: 8px; text-decoration: none; }
 
-.mdx-trainer-stub { border: 1px dashed var(--lavender); padding: 1.5rem; text-align: center; border-radius: 8px; color: var(--lavender); }
-
 .mdx-divider { border: 0; border-top: 1px solid color-mix(in srgb, var(--paper) 20%, transparent); margin: 2.5rem auto; width: 60%; }

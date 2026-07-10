@@ -475,6 +475,23 @@ a.course-card {
   color: var(--mint);
 }
 
+/* T7 дизайн-аудита (Б.8): «экран до сеанса» — заглушка видео (нет video_id, честно
+   у всех 12 уроков контракта v2 сейчас) была лавандовым dashed-боксом (.mdx-trainer-stub,
+   mdx.css — класс использовался только здесь, теперь удалён как мёртвый). Текст
+   (t.lesson.videoSoon) НЕ меняется, только оформление: переиспользуем
+   .crat-visual-frame.horizon (уже даёт тёмный 16:9 кадр + тусклую красную линию-
+   горизонт) + .crat-noise зерно вместо dashed-рамки. */
+.lesson-video-stub {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 1.5rem;
+}
+.lesson-video-stub-text {
+  margin: 0;
+}
+
 /* T4 дизайн-аудита: компактная пара ссылок навигации по урокам внизу страницы —
    prev слева, next справа; next становится primary-кнопкой после прохождения урока. */
 .lesson-pager {

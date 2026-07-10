@@ -124,18 +124,33 @@ export default function Home() {
           <div className="studio-bleed">
             <span className="studio-horizon" aria-hidden="true" />
             <div className="studio-grid">
-              <div className="crat-visual-frame crat-noise studio-frame-a" aria-hidden="true">
-                <Image src="/images/studio-1.webp" alt="" fill sizes="(max-width: 760px) 100vw, 50vw" className="crat-frame-img" />
-              </div>
-              <div className="crat-visual-frame crat-noise studio-frame-b" aria-hidden="true">
-                <Image src="/images/studio-2.webp" alt="" fill sizes="(max-width: 760px) 100vw, 25vw" className="crat-frame-img" />
-              </div>
-              <div className="crat-visual-frame crat-noise studio-frame-c" aria-hidden="true">
-                <Image src="/images/studio-3.webp" alt="" fill sizes="(max-width: 760px) 100vw, 25vw" className="crat-frame-img" />
-              </div>
-              <div className="crat-visual-frame crat-noise studio-frame-d" aria-hidden="true">
-                <Image src="/images/studio-4.webp" alt="" fill sizes="(max-width: 760px) 100vw, 50vw" className="crat-frame-img" />
-              </div>
+              {/* T7 дизайн-аудита (Б.8): mono-подписи под кадрами — честные к содержимому
+                  (см. комментарий у home.studioCaption* в ru.ts). grid-area переехала на
+                  <figure>, картинка/зерно — на вложенный .crat-visual-frame (aria-hidden). */}
+              <figure className="studio-frame-a">
+                <div className="crat-visual-frame crat-noise" aria-hidden="true">
+                  <Image src="/images/studio-1.webp" alt="" fill sizes="(max-width: 760px) 100vw, 50vw" className="crat-frame-img" />
+                </div>
+                <figcaption className="studio-frame-caption">{t.home.studioCaptionA}</figcaption>
+              </figure>
+              <figure className="studio-frame-b">
+                <div className="crat-visual-frame crat-noise" aria-hidden="true">
+                  <Image src="/images/studio-2.webp" alt="" fill sizes="(max-width: 760px) 100vw, 25vw" className="crat-frame-img" />
+                </div>
+                <figcaption className="studio-frame-caption">{t.home.studioCaptionB}</figcaption>
+              </figure>
+              <figure className="studio-frame-c">
+                <div className="crat-visual-frame crat-noise" aria-hidden="true">
+                  <Image src="/images/studio-3.webp" alt="" fill sizes="(max-width: 760px) 100vw, 25vw" className="crat-frame-img" />
+                </div>
+                <figcaption className="studio-frame-caption">{t.home.studioCaptionC}</figcaption>
+              </figure>
+              <figure className="studio-frame-d">
+                <div className="crat-visual-frame crat-noise" aria-hidden="true">
+                  <Image src="/images/studio-4.webp" alt="" fill sizes="(max-width: 760px) 100vw, 50vw" className="crat-frame-img" />
+                </div>
+                <figcaption className="studio-frame-caption">{t.home.studioCaptionD}</figcaption>
+              </figure>
             </div>
           </div>
         </section>
@@ -203,6 +218,10 @@ export default function Home() {
             </ul>
           </div>
         </section>
+
+        {/* Перфорация киноплёнки (T7 дизайн-аудита, Б.8) — тихий разделитель-décor перед
+            финальным CTA; main.crat-home уже full-bleed, вылезать из crat-shell не нужно. */}
+        <div className="film-perforation" aria-hidden="true" />
 
         {/* 10. Контакты (бриф §7.11) */}
         <section className="crat-section shader-scope" id="contact">

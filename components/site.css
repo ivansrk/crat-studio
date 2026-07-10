@@ -124,8 +124,18 @@
 }
 
 .site-footer {
-  border-top: 1px solid var(--line-soft);
   margin-top: clamp(3rem, 8vh, 6rem);
+}
+
+/* T7 дизайн-аудита (Б.8): «свет гаснет в конце сеанса» — горизонт вместо
+   border-top: var(--line-soft): тонкая красная линия во всю ширину с neon-glow,
+   затухающая к краям (градиент-маска, не hard-edge). Декор, без текста — сам
+   footer остаётся статичным (санкционированной анимации тут нет по брифу T7). */
+.footer-horizon {
+  display: block;
+  height: 1px;
+  background: linear-gradient(to right, transparent, var(--neon) 15%, var(--neon) 85%, transparent);
+  box-shadow: var(--neon-glow);
 }
 
 .site-footer-inner {
@@ -233,6 +243,16 @@
 }
 .article-cover img {
   object-fit: cover;
+}
+
+/* T7 дизайн-аудита (Б.6): лид статьи — meta.description под заголовком, крупнее
+   основного текста и курсивом Cormorant (T6 .crat-em) — description УЖЕ выводился
+   только в <meta>, в теле статьи отсутствовал. */
+.article-lead {
+  font-size: 1.25rem;
+  line-height: 1.5;
+  max-width: var(--maxw-text);
+  margin: 0 0 1.5rem;
 }
 
 /* ---------- главная — редакционный монтаж (Ф5 Task 4, бриф §7) ---------- */
@@ -742,10 +762,29 @@ main.crat-page {
     'a a d d';
   gap: 1.25rem;
 }
-.studio-grid .crat-visual-frame {
+/* T7 дизайн-аудита (Б.8): mono-подписи под кадрами — рамка + подпись теперь внутри
+   <figure>, grid-area переехала на figure (была на .crat-visual-frame); figure —
+   flex-колонка, чтобы подпись не съедалась фикс. высотой ячейки (та же логика,
+   что предупреждение crat-design про aspect-ratio+overflow:hidden). */
+.studio-grid figure {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.studio-grid figure .crat-visual-frame {
   aspect-ratio: auto;
-  height: 100%;
+  flex: 1 1 auto;
   min-height: 160px;
+}
+.studio-frame-caption {
+  display: block;
+  margin: .75rem 0 0;
+  font-family: var(--font-mono), monospace;
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  font-size: var(--fs-small);
+  color: var(--paper-muted);
 }
 .studio-frame-a { grid-area: a; }
 .studio-frame-b { grid-area: b; }
@@ -762,11 +801,27 @@ main.crat-page {
     grid-template-rows: none;
     grid-template-areas: none;
   }
-  .studio-grid .crat-visual-frame {
-    aspect-ratio: 16 / 9;
-    height: auto;
+  .studio-grid figure {
     grid-area: auto;
   }
+  .studio-grid figure .crat-visual-frame {
+    aspect-ratio: 16 / 9;
+    flex: none;
+    min-height: 0;
+  }
+}
+
+/* T7 дизайн-аудита (Б.8): перфорация киноплёнки — тихий разделитель-décor перед
+   «Контактами» (main.crat-home уже full-bleed, max-width:none/padding:0 — edge-to-edge
+   без обёртки). «Дырочки» — repeating radial-gradient (background-size тайлит паттерн),
+   без картинки; паттерн целиком внутри границ элемента, box-shadow нет — overflow на
+   360px не создаёт (в отличие от .studio-bleed со свечением на краях). */
+.film-perforation {
+  height: 14px;
+  background-image: radial-gradient(circle, var(--line-soft) 2.4px, transparent 3px);
+  background-size: 22px 14px;
+  background-position: center;
+  background-repeat: repeat-x;
 }
 
 /* этика — T6: full-bleed манифест-разворот, единственный «цветовой акт» страницы (П1 Пакета Б) */
@@ -991,6 +1046,51 @@ main.crat-page {
   flex: none;
 }
 
+/* T7 дизайн-аудита (Б.6): «Выдержка из урока» — кадр-цитата между Программой и
+   Результатом (lib/content lessonExcerpt, реальный текст урока 1.1). aspect-ratio
+   отключён (auto) — текст переменной длины: фикс. 16/9 + overflow:hidden обрезал бы
+   контент (пойманный дефект — crat-design SKILL, «история пойманных дефектов»). */
+.lesson-excerpt {
+  aspect-ratio: auto;
+  padding: clamp(2rem, 6vw, 3.5rem);
+  display: grid;
+  gap: 1.5rem;
+  align-content: center;
+  justify-items: start;
+}
+.lesson-excerpt-text {
+  font-size: clamp(1.3rem, 2.6vw, 1.7rem);
+  line-height: 1.55;
+  max-width: 42ch;
+  margin: 0;
+}
+.lesson-excerpt-caption {
+  margin: 0;
+}
+
+/* Б.6: «Результат» и «Мини-проект» — один разворот, 2 колонки (1 на мобиле);
+   resultTitle/projectTitle остаются подзаголовками колонок (ru.ts). */
+.result-project-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2.5rem;
+  margin-top: 2rem;
+}
+@media (min-width: 760px) {
+  .result-project-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: clamp(2.5rem, 6vw, 5rem);
+  }
+  .result-project-col + .result-project-col {
+    border-inline-start: 1px solid var(--line-soft);
+    padding-inline-start: clamp(2.5rem, 6vw, 5rem);
+  }
+}
+.result-project-heading {
+  font-size: var(--fs-h3);
+  margin: .75rem 0 0;
+}
+
 .accepted-card {
   display: grid;
   gap: 1rem;
@@ -1120,5 +1220,30 @@ main.crat-page {
   }
   .cookie-banner-inner .crat-button {
     justify-content: center;
+  }
+}
+
+/* ---------- /login /reset — Б.10: вертикальный кадр справа (десктоп ≥1024) ----------
+   Чистый CSS, без картинок: .crat-visual-frame.horizon (уже есть в crat.css) даёт
+   красную линию-горизонт + crat-noise зерно. На мобиле колонка не рендерится (display:none) —
+   форма остаётся единственной колонкой, как раньше. */
+.auth-layout {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2rem;
+  align-items: stretch;
+}
+.auth-frame-col {
+  display: none;
+}
+@media (min-width: 1024px) {
+  .auth-layout {
+    grid-template-columns: 3fr 2fr;
+    gap: clamp(2.5rem, 5vw, 4rem);
+  }
+  .auth-frame-col {
+    display: block;
+    aspect-ratio: auto;
+    min-height: 420px;
   }
 }

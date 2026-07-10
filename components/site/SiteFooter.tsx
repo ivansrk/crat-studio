@@ -5,6 +5,9 @@ import { t } from '@/lib/i18n'
 export function SiteFooter() {
   return (
     <footer className="site-footer">
+      {/* T7 дизайн-аудита (Б.8): «свет гаснет в конце сеанса» — красный горизонт вместо
+          прежней border-top: line-soft. */}
+      <span className="footer-horizon" aria-hidden="true" />
       <div className="site-footer-inner crat-shell">
         <div className="site-footer-brand">
           <span className="site-brand-name">{t.home.brand}</span>

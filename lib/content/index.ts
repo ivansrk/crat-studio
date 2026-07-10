@@ -120,6 +120,43 @@ export function lessonPosition(courseSlug: string, lessonId: string): { index: n
   return null
 }
 
+/**
+ * T7 дизайн-аудита (Б.6): «Выдержка из урока» на /ai-basics — первый содержательный
+ * абзац реального lesson.mdx, БЕЗ mdx-компонентов, статично при билде (mdx — сырой
+ * текст с диска, а не скомпилированный React — парсинг чистый Markdown, не JSX).
+ * Берёт первый блок между \n\n, который не заголовок (#), не mdx-тег (<...>) и не
+ * italic-заглушка курса (*...*, см. lesson.mdx module-1/lesson-1.1 — последняя строка
+ * «Этот текст — заглушка для разработки» специально исключена этим фильтром). Инлайн-
+ * разметка (**bold**, *italic*, `code`, [text](url), остаточные <tag>) вычищается до
+ * простого текста. 2–3 предложения — до ~380 символов, дальше грубо режет к 2.
+ * null — если урок не найден или в mdx нет подходящего абзаца (честная деградация:
+ * страница /ai-basics прячет блок целиком, а не показывает пустоту).
+ */
+export function lessonExcerpt(courseSlug: string, lessonId: string): { text: string; lessonTitle: string } | null {
+  const lesson = getLesson(courseSlug, lessonId)
+  if (!lesson) return null
+  const blocks = lesson.mdx.split(/\n\s*\n/).map(b => b.trim()).filter(Boolean)
+  const paragraph = blocks.find(b => !b.startsWith('#') && !b.startsWith('<') && !b.startsWith('*'))
+  if (!paragraph) return null
+  const plain = paragraph
+    .replace(/<[^>]+>/g, '')
+    .replace(/\*\*([^*]+)\*\*/g, '$1')
+    .replace(/\*([^*]+)\*/g, '$1')
+    .replace(/`([^`]+)`/g, '$1')
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+    .replace(/\s+/g, ' ')
+    .trim()
+  if (!plain) return null
+  const sentences = plain.match(/[^.!?…]+[.!?…]+/g) ?? [plain]
+  let text = ''
+  for (let i = 0; i < Math.min(3, sentences.length); i++) {
+    if (i === 2 && text.length + sentences[i].length > 380) break
+    text += sentences[i]
+  }
+  text = text.trim()
+  return text ? { text, lessonTitle: lesson.meta.title } : null
+}
+
 function getArticlesRaw(): { articles: Article[]; issues: ArticleIssue[] } {
   if (!g.__articles) g.__articles = loadArticles(path.join(CONTENT_DIR, ARTICLES_DIR_NAME))
   return g.__articles

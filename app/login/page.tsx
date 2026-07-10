@@ -11,10 +11,15 @@ export default function Login() {
       <SiteHeader />
       <main className="crat-page">
         <section className="crat-section">
-          <div className="crat-shell">
-            <SectionLabel kicker={t.auth.kicker} />
-            <h1 className="crat-display">{t.auth.title}</h1>
-            <LoginForm />
+          {/* T7 дизайн-аудита (Б.10): узкий вертикальный кадр справа (десктоп ≥1024) —
+              чистый CSS (crat-visual-frame.horizon + crat-noise), формы не трогаем. */}
+          <div className="crat-shell auth-layout">
+            <div>
+              <SectionLabel kicker={t.auth.kicker} />
+              <h1 className="crat-display">{t.auth.title}</h1>
+              <LoginForm />
+            </div>
+            <div className="crat-visual-frame horizon crat-noise auth-frame-col" aria-hidden="true" />
           </div>
         </section>
       </main>
