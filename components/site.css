@@ -29,10 +29,37 @@
 
 .site-brand {
   display: flex;
-  flex-direction: column;
-  gap: .2rem;
+  align-items: center;
+  gap: .75rem;
   text-decoration: none;
   color: var(--paper);
+}
+
+.site-brand-text {
+  display: flex;
+  flex-direction: column;
+  gap: .2rem;
+  min-width: 0;
+}
+
+/* Логотип-«штамп»: рисованный знак на бумажном фоне — кремовая карточка
+   на чёрном сайте сознательно контрастна (эстетика архива, бриф §3). */
+.site-brand-logo {
+  width: 44px;
+  height: 44px;
+  border-radius: 6px;
+  flex-shrink: 0;
+}
+
+/* На узких экранах подпись-моно переносится в 3–4 строки — центрированный
+   логотип «повисает»; прижимаем к первой строке (к имени). */
+@media (max-width: 720px) {
+  .site-brand {
+    align-items: flex-start;
+  }
+  .site-brand-logo {
+    margin-top: .1rem;
+  }
 }
 
 .site-brand-name {

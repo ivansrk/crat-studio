@@ -201,6 +201,7 @@ export const ru = {
   header: {
     sub: 'applied AI / education / automation / creative work',
     navAria: 'Основная навигация',
+    logoAlt: 'CRAT school & studio — логотип',
   },
   lesson: {
     videoSoon: 'Видео скоро появится',
