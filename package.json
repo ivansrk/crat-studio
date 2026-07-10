@@ -9,7 +9,8 @@
     "typecheck": "tsc --noEmit",
     "lint": "eslint",
     "test": "vitest run",
-    "seed": "tsx scripts/seed.ts"
+    "seed": "tsx scripts/seed.ts",
+    "send-set-password": "tsx scripts/send-set-password.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.110.0",
