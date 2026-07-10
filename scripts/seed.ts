@@ -1,3 +1,4 @@
+import { pathToFileURL } from 'node:url'
 import { syncAdmins } from '@/lib/auth/sync-admins'
 import { db } from '@/lib/db'
 import { mintResetToken } from '@/lib/auth/reset'
@@ -352,6 +353,10 @@ async function main() {
   await printResetLink(SEED('student'), 'reset-demo') // T8: живой пример reset-флоу, см. комментарий у функции
 }
 
-main()
-  .catch((e) => { console.error('[seed] ошибка:', e); process.exitCode = 1 })
-  .finally(() => db.$disconnect())
+// Ревью M2: тот же guard, что и scripts/send-set-password.ts — дешёвая профилактика, seed.ts
+// сейчас никем не импортируется, но если это изменится, main() не должен запускаться при import.
+if (import.meta.url === pathToFileURL(process.argv[1] ?? '').href) {
+  main()
+    .catch((e) => { console.error('[seed] ошибка:', e); process.exitCode = 1 })
+    .finally(() => db.$disconnect())
+}

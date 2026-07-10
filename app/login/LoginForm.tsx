@@ -15,7 +15,7 @@ export function LoginForm() {
     <>
       <form action={formAction} className="signup-form crat-card">
         {state.error && <p role="alert" className="form-alert">{state.error}</p>}
-        <label>{t.auth.emailLabel}<input name="email" type="email" required autoComplete="email" /></label>
+        <label>{t.auth.emailLabel}<input name="email" type="email" required autoComplete="email" defaultValue={state.email} /></label>
         <label>{t.auth.passwordLabel}<input name="password" type="password" required autoComplete="current-password" /></label>
         <button type="submit" className="crat-button primary" disabled={pending}>{t.auth.submit}</button>
       </form>

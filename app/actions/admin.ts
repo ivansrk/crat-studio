@@ -22,7 +22,14 @@ export type GrantActionState =
 export async function grantAccessAction(_prevState: GrantActionState, formData: FormData): Promise<GrantActionState> {
   const admin = await requireAdmin()
   const result = await grantAccess(String(formData.get('registrationId')), admin.id)
-  revalidatePath('/admin')
+  // Ревью M1/AUTH-15: revalidatePath В ЭТОМ round-trip'е рвал показ пароля — force-dynamic
+  // /admin успевал перечитать регистрацию как ENROLLED ДО того, как React отрисовал granted-состояние
+  // формы, а условие `r.status !== 'ENROLLED'` в admin/page.tsx размонтирует <GrantForm/>, унося
+  // plainPassword (он живёт только в памяти этого клиентского компонента, см. GrantForm.tsx) с собой —
+  // ни пароль, ни баннер granted_email_failed админ увидеть не успевал (доказано probe-тестом).
+  // Фикс: не резолвим статус страницы синхронно с показом пароля — строка обновится на ENROLLED
+  // сама, при следующей навигации (страница force-dynamic, кеш RSC ей не нужен).
+  if (result.status !== 'granted' && result.status !== 'granted_email_failed') revalidatePath('/admin')
   if (result.status === 'not_found') return { status: 'idle' }
   return result
 }

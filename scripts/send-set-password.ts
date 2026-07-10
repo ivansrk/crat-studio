@@ -1,3 +1,4 @@
+import { pathToFileURL } from 'node:url'
 import { db } from '@/lib/db'
 import { mintResetToken } from '@/lib/auth/reset'
 import { sendEmail } from '@/lib/email'
@@ -76,6 +77,11 @@ async function main() {
   )
 }
 
-main()
-  .catch((e) => { console.error('[send-set-password] ошибка:', e); process.exitCode = 1 })
-  .finally(() => db.$disconnect())
+// Ревью M2: main() на верхнем уровне модуля запускался и при `import` (scripts/send-set-password.test.ts
+// импортирует runSetPasswordCampaign из этого же файла) — тест бил боевой DATABASE_URL. Guard запускает
+// main() только при прямом вызове `tsx scripts/send-set-password.ts` (process.argv[1]), не при импорте.
+if (import.meta.url === pathToFileURL(process.argv[1] ?? '').href) {
+  main()
+    .catch((e) => { console.error('[send-set-password] ошибка:', e); process.exitCode = 1 })
+    .finally(() => db.$disconnect())
+}

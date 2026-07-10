@@ -25,7 +25,9 @@ export async function mintResetToken(
     data: { tokenHash: hashToken(raw), email, userId: user?.id ?? null, purpose, expiresAt: new Date(Date.now() + RESET_TTL_MS) },
   })
   const path = purpose === ResetTokenPurpose.PASSWORD_RESET ? 'reset' : 'invite-confirm'
-  return { url: `${process.env.APP_URL}/${path}/${raw}`, tokenId: token.id }
+  // Ревью m3: fallback на localhost, как у бывшего printMagicLink — без него seed на машине без
+  // APP_URL в .env печатает нерабочую demo-ссылку («undefined/reset/...»).
+  return { url: `${process.env.APP_URL ?? 'http://localhost:3000'}/${path}/${raw}`, tokenId: token.id }
 }
 
 /** AUTH-16: наружу ВСЕГДА один ответ (SEC-06, тот же приём, что requestMagicLink) — молчим и

@@ -64,7 +64,7 @@ describe('mintResetToken (AUTH-16, D-031)', () => {
     expect(data.purpose).toBe('PASSWORD_RESET')
     expect(data.userId).toBe('u1')
     expect(data.expiresAt.getTime()).toBeGreaterThanOrEqual(before + RESET_TTL_MS)
-    expect(url).toMatch(new RegExp(`^${process.env.APP_URL}/reset/[0-9a-f]{64}$`))
+    expect(url).toMatch(new RegExp(`^${process.env.APP_URL ?? 'http://localhost:3000'}/reset/[0-9a-f]{64}$`))
     expect(tokenId).toBeTruthy()
   })
 
@@ -75,7 +75,7 @@ describe('mintResetToken (AUTH-16, D-031)', () => {
     const data = tokenCreate.mock.calls[0][0].data
     expect(data.userId).toBeNull()
     expect(data.purpose).toBe('OPT_IN')
-    expect(url).toMatch(new RegExp(`^${process.env.APP_URL}/invite-confirm/[0-9a-f]{64}$`))
+    expect(url).toMatch(new RegExp(`^${process.env.APP_URL ?? 'http://localhost:3000'}/invite-confirm/[0-9a-f]{64}$`))
   })
 })
 

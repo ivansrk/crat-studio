@@ -23,6 +23,10 @@ export async function attemptLogin(
 ): Promise<LoginResult> {
   const email = rawEmail.trim().toLowerCase()
 
+  // [РЕШЕНИЕ АВТОРА, ревью m1] loginIp считает и успешные входы, хотя AUTH-20 говорит о неудачных:
+  // сбрасывать общий IP-ключ на каждый успех стёр бы счётчик атакующего, который параллельно подбирает
+  // пароль к другому аккаунту с того же IP (NAT/офис). Осознанный компромисс — 20 входов/15мин с одного
+  // IP как общий бюджет достаточно щедрый, ложный лок от него маловероятен и приемлем.
   if (!limiters.loginEmail.allow(`le:${email}`) || !limiters.loginIp.allow(`lip:${ip}`)) {
     return { ok: false } // AUTH-20, наружу неотличимо от неверного пароля (SEC-06)
   }
