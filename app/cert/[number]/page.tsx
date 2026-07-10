@@ -5,6 +5,7 @@ import { t } from '@/lib/i18n'
 import { SiteHeader } from '@/components/site/SiteHeader'
 import { SiteFooter } from '@/components/site/SiteFooter'
 import { SectionLabel } from '@/components/site/SectionLabel'
+import { SectionShader } from '@/components/site/SectionShader'
 
 // CERT-06/D-010: публичная проверка подлинности — доступна без входа, как /login.
 // force-dynamic: номер меняется от запроса к запросу, статически не кэшируем.
@@ -36,13 +37,18 @@ export default async function CertPage({ params }: Props) {
                 <p className="crat-muted">{t.cert.revoked}</p>
               </>
             ) : (
-              <div className="crat-card">
-                <p className="cert-number">{cert.number}</p>
-                <p className="crat-muted">{t.cert.issuedTo}</p>
-                {/* fullName может быть null после GDPR-удаления (D-010/CERT-07) — номер и статус остаются проверяемыми. */}
-                <h1 className="crat-display">{cert.fullName ?? '—'}</h1>
-                <p className="crat-muted">{t.cert.completedCourse} «{cert.courseTitle}»</p>
-                <p className="crat-muted">{t.cert.issuedOn}: {formatDate(cert.issuedAt)}</p>
+              // T2 дизайн-аудита (D-042): те же прожектор-лучи, что у «Квиз сдан» —
+              // валидный сертификат тоже маленький триумф (site.css .shader-scope/.shader-content).
+              <div className="crat-card shader-scope">
+                <SectionShader variant="celebrate-rays" />
+                <div className="shader-content">
+                  <p className="cert-number">{cert.number}</p>
+                  <p className="crat-muted">{t.cert.issuedTo}</p>
+                  {/* fullName может быть null после GDPR-удаления (D-010/CERT-07) — номер и статус остаются проверяемыми. */}
+                  <h1 className="crat-display">{cert.fullName ?? '—'}</h1>
+                  <p className="crat-muted">{t.cert.completedCourse} «{cert.courseTitle}»</p>
+                  <p className="crat-muted">{t.cert.issuedOn}: {formatDate(cert.issuedAt)}</p>
+                </div>
               </div>
             )}
           </div>

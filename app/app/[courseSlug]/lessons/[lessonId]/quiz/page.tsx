@@ -8,6 +8,7 @@ import { nextQuestionIndex, QUIZ_TOTAL, type StoredAnswer } from '@/lib/progress
 import { answerAction } from '@/app/actions/quiz'
 import { startQuizAction } from '@/app/actions/lesson'
 import { t } from '@/lib/i18n'
+import { SectionShader } from '@/components/site/SectionShader'
 
 export const dynamic = 'force-dynamic'
 
@@ -46,18 +47,24 @@ export default async function QuizPage({ params, searchParams }: {
 
   // Финальный экран
   if (attempt.finishedAt) {
+    // T2 дизайн-аудита (D-042): прожектор-лучи только у сдавших — «Квиз не
+    // сдан» без праздничного эффекта. main.quiz-stage уже position:relative
+    // через .crat-noise, .quiz-result добавляет overflow:hidden (site.css).
     return (
-      <main className="quiz quiz-stage crat-noise">
-        {fbBlock}
-        <h1 className="crat-display">{attempt.passed ? t.quiz.passedTitle : t.quiz.failedTitle}</h1>
-        <p>{t.quiz.scoreLabel}: {attempt.score}/{attempt.total}</p>
-        {!attempt.passed && (
-          <form action={startQuizAction}>
-            <input type="hidden" name="courseSlug" value={courseSlug} />
-            <input type="hidden" name="lessonId" value={lessonId} />
-            <button className="crat-button" type="submit">{t.lesson.retakeQuiz}</button></form>
-        )}
-        <p><Link className="crat-button" href={`/app/${courseSlug}/lessons/${lessonId}`}>{t.quiz.backToLesson}</Link></p>
+      <main className={`quiz quiz-stage crat-noise${attempt.passed ? ' quiz-result' : ''}`}>
+        {attempt.passed && <SectionShader variant="celebrate-rays" />}
+        <div className="shader-content">
+          {fbBlock}
+          <h1 className="crat-display">{attempt.passed ? t.quiz.passedTitle : t.quiz.failedTitle}</h1>
+          <p>{t.quiz.scoreLabel}: {attempt.score}/{attempt.total}</p>
+          {!attempt.passed && (
+            <form action={startQuizAction}>
+              <input type="hidden" name="courseSlug" value={courseSlug} />
+              <input type="hidden" name="lessonId" value={lessonId} />
+              <button className="crat-button" type="submit">{t.lesson.retakeQuiz}</button></form>
+          )}
+          <p><Link className="crat-button" href={`/app/${courseSlug}/lessons/${lessonId}`}>{t.quiz.backToLesson}</Link></p>
+        </div>
       </main>
     )
   }

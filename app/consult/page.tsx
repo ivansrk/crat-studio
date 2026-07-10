@@ -6,6 +6,7 @@ import { t } from '@/lib/i18n'
 import { SiteHeader } from '@/components/site/SiteHeader'
 import { SiteFooter } from '@/components/site/SiteFooter'
 import { SectionLabel } from '@/components/site/SectionLabel'
+import { SectionShader } from '@/components/site/SectionShader'
 
 export const metadata: Metadata = {
   title: t.consult.title,
@@ -30,9 +31,16 @@ export default async function Consult({ searchParams }: { searchParams: Promise<
       <main className="crat-page">
         <section className="crat-section">
           <div className="crat-shell">
-            <SectionLabel kicker={tc.kicker} />
-            <h1 className="crat-display">{tc.title}</h1>
-            <p className="crat-muted section-intro">{tc.offerText}</p>
+            {/* T2 дизайн-аудита (D-042): шейдер держит только заголовок+интро,
+                форму ниже не перекрывает — см. site.css .section-shader--consult-blob. */}
+            <div className="shader-scope">
+              <SectionShader variant="consult-blob" />
+              <div className="shader-content">
+                <SectionLabel kicker={tc.kicker} />
+                <h1 className="crat-display">{tc.title}</h1>
+                <p className="crat-muted section-intro">{tc.offerText}</p>
+              </div>
+            </div>
 
             <form action={consultAction} className="signup-form crat-card">
               {notice && (

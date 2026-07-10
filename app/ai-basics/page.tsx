@@ -8,6 +8,7 @@ import { SiteHeader } from '@/components/site/SiteHeader'
 import { SiteFooter } from '@/components/site/SiteFooter'
 import { SectionLabel } from '@/components/site/SectionLabel'
 import { HeroVisual } from '@/components/site/HeroVisual'
+import { SectionShader } from '@/components/site/SectionShader'
 import { JsonLd, courseSchema } from '@/components/site/JsonLd'
 
 export const metadata: Metadata = {
@@ -40,6 +41,10 @@ export default async function Landing({ searchParams }: { searchParams: Promise<
       <main className="crat-page">
         {/* Hero (бриф §8) */}
         <section className="crat-section hero-section">
+          {/* T2 дизайн-аудита (D-042): тихий дизеринг за текстовой половиной,
+              фото справа сверху не трогаем (протагонист) — .hero-section уже
+              position:relative+overflow:hidden, .hero-grid уже z-index:1 (D-040). */}
+          <SectionShader variant="course-dither" />
           <div className="crat-shell hero-grid">
             <div className="hero-copy">
               <span className="crat-kicker fade-up d1">{t.landing.courseLabel}</span>

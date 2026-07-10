@@ -281,6 +281,77 @@ main.crat-page {
   z-index: 1;
 }
 
+/* ---------- Шейдеры-эхо (D-042, дизайн-аудит T2) ----------
+   Та же тактика, что .hero-shader выше, только тише героя и в четырёх других
+   точках (SectionShader.tsx): .shader-scope — контейнеру position:relative +
+   overflow:hidden там, где их ещё нет; .shader-content — контенту z-index:1
+   поверх канваса; .section-shader — сам канвас, absolute inset-0 z-index:0. */
+.section-shader {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+.shader-scope {
+  position: relative;
+  overflow: hidden;
+}
+.shader-content {
+  position: relative;
+  z-index: 1;
+}
+
+/* Контакты главной (#contact): волна-эхо hero-шейдера, тише — тёмный scrim
+   слева, где начинается текст (та же тактика, что .hero-shader::after). */
+.section-shader--contact-ripple::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to right, rgba(14, 11, 11, .8) 0%, rgba(14, 11, 11, .5) 45%, transparent 78%);
+}
+
+/* /consult: шейдер держит только верх страницы (заголовок+интро), гаснет
+   книзу — форма ниже остаётся на ровном фоне, вне разметки шейдера. */
+.section-shader--consult-blob::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, transparent 0%, rgba(13, 13, 13, .55) 72%, rgba(13, 13, 13, .92) 100%);
+}
+
+/* /ai-basics hero: дизеринг за текстовой половиной (Dithering не умеет
+   intensity — гасим прозрачностью обёртки) + тот же приём scrim слева, что у
+   .hero-shader (текст слева, кадр справа — не трогаем). */
+.section-shader--course-dither {
+  opacity: .55;
+}
+.section-shader--course-dither::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to right, rgba(14, 11, 11, .6) 0%, rgba(14, 11, 11, .35) 45%, transparent 75%);
+}
+@media (max-width: 860px) {
+  .section-shader--course-dither::after {
+    background: rgba(14, 11, 11, .55);
+  }
+}
+
+/* Квиз «сдан» и /cert (валидный сертификат): прожектор-лучи — радиальная
+   виньетка держит текст в центре читаемым, лучи видны по краям карточки. */
+.section-shader--celebrate-rays::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at center, rgba(13, 13, 13, .8) 0%, rgba(13, 13, 13, .3) 55%, transparent 85%);
+}
+
+/* Квиз-финал: main.quiz-stage уже position:relative через .crat-noise —
+   не хватает только overflow:hidden, чтобы канвас не выходил за скругление. */
+.quiz-result {
+  overflow: hidden;
+}
+
 .hero-grid {
   display: grid;
   grid-template-columns: 55fr 45fr;

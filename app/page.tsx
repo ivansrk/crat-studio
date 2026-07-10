@@ -9,6 +9,7 @@ import { DirectionCard } from '@/components/site/DirectionCard'
 import { TeamCard } from '@/components/site/TeamCard'
 import { JsonLd, organizationSchema } from '@/components/site/JsonLd'
 import { HeroShader } from '@/components/site/HeroShader'
+import { SectionShader } from '@/components/site/SectionShader'
 import Image from 'next/image'
 
 /**
@@ -191,8 +192,10 @@ export default function Home() {
         </section>
 
         {/* 10. Контакты (бриф §7.11) */}
-        <section className="crat-section" id="contact">
-          <div className="crat-shell">
+        <section className="crat-section shader-scope" id="contact">
+          {/* T2 дизайн-аудита (D-042): волна-эхо hero-шейдера, тише — см. site.css .section-shader--contact-ripple. */}
+          <SectionShader variant="contact-ripple" />
+          <div className="crat-shell shader-content">
             <SectionLabel kicker={t.home.contactKicker} />
             <h2 className="crat-display">{t.home.contactTitle}</h2>
             <p className="crat-muted section-intro">{t.home.contactText}</p>
