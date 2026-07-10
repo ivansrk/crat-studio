@@ -15,6 +15,7 @@
   "dependencies": {
     "@anthropic-ai/sdk": "^0.110.0",
     "@mdx-js/mdx": "^3.1.1",
+    "@paper-design/shaders-react": "^0.0.77",
     "@prisma/adapter-pg": "^7.8.0",
     "@prisma/client": "^7.8.0",
     "bcryptjs": "^3.0.3",

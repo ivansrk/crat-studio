@@ -29,7 +29,7 @@ description: Use when doing ANY visual or design work on this site — pages, co
 - Типографика: Cormorant Garamond (display) / Manrope (текст) / JetBrains Mono (label UPPERCASE). База 18–20px, мельче нельзя (аудитория 40+). Строка ≤75ch.
 - Тач-таргеты ≥44px. Hover-эффекты — только под `@media (hover: hover)`; `:focus-visible` всегда видим.
 - Все строки через lib/i18n/ru.ts — кириллицы в разметке НЕТ.
-- CSS-only: Tailwind/framer-motion/сторонние UI-киты запрещены. prefers-reduced-motion глушится глобально — новые анимации обязаны попадать под глушитель.
+- CSS-only: Tailwind/framer-motion/сторонние UI-киты запрещены. prefers-reduced-motion глушится глобально — новые анимации обязаны попадать под глушитель. Единственное санкционированное исключение — @paper-design/shaders-react для ФОНОВЫХ шейдеров (D-040): canvas-анимация не глушится глобальным CSS-правилом, reduce уважать вручную (пример: components/site/HeroShader.tsx).
 - Изображения: next/image (lazy, sizes), priority только первому экрану; вес картинок страницы ≤600KB; alt="" для декоративных.
 - Белого фона нет нигде. Стоков нет. Картинки — только из public/images (сгенерированные по image-brief) с CSS-эффектами поверх (зерно, glow, scrim).
 

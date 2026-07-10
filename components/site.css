@@ -198,6 +198,40 @@ main.crat-page {
 
 /* hero */
 
+/* Шейдерный фон hero (D-040): canvas за контентом, клики сквозь него не проходят
+   и не нужны; текст читается за счёт intensity 0.15 у самого шейдера + scrim ниже. */
+.hero-section {
+  position: relative;
+  overflow: hidden;
+}
+
+.hero-shader {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* затемнение слева, где текст: яркая волна шейдера (лайм) проходит под
+   заголовком — без scrim кремовый текст на ней нечитаем (UX-01). */
+.hero-shader::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to right, rgba(14, 11, 11, .82) 0%, rgba(14, 11, 11, .6) 45%, transparent 72%);
+}
+@media (max-width: 860px) {
+  /* на мобильном текст занимает всю ширину — затемняем равномернее */
+  .hero-shader::after {
+    background: rgba(14, 11, 11, .68);
+  }
+}
+
+.hero-section .hero-grid {
+  position: relative;
+  z-index: 1;
+}
+
 .hero-grid {
   display: grid;
   grid-template-columns: 55fr 45fr;

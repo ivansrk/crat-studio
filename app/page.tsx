@@ -8,6 +8,7 @@ import { SectionLabel } from '@/components/site/SectionLabel'
 import { DirectionCard } from '@/components/site/DirectionCard'
 import { TeamCard } from '@/components/site/TeamCard'
 import { JsonLd, organizationSchema } from '@/components/site/JsonLd'
+import { HeroShader } from '@/components/site/HeroShader'
 import Image from 'next/image'
 
 /**
@@ -28,8 +29,9 @@ export default function Home() {
       <JsonLd data={organizationSchema()} />
       <SiteHeader />
       <main className="crat-home">
-        {/* 1. Hero (бриф §7.2) */}
+        {/* 1. Hero (бриф §7.2; шейдерный фон — D-040) */}
         <section className="crat-section hero-section">
+          <HeroShader />
           <div className="crat-shell hero-grid">
             <div className="hero-copy">
               <span className="crat-kicker fade-up d1">{t.home.label}</span>
