@@ -18,6 +18,8 @@ enum RegistrationStatus {
   NEW // первая заявка
   RESUBMITTED // повторная отправка того же email (REG-05)
   ENROLLED // по заявке выдан доступ
+  PENDING_OPT_IN // Ф7б: отправлена, ждёт подтверждения email (REG-11)
+  CONFIRMED // Ф7б: email подтверждён, публичная заявка ждёт ручной выдачи (REG-13)
 }
 
 enum ConsentType {
@@ -64,6 +66,12 @@ enum EmailStatus {
   FAILED // 3 ретрая исчерпаны — видно в админке (MAIL-04)
 }
 
+enum ConsultationStatus {
+  NEW
+  CONTACTED
+  CLOSED
+}
+
 // ------------------------------------------------------------------ модели
 
 model User {
@@ -104,8 +112,28 @@ model Registration {
   source          String             @default("landing") // с какой страницы/ссылки пришла
   submitCount     Int                @default(1) // сколько раз отправляли форму
   alreadyEnrolled Boolean            @default(false) // пометка для админки (REG-09)
+  whatsapp        String? // Ф7б: мессенджер whatsapp (REG-10)
+  inviteLinkId    String? // Ф7б: если пришла по инвайту (REG-13 → авто-enroll); без FK — как grantedById
+  wantsNewsletter Boolean            @default(false) // Ф7б: чекбокс на форме; действующим согласие станет после подтверждения (REG-12)
+  confirmedAt     DateTime? // Ф7б: double opt-in подтверждён (REG-13); null = ожидает (REG-15)
   createdAt       DateTime           @default(now())
   updatedAt       DateTime           @updatedAt // = дата последней отправки
+}
+
+// Ф7б: инвайт-ссылка на курс (INV-*). Токен в URL сам доступа не даёт — только источник авто-enroll.
+model InviteLink {
+  id                 String    @id @default(cuid())
+  token              String    @unique // сырой токен в URL /invite/{token}
+  courseSlug         String // на какой курс (MC)
+  sourceLabel        String // → Enrollment.source (INV-01)
+  active             Boolean   @default(true) // отзыв: active=false (INV-02)
+  maxRegistrations   Int? // лимит регистраций, null = без лимита (INV-01/05)
+  registrationsCount Int       @default(0) // подтверждённые регистрации (INV-05)
+  expiresAt          DateTime? // необязательный срок (INV-01/04)
+  createdById        String? // админ-создатель (без FK — как Enrollment.grantedById)
+  createdAt          DateTime  @default(now())
+
+  @@index([token])
 }
 
 // Append-only журнал согласий (D-014). Действующее = последняя запись (email, type).
@@ -277,4 +305,22 @@ model TrainerUsage {
   usedAt    DateTime @default(now())
 
   @@index([userId, trainerId, usedAt]) // ≤20/день (Warsaw) и ≤3/мин — count по окнам
+}
+
+// Ф7б: заявка на консультацию (CONS-*). Бизнес-лид, не персональные данные учёбы —
+// при GDPR-удалении студента обезличивается (userId → null), а не удаляется (D-036).
+// userId без relation/FK — как PasswordResetToken.userId: переживает удаление User.
+model ConsultationRequest {
+  id        String             @id @default(cuid())
+  name      String
+  contact   String // email/телефон/мессенджер — свободный текст (CONS-01)
+  topic     String? // направление: оптимизация/автоматизация/персональная система (опц.)
+  message   String // описание задачи
+  status    ConsultationStatus @default(NEW)
+  userId    String? // если из кабинета (CONS-02); без каскада — заявка переживает GDPR-удаление
+  source    String             @default("cabinet") // cabinet | public
+  createdAt DateTime           @default(now())
+  updatedAt DateTime           @updatedAt
+
+  @@index([status, createdAt])
 }
