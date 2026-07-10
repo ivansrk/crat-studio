@@ -289,9 +289,18 @@ export const ru = {
     navArticles: 'Статьи',
     login: 'Войти',
     navAria: 'Навигация в подвале',
+    // Ф7в T5, LEGAL-03: юр-блок в футере всех публичных страниц.
+    legalNavAria: 'Юридическая информация',
+    navPrivacy: 'Политика конфиденциальности',
+    navTerms: 'Оферта',
+    navCookies: 'Cookies',
   },
   header: {
-    sub: 'applied AI / education / automation / creative work',
+    // Ф7в T6, NAV-01/D-037: русская навигация — mono-подпись шапки была на английском
+    // («applied AI / education / automation / creative work»), теперь переведена.
+    // Используется и в SiteHeader, и в подписи HeroVisual (оба читают этот же ключ).
+    // [текст на согласование]
+    sub: 'прикладной ИИ / обучение / автоматизации / креатив',
     navAria: 'Основная навигация',
     logoAlt: 'CRAT school & studio — логотип',
   },
