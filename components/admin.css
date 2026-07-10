@@ -138,7 +138,8 @@
   border-radius: 8px;
   padding: .8rem 1rem;
   font-size: var(--fs-base);
-  transition: border-color .3s ease;
+  /* T9: .3s ease → .18s cubic-bezier(.23,1,.32,1) — тот же почерк, что у остальных ховеров. */
+  transition: border-color .18s cubic-bezier(.23, 1, .32, 1);
 }
 .admin-edit-form input:hover,
 .danger-zone-body input:hover { border-color: var(--line-red); }

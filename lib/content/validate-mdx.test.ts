@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { validateMdx } from './validate-mdx'
 
-const ANIMS = ['neon-pulse', 'float-up']
+const ANIMS = ['neon-pulse'] // float-up удалён в T1 дизайн-аудита (мультяшность, бан брифа)
 const ok = (src: string, assets: string[] = []) =>
   validateMdx(src, { existingAssets: new Set(assets), animationIds: new Set(ANIMS) })
 

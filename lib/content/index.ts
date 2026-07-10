@@ -124,11 +124,13 @@ export function lessonPosition(courseSlug: string, lessonId: string): { index: n
  * T7 дизайн-аудита (Б.6): «Выдержка из урока» на /ai-basics — первый содержательный
  * абзац реального lesson.mdx, БЕЗ mdx-компонентов, статично при билде (mdx — сырой
  * текст с диска, а не скомпилированный React — парсинг чистый Markdown, не JSX).
- * Берёт первый блок между \n\n, который не заголовок (#), не mdx-тег (<...>) и не
+ * Берёт первый блок между \n\n, который не заголовок (#), не mdx-тег (<...>), не
  * italic-заглушка курса (*...*, см. lesson.mdx module-1/lesson-1.1 — последняя строка
- * «Этот текст — заглушка для разработки» специально исключена этим фильтром). Инлайн-
- * разметка (**bold**, *italic*, `code`, [text](url), остаточные <tag>) вычищается до
- * простого текста. 2–3 предложения — до ~380 символов, дальше грубо режет к 2.
+ * «Этот текст — заглушка для разработки» специально исключена этим фильтром) и не
+ * список/цитата (T9 дизайн-аудита: строки, начинающиеся с «- », «> » или «1. » —
+ * это не связная проза, для цитаты-выдержки не годится). Инлайн-разметка (**bold**,
+ * *italic*, `code`, [text](url), остаточные <tag>) вычищается до простого текста.
+ * 2–3 предложения — до ~380 символов, дальше грубо режет к 2.
  * null — если урок не найден или в mdx нет подходящего абзаца (честная деградация:
  * страница /ai-basics прячет блок целиком, а не показывает пустоту).
  */
@@ -136,7 +138,10 @@ export function lessonExcerpt(courseSlug: string, lessonId: string): { text: str
   const lesson = getLesson(courseSlug, lessonId)
   if (!lesson) return null
   const blocks = lesson.mdx.split(/\n\s*\n/).map(b => b.trim()).filter(Boolean)
-  const paragraph = blocks.find(b => !b.startsWith('#') && !b.startsWith('<') && !b.startsWith('*'))
+  const isNonParagraph = (b: string) =>
+    b.startsWith('#') || b.startsWith('<') || b.startsWith('*') ||
+    b.startsWith('-') || b.startsWith('>') || /^\d+\.\s/.test(b)
+  const paragraph = blocks.find(b => !isNonParagraph(b))
   if (!paragraph) return null
   const plain = paragraph
     .replace(/<[^>]+>/g, '')

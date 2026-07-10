@@ -113,6 +113,13 @@ describe('lessonExcerpt(courseSlug, lessonId) — T7 дизайн-аудита (
     expect(lessonExcerpt('unknown', '1.1')).toBeNull()
     expect(lessonExcerpt('ai-basics', '9.9')).toBeNull()
   })
+  it('T9 дизайн-аудита: markdown-список в начале урока (demo-course/1.1) пропускается — берётся первый настоящий абзац', () => {
+    const excerpt = lessonExcerpt('demo-course', '1.1')
+    expect(excerpt).not.toBeNull()
+    expect(excerpt!.text).not.toMatch(/^-/)
+    expect(excerpt!.text).not.toMatch(/Первый пункт списка/)
+    expect(excerpt!.text.startsWith('Это заглушка урока демо-курса')).toBe(true)
+  })
 })
 
 describe('splitCourseCatalog (MC-03) — мои курсы vs каталог', () => {

@@ -89,25 +89,45 @@ export function CookieBanner() {
     window.dispatchEvent(new Event(ACK_EVENT))
   }
 
-  if (acknowledged || hiddenRoute) return null
+  if (hiddenRoute) return null
 
   return (
-    <div
-      ref={ref}
-      className="cookie-banner"
-      data-mounted={mounted ? '' : undefined}
-      role="complementary"
-      aria-label={t.legal.banner.ariaLabel}
-    >
-      <div className="cookie-banner-inner crat-shell">
-        <p className="cookie-banner-text crat-muted">
-          {t.legal.banner.text}{' '}
-          <Link href="/cookies">{t.legal.banner.linkLabel}</Link>
-        </p>
-        <button type="button" className="crat-button primary" onClick={ack}>
-          {t.legal.banner.ack}
-        </button>
-      </div>
-    </div>
+    <>
+      {/* T9 дизайн-аудита: без JS getServerSnapshot() всегда «acknowledged» (см. комментарий
+          выше — так JS-версия не мигает уже согласившимся посетителям при гидратации), а
+          значит div ниже в SSR-разметке без JS вообще отсутствует и «Понятно» всё равно не
+          сработал бы (onClick требует JS) — LEGAL-04/06 требует, чтобы уведомление было видно
+          и без JS. <noscript> рендерится браузером только когда JS выключен — статичная копия
+          без кнопки (не давать нажать то, что не работает), полностью независима от хука выше. */}
+      <noscript>
+        <div className="cookie-banner cookie-banner--noscript" role="complementary" aria-label={t.legal.banner.ariaLabel}>
+          <div className="cookie-banner-inner crat-shell">
+            <p className="cookie-banner-text crat-muted">
+              {t.legal.banner.text}{' '}
+              <Link href="/cookies">{t.legal.banner.linkLabel}</Link>
+            </p>
+          </div>
+        </div>
+      </noscript>
+      {!acknowledged && (
+        <div
+          ref={ref}
+          className="cookie-banner"
+          data-mounted={mounted ? '' : undefined}
+          role="complementary"
+          aria-label={t.legal.banner.ariaLabel}
+        >
+          <div className="cookie-banner-inner crat-shell">
+            <p className="cookie-banner-text crat-muted">
+              {t.legal.banner.text}{' '}
+              <Link href="/cookies">{t.legal.banner.linkLabel}</Link>
+            </p>
+            <button type="button" className="crat-button primary" onClick={ack}>
+              {t.legal.banner.ack}
+            </button>
+          </div>
+        </div>
+      )}
+    </>
   )
 }

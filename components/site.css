@@ -371,9 +371,23 @@ main.crat-page {
 
 /* /ai-basics hero: дизеринг за текстовой половиной (Dithering не умеет
    intensity — гасим прозрачностью обёртки) + тот же приём scrim слева, что у
-   .hero-shader (текст слева, кадр справа — не трогаем). */
+   .hero-shader (текст слева, кадр справа — не трогаем). T9 дизайн-аудита: ::after
+   ниже — тёмный scrim ПОВЕРХ канваса (читаемость текста), но сам канвас раньше
+   тянулся на всю ширину секции с одной opacity — зерно было заметно и над фото
+   справа (.hero-grid — 55fr текст/45fr фото). mask-image гасит сам канвас
+   (не только затемняет) после ~55% ширины, до прозрачности к ~80% — фото
+   остаётся чистым, зерно живёт только под текстовой колонкой. */
 .section-shader--course-dither {
   opacity: .55;
+  mask-image: linear-gradient(to right, black 0%, black 55%, transparent 80%);
+  -webkit-mask-image: linear-gradient(to right, black 0%, black 55%, transparent 80%);
+}
+@media (max-width: 860px) {
+  /* мобильный: .hero-grid одна колонка, текст на всю ширину — маска не нужна. */
+  .section-shader--course-dither {
+    mask-image: none;
+    -webkit-mask-image: none;
+  }
 }
 .section-shader--course-dither::after {
   content: '';
@@ -1117,7 +1131,8 @@ main.crat-page {
 .signup-form { display: grid; gap: 1rem; max-width: var(--maxw-text); }
 .signup-form label { display: grid; gap: .35rem; }
 .signup-form label.check { grid-template-columns: auto 1fr; align-items: start; gap: .6rem; }
-.signup-form input:not([type=checkbox]) { background: var(--ink); color: var(--paper); border: 1px solid var(--line-soft); border-radius: 8px; padding: .8rem 1rem; font-size: var(--fs-base); transition: border-color .3s ease; }
+/* T9: .3s ease → .18s cubic-bezier(.23,1,.32,1) — тот же почерк, что у остальных ховеров. */
+.signup-form input:not([type=checkbox]) { background: var(--ink); color: var(--paper); border: 1px solid var(--line-soft); border-radius: 8px; padding: .8rem 1rem; font-size: var(--fs-base); transition: border-color .18s cubic-bezier(.23, 1, .32, 1); }
 .signup-form input:not([type=checkbox]):hover { border-color: var(--line-red); }
 .signup-form input[type=checkbox] { width: 1.5rem; height: 1.5rem; margin-top: .1rem; accent-color: var(--neon); cursor: pointer; }
 .signup-form input:focus-visible { outline: 2px solid var(--neon); outline-offset: 2px; }
@@ -1185,6 +1200,14 @@ main.crat-page {
 }
 .cookie-banner:not([data-mounted]) {
   transform: translateY(100%);
+}
+/* T9 дизайн-аудита: копия баннера без JS (CookieBanner.tsx <noscript>) — тот же
+   селектор выше её тоже матчит (нет data-mounted, JS некому проставить), из-за
+   чего она навсегда пряталась бы за экран. Без JS переходов/@starting-style не
+   бывает — просто показываем сразу. */
+.cookie-banner--noscript:not([data-mounted]) {
+  transform: translateY(0);
+  transition: none;
 }
 .cookie-banner-inner {
   display: flex;
