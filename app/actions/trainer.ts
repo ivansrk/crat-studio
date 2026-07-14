@@ -4,6 +4,7 @@ import { currentUser } from '@/lib/auth/current-user'
 import { hasCourseAccess } from '@/lib/progress/access'
 import { askT1 } from '@/lib/trainers/t1'
 import { askT2Initial, askT2Refine } from '@/lib/trainers/t2'
+import { evaluateT3 } from '@/lib/trainers/t3'
 import { t } from '@/lib/i18n'
 
 async function requireStudent() {
@@ -75,4 +76,22 @@ export async function askT2Action(_prevState: T2FormState, formData: FormData): 
   const result = await askT2Initial(user.id, prompt)
   if (!result.ok) return { message: REASON_MESSAGE[result.reason] }
   return { stage: 'first', prompt, firstAnswer: result.reply }
+}
+
+export type T3FormState = { verdict?: string; message?: string }
+
+/** TRN-02/05/09: серверный экшен для T3Form — один вызов evaluateT3 на попытку («Проверить»).
+ *  taskId приходит hidden-полем: page.tsx подставляет id текущего по ?i= задания из пула
+ *  (lib/trainers/t3-tasks); неверный/подделанный taskId отсеивается внутри evaluateT3 без траты
+ *  лимита. Ротация «Следующее задание»/«Ещё раз это» в T3Form сделана обычными ссылками на другой
+ *  ?i=, не через этот action (задание не требует вызова модели, только вердикт по ответу требует). */
+export async function evaluateT3Action(_prevState: T3FormState, formData: FormData): Promise<T3FormState> {
+  const user = await requireStudent()
+
+  const taskId = String(formData.get('taskId') ?? '')
+  const answer = String(formData.get('answer') ?? '').trim()
+  if (!answer) return { message: t.trainers.t3EmptyAnswer }
+
+  const result = await evaluateT3(user.id, taskId, answer)
+  return result.ok ? { verdict: result.reply } : { message: REASON_MESSAGE[result.reason] }
 }

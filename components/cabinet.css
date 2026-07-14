@@ -683,6 +683,37 @@ a.trainer-card {
   margin: 0 0 .5rem;
 }
 
+/* TRN-09: T3 «Найди ошибку» показывает текст задания как «экран ответа ИИ» — тонкая градиентная
+   рамка (.crat-frame-gradient, DSN-04, уже используется на hero/карточках направлений) + mono-
+   подпись сверху с красной точкой-индикатором вместо generic chat-bubble/градиента (анти-дефолт). */
+.trainer-t3-topic {
+  margin: 0;
+}
+.trainer-t3-frame {
+  background: var(--bg-void);
+  padding: 1.5rem clamp(1.25rem, 4vw, 2rem);
+}
+.trainer-t3-frame-label {
+  font-family: var(--font-mono), monospace;
+  text-transform: uppercase;
+  font-size: var(--fs-small);
+  color: var(--paper-muted);
+  letter-spacing: .06em;
+  margin: 0 0 .75rem;
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+}
+.trainer-t3-frame-label::before {
+  content: '';
+  width: .5rem;
+  height: .5rem;
+  border-radius: 50%;
+  background: var(--neon);
+  box-shadow: var(--neon-glow);
+  flex: none;
+}
+
 /* T5 дизайн-аудита: «осталось N из 20» над формой — mono, тихо. */
 .trainer-remaining {
   font-family: var(--font-mono), monospace;
