@@ -1,6 +1,11 @@
+import Image from 'next/image'
+
 /**
- * «Архивное досье» участника команды (бриф §7.9 / §11): номер, CSS-кадр вместо
- * фото (без стоков — бриф §13), имя, роль, текст, mono-теги.
+ * «Архивное досье» участника команды (бриф §7.9 / §11): номер, портретное фото
+ * 4:5 (реальный человек, не сток — обработка team-photos), имя, роль, текст,
+ * mono-теги. Номер-бейдж — элемент бренда, вынесен поверх фото (bottom-left) на
+ * собственном scrim (та же схема, что hero-visual-scrim в crat.css), чтобы
+ * оставаться читаемым на любом фоне фото.
  */
 export function TeamCard({
   num,
@@ -8,17 +13,27 @@ export function TeamCard({
   role,
   text,
   tags,
+  photo,
 }: {
   num: string
   name: string
   role: string
   text: string
   tags: readonly string[]
+  photo: string
 }) {
   return (
     <article className="crat-card team-card">
-      <div className="crat-visual-frame neon-line crat-noise team-card-frame" aria-hidden="true">
-        <span className="crat-kicker team-card-num">{num}</span>
+      <div className="crat-visual-frame neon-line crat-noise team-card-frame">
+        <Image
+          src={`/images/team/${photo}.webp`}
+          alt={name}
+          fill
+          sizes="(max-width: 700px) 100vw, 50vw"
+          className="crat-frame-img team-card-img"
+        />
+        <span className="team-card-scrim" aria-hidden="true" />
+        <span className="crat-kicker team-card-num" aria-hidden="true">{num}</span>
       </div>
       <h3>{name}</h3>
       <p className="crat-muted team-card-role">{role}</p>
