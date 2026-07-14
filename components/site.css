@@ -1346,6 +1346,33 @@ main.crat-page h1.crat-display {
   }
 }
 
+/* ---------- /ai-basics форма заявки (T9b, п.2) — кадр справа на широких экранах ----------
+   На 1280–1440 .signup-form (max-width:46rem) сидела узкой колонкой в .crat-shell (76rem) —
+   справа пустело. Кадр column1 зафиксирован тем же max-width, что у формы (minmax(0,
+   var(--maxw-text))), чтобы форма визуально не менялась ни на пиксель; остаток ширины —
+   crat-visual-frame.horizon (тот же язык, что auth-frame-col). <1280 — одна колонка, форма
+   на всю ширину, кадр не рендерится (display:none), как раньше. */
+.signup-layout {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2rem;
+  align-items: stretch;
+}
+.signup-frame-col {
+  display: none;
+}
+@media (min-width: 1280px) {
+  .signup-layout {
+    grid-template-columns: minmax(0, var(--maxw-text)) 1fr;
+    gap: clamp(2.5rem, 5vw, 4rem);
+  }
+  .signup-frame-col {
+    display: block;
+    aspect-ratio: auto;
+    min-height: 480px;
+  }
+}
+
 /* ---------- /not-found (П1) — три выхода вместо тупика ---------- */
 .not-found-links {
   display: flex;

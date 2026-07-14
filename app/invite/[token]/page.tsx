@@ -26,13 +26,17 @@ export default async function InvitePage({ params, searchParams }: {
         <SiteHeader />
         <main className="crat-page">
           <section className="crat-section">
-            <div className="crat-shell">
-              <SectionLabel kicker={t.invite.kicker} />
-              <div className="crat-card accepted-card">
-                <h1 className="crat-display">{t.invite.invalidTitle}</h1>
-                <p className="crat-muted">{t.invite.invalidBody}</p>
-                <a className="crat-button primary" href={`mailto:${t.footer.contactEmail}`}>{t.invite.contactCta}</a>
+            {/* T9b дизайн-аудита: тот же кадр, что на /login/register — см. пояснение ниже. */}
+            <div className="crat-shell auth-layout">
+              <div>
+                <SectionLabel kicker={t.invite.kicker} />
+                <div className="crat-card accepted-card">
+                  <h1 className="crat-display">{t.invite.invalidTitle}</h1>
+                  <p className="crat-muted">{t.invite.invalidBody}</p>
+                  <a className="crat-button primary" href={`mailto:${t.footer.contactEmail}`}>{t.invite.contactCta}</a>
+                </div>
               </div>
+              <div className="crat-visual-frame horizon crat-noise auth-frame-col" aria-hidden="true" />
             </div>
           </section>
         </main>
@@ -48,10 +52,17 @@ export default async function InvitePage({ params, searchParams }: {
       <SiteHeader />
       <main className="crat-page">
         <section className="crat-section">
-          <div className="crat-shell">
-            <SectionLabel kicker={t.invite.kicker} />
-            <h1 className="crat-display">{t.landing.signupTitle}</h1>
-            <SignupForm returnTo={`/invite/${token}`} showTitle={false} notice={notice} inviteToken={token} />
+          {/* T9b дизайн-аудита (3 точечные правки): тот же вертикальный кадр, что на /login,
+              /reset, 404 (auth-layout/auth-frame-col, components/site.css) — раньше правая
+              колонка на ≥1024 пустовала. Форма первая в DOM (auth-frame-col aria-hidden), для
+              клавиатуры/скринридера порядок логичный. */}
+          <div className="crat-shell auth-layout">
+            <div>
+              <SectionLabel kicker={t.invite.kicker} />
+              <h1 className="crat-display">{t.landing.signupTitle}</h1>
+              <SignupForm returnTo={`/invite/${token}`} showTitle={false} notice={notice} inviteToken={token} />
+            </div>
+            <div className="crat-visual-frame horizon crat-noise auth-frame-col" aria-hidden="true" />
           </div>
         </section>
       </main>

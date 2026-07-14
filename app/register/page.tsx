@@ -23,12 +23,19 @@ export default async function Register({ searchParams }: { searchParams: Promise
       <SiteHeader />
       <main className="crat-page">
         <section className="crat-section">
-          <div className="crat-shell">
-            <SectionLabel kicker={t.landing.courseLabel} />
-            <h1 className="crat-display">{t.landing.signupTitle}</h1>
-            {user
-              ? <p><Link className="crat-button primary" href="/app">{t.home.toCabinet}</Link></p>
-              : <SignupForm returnTo="/register" showTitle={false} notice={notice} />}
+          {/* T9b дизайн-аудита (3 точечные правки): тот же вертикальный кадр, что на /login,
+              /reset, 404 (auth-layout/auth-frame-col, components/site.css) — раньше правая
+              колонка на ≥1024 пустовала. Форма первая в DOM (auth-frame-col aria-hidden), для
+              клавиатуры/скринридера порядок логичный. */}
+          <div className="crat-shell auth-layout">
+            <div>
+              <SectionLabel kicker={t.landing.courseLabel} />
+              <h1 className="crat-display">{t.landing.signupTitle}</h1>
+              {user
+                ? <p><Link className="crat-button primary" href="/app">{t.home.toCabinet}</Link></p>
+                : <SignupForm returnTo="/register" showTitle={false} notice={notice} />}
+            </div>
+            <div className="crat-visual-frame horizon crat-noise auth-frame-col" aria-hidden="true" />
           </div>
         </section>
       </main>
