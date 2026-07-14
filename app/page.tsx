@@ -199,6 +199,7 @@ export default function Home() {
                   role={member.role}
                   text={member.text}
                   tags={member.tags}
+                  photo={member.photo}
                 />
               ))}
             </div>

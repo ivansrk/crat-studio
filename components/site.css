@@ -999,11 +999,38 @@ main.crat-page h1.crat-display {
   margin: 0;
 }
 
+/* team-photos: портрет 4:5 совпадает с обработанными файлами (999×1250) —
+   next/image fill + object-fit:cover без искажений. Бейдж-номер и подпись
+   больше не зависят от flex — они absolute поверх фото (см. .team-card-num),
+   поэтому padding/align-items декоративного кадра здесь не нужны (в отличие
+   от прежнего CSS-заглушечного кадра). */
 .team-card-frame {
-  aspect-ratio: 21 / 9;
-  display: flex;
-  align-items: flex-end;
-  padding: 1rem;
+  aspect-ratio: 4 / 5;
+}
+
+.team-card-img {
+  object-fit: cover;
+}
+
+/* Мягкая виньетка снизу под номер-бейдж — та же схема, что hero-visual-scrim:
+   лица остаются естественными (виньетка только в нижней трети кадра), номер
+   читается на любом фоне фото. z-index 1 — между фото (0) и зерном (2). */
+.team-card-scrim {
+  position: absolute;
+  inset: auto 0 0 0;
+  height: 40%;
+  z-index: 1;
+  background: linear-gradient(to top, rgba(5, 5, 5, .82) 0%, rgba(5, 5, 5, .3) 65%, transparent 100%);
+  pointer-events: none;
+}
+
+.team-card-num {
+  position: absolute;
+  z-index: 4;
+  left: 1rem;
+  bottom: 1rem;
+  color: var(--paper);
+  text-shadow: 0 1px 8px rgba(0, 0, 0, .85);
 }
 
 .team-card-role {
