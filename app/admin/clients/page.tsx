@@ -36,6 +36,7 @@ export default async function Clients({ searchParams }: { searchParams: Promise<
               <th>{tc.colMessengers}</th>
               <th>{tc.colSubscribed}</th>
               <th>{tc.colLastCourse}</th>
+              <th>{tc.colCertCount}</th>
             </tr>
             </thead>
             <tbody>
@@ -50,6 +51,7 @@ export default async function Clients({ searchParams }: { searchParams: Promise<
                 <td>{[c.telegram, c.whatsapp].filter(Boolean).join(' · ') || t.admin.notYet}</td>
                 <td>{c.subscribed ? tc.subscribedYes : tc.subscribedNo}</td>
                 <td>{c.lastCourseSlug ?? t.admin.notYet}</td>
+                <td>{c.certCount > 0 ? c.certCount : t.admin.notYet}</td>
               </tr>
             ))}
             </tbody>

@@ -71,6 +71,7 @@ function fakeClient(opts: {
         ...u,
         enrollments: store.enrollments.filter(e => e.userId === u.id).sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime()).slice(0, 1),
         consents: store.consents.filter(c => c.email === u.email && c.type === 'NEWSLETTER').sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime()).slice(0, 1),
+        _count: { certificates: store.certificates.filter(c => c.userId === u.id && c.status === 'VALID').length },
       }))
     }),
     findUnique: vi.fn(async ({ where }: { where: { id: string } }) => store.users.find(u => u.id === where.id) ?? null),
@@ -98,8 +99,8 @@ function fakeClient(opts: {
       [...store.enrollments.filter(e => e.userId === where.userId)].sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())),
   }
   const certificate = {
-    findFirst: vi.fn(async ({ where }: { where: { userId: string } }) =>
-      [...store.certificates.filter(c => c.userId === where.userId)].sort((a, b) => b.issuedAt.getTime() - a.issuedAt.getTime())[0] ?? null),
+    findMany: vi.fn(async ({ where }: { where: { userId: string } }) =>
+      [...store.certificates.filter(c => c.userId === where.userId)].sort((a, b) => b.issuedAt.getTime() - a.issuedAt.getTime())),
   }
   const consultationRequest = {
     findMany: vi.fn(async ({ where }: { where: { userId: string } }) =>
@@ -159,6 +160,23 @@ describe('listClients (CRM-01/02)', () => {
     expect((await listClients(undefined, client))[0].resendSyncError).toBe(true)
   })
 
+  // ADM-12: колонка «Сертификаты» — число VALID-сертификатов клиента; REVOKED не считается.
+  it('certCount считает только VALID-сертификаты клиента', async () => {
+    const withCerts = makeUser({ id: 'u-1' })
+    const withoutCerts = makeUser({ id: 'u-2', email: 'nocert@test.c' })
+    const { client } = fakeClient({
+      users: [withCerts, withoutCerts],
+      certificates: [
+        { id: 'cert-1', userId: 'u-1', status: 'VALID', issuedAt: new Date('2026-01-01') },
+        { id: 'cert-2', userId: 'u-1', status: 'VALID', issuedAt: new Date('2026-02-01') },
+        { id: 'cert-3', userId: 'u-1', status: 'REVOKED', issuedAt: new Date('2026-03-01') },
+      ],
+    })
+    const list = await listClients(undefined, client)
+    expect(list.find(c => c.id === 'u-1')!.certCount).toBe(2)
+    expect(list.find(c => c.id === 'u-2')!.certCount).toBe(0)
+  })
+
   // T8 дизайн-аудита (П2): админы — не клиенты студии, не должны попадать в CRM-базу.
   const ORIGINAL_ADMIN_EMAILS = process.env.ADMIN_EMAILS
   afterEach(() => { process.env.ADMIN_EMAILS = ORIGINAL_ADMIN_EMAILS })
@@ -185,7 +203,7 @@ describe('getClient (CRM-03)', () => {
     expect(await getClient('nope', client)).toBeNull()
   })
 
-  it('собирает профиль + заявку + журнал + enrollments + сертификат + действующую подписку', async () => {
+  it('собирает профиль + заявку + журнал + enrollments + сертификаты + действующую подписку', async () => {
     const u = makeUser({ id: 'u-1', email: 'a@b.c' })
     const { client } = fakeClient({
       users: [u],
@@ -203,8 +221,24 @@ describe('getClient (CRM-03)', () => {
     expect(detail!.registration?.id).toBe('r-1')
     expect(detail!.consents).toHaveLength(3)
     expect(detail!.enrollments).toHaveLength(1)
-    expect(detail!.certificate?.id).toBe('cert-1')
+    expect(detail!.certificates.map(c => c.id)).toEqual(['cert-1'])
     expect(detail!.subscribed).toBe(false) // последняя NEWSLETTER-запись — отписка (c2)
+  })
+
+  // ADM-12: клиент с сертификатами по нескольким курсам — все возвращаются, новые сверху,
+  // REVOKED тоже присутствует в списке (виден в карточке, просто без кнопки скачивания в UI).
+  it('собирает все сертификаты клиента по всем курсам и статусам, новые сверху', async () => {
+    const u = makeUser({ id: 'u-1' })
+    const { client } = fakeClient({
+      users: [u],
+      certificates: [
+        { id: 'cert-1', userId: 'u-1', status: 'VALID', issuedAt: new Date('2026-01-01') },
+        { id: 'cert-2', userId: 'u-1', status: 'REVOKED', issuedAt: new Date('2026-04-01') },
+        { id: 'cert-3', userId: 'u-1', status: 'VALID', issuedAt: new Date('2026-02-01') },
+      ],
+    })
+    const detail = await getClient('u-1', client)
+    expect(detail!.certificates.map(c => c.id)).toEqual(['cert-2', 'cert-3', 'cert-1'])
   })
 
   // T8 дизайн-аудита (П3): карточка клиента показывает его заявки на консультацию.

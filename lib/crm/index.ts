@@ -21,12 +21,14 @@ export type ClientListItem = {
   subscribed: boolean // действующее согласие NEWSLETTER (D-014)
   lastCourseSlug: string | null // последний Enrollment по createdAt (CRM-01)
   resendSyncError: boolean // CRM-05: баннер рассинхрона
+  certCount: number // ADM-12: число VALID-сертификатов клиента (по всем курсам)
 }
 
 /** CRM-01/02: все клиенты + последний курс + действующая подписка, с поиском по подстроке
  *  (имя/фамилия/email/телефон, регистронезависимо). N+1-безопасно: последний Enrollment и
  *  последний NEWSLETTER-Consent тянутся как коррелированные подзапросы (orderBy+take на
- *  relation) в том же findMany, а не отдельным запросом на каждого пользователя. */
+ *  relation) в том же findMany, а не отдельным запросом на каждого пользователя; счётчик
+ *  сертификатов (ADM-12) — тем же приёмом через фильтрованный _count. */
 export async function listClients(query?: string, client: CrmDbClient = db): Promise<ClientListItem[]> {
   const q = (query ?? '').trim()
   const searchWhere = q
@@ -51,6 +53,7 @@ export async function listClients(query?: string, client: CrmDbClient = db): Pro
     include: {
       enrollments: { orderBy: { createdAt: 'desc' as const }, take: 1 },
       consents: { where: { type: 'NEWSLETTER' as const }, orderBy: { createdAt: 'desc' as const }, take: 1 },
+      _count: { select: { certificates: { where: { status: 'VALID' as const } } } },
     },
   })
 
@@ -65,6 +68,7 @@ export async function listClients(query?: string, client: CrmDbClient = db): Pro
     subscribed: u.consents[0]?.granted ?? false,
     lastCourseSlug: u.enrollments[0]?.courseSlug ?? null,
     resendSyncError: u.resendSyncError != null,
+    certCount: u._count.certificates,
   }))
 }
 
@@ -73,7 +77,7 @@ export type ClientDetail = {
   registration: Registration | null // заявка по email — может не быть (легаси-юзер без Registration)
   consents: Consent[] // весь журнал по email, новые сверху (D-014)
   enrollments: Enrollment[]
-  certificate: Certificate | null
+  certificates: Certificate[] // ADM-12: все сертификаты клиента по всем курсам, новые сверху
   consultations: ConsultationRequest[] // T8 дизайн-аудита (П3): заявки на консультацию этого клиента
   subscribed: boolean // действующее согласие NEWSLETTER, свёрнутое из consents
 }
@@ -83,11 +87,12 @@ export async function getClient(userId: string, client: CrmDbClient = db): Promi
   const user = await client.user.findUnique({ where: { id: userId } })
   if (!user) return null
 
-  const [registration, consents, enrollments, certificate, consultations] = await Promise.all([
+  const [registration, consents, enrollments, certificates, consultations] = await Promise.all([
     client.registration.findUnique({ where: { email: user.email } }),
     client.consent.findMany({ where: { email: user.email }, orderBy: { createdAt: 'desc' } }),
     client.enrollment.findMany({ where: { userId }, orderBy: { createdAt: 'desc' } }),
-    client.certificate.findFirst({ where: { userId, status: { in: ['VALID', 'REVOKED'] } }, orderBy: { issuedAt: 'desc' } }),
+    // ADM-12: список, не один сертификат — клиент может иметь сертификаты по нескольким курсам.
+    client.certificate.findMany({ where: { userId }, orderBy: { issuedAt: 'desc' } }),
     client.consultationRequest.findMany({ where: { userId }, orderBy: { createdAt: 'desc' } }),
   ])
 
@@ -95,7 +100,7 @@ export async function getClient(userId: string, client: CrmDbClient = db): Promi
   // resync (lib/consent/effective), просто над уже загруженным журналом, без похода в базу.
   const subscribed = isEffectivelyGranted(consents.filter(c => c.type === 'NEWSLETTER'))
 
-  return { user, registration, consents, enrollments, certificate, consultations, subscribed }
+  return { user, registration, consents, enrollments, certificates, consultations, subscribed }
 }
 
 export type UpdateClientInput = {

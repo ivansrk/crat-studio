@@ -153,6 +153,12 @@
   font-size: var(--fs-small);
 }
 
+/* ADM-12: номер сертификата в таблице карточки клиента — тот же приём mono-акцента, что у crm-flag. */
+.cert-number-mono {
+  font-family: var(--font-mono), monospace;
+  font-size: var(--fs-small);
+}
+
 /* T6: карточки проверки мини-проектов (/admin/projects) — стопка crat-card, hover-подъём не нужен. */
 .admin-review-list {
   display: grid;

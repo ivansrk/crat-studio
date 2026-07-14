@@ -32,7 +32,7 @@ export default async function ClientCard({
   const { updated, resync } = await searchParams
   const detail = await getClient(userId)
   if (!detail) notFound()
-  const { user, registration, consents, enrollments, certificate, consultations, subscribed } = detail
+  const { user, registration, consents, enrollments, certificates, consultations, subscribed } = detail
   const tc = t.admin.clients
 
   const updateBanner = updated ? UPDATE_BANNER[updated] : undefined
@@ -154,13 +154,38 @@ export default async function ClientCard({
       <p><Link className="crat-button compact" href={`/admin/students/${user.id}`}>{t.admin.progress}</Link></p>
 
       <h3>{tc.certificateSection}</h3>
-      {certificate ? (
-        <p>
-          <Link href={`/cert/${certificate.number}`}>{certificate.number}</Link>
-          {' · '}{certificate.status === 'VALID' ? t.admin.certStatusValid : t.admin.certStatusRevoked}
-          {' · '}{formatDate(certificate.issuedAt)}
-        </p>
-      ) : <p className="crat-muted">{t.admin.notYet}</p>}
+      {certificates.length === 0 ? <p className="crat-muted">{tc.noCertificates}</p> : (
+        <div className="admin-table-wrap">
+          <table className="admin-table">
+            <thead>
+            <tr>
+              <th>{tc.colCertNumber}</th>
+              <th>{tc.colCertCourse}</th>
+              <th>{tc.colCertDate}</th>
+              <th>{tc.colCertStatus}</th>
+              <th></th>
+            </tr>
+            </thead>
+            <tbody>
+            {certificates.map(cert => (
+              <tr key={cert.id}>
+                <td><Link href={`/cert/${cert.number}`} className="cert-number-mono">{cert.number}</Link></td>
+                <td>{cert.courseTitle}</td>
+                <td>{formatDate(cert.issuedAt)}</td>
+                <td>{cert.status === 'VALID' ? t.admin.certStatusValid : t.admin.certStatusRevoked}</td>
+                <td>
+                  {cert.status === 'VALID' && (
+                    <a className="crat-button compact" href={`/admin/certificates/${cert.id}`} target="_blank" rel="noopener noreferrer">
+                      {tc.downloadCertPdf}
+                    </a>
+                  )}
+                </td>
+              </tr>
+            ))}
+            </tbody>
+          </table>
+        </div>
+      )}
 
       {/* T8 дизайн-аудита (П3): заявки на консультацию этого клиента — видны прямо в карточке,
           не нужно искать по имени/контакту в общем списке /admin/consultations. */}

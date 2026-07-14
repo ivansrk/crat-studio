@@ -680,6 +680,7 @@ export const ru = {
       colMessengers: 'Мессенджеры',
       colSubscribed: 'Рассылка',
       colLastCourse: 'Последний курс',
+      colCertCount: 'Сертификаты',
       subscribedYes: '✓',
       subscribedNo: '—',
       syncErrorFlag: 'рассинхрон',
@@ -725,7 +726,15 @@ export const ru = {
       colCourseSource: 'Источник',
       colCourseDate: 'Дата',
       noCourses: 'Курсов нет',
-      certificateSection: 'Сертификат',
+      certificateSection: 'Сертификаты',
+      // ADM-12: список всех сертификатов клиента по всем курсам (не один — клиент может быть на
+      // нескольких курсах), со скачиванием PDF у действующих.
+      colCertNumber: 'Номер',
+      colCertCourse: 'Курс',
+      colCertDate: 'Дата выдачи',
+      colCertStatus: 'Статус',
+      downloadCertPdf: 'Скачать PDF',
+      noCertificates: 'Сертификатов нет',
       // T8 дизайн-аудита (П3): заявки на консультацию этого клиента — в карточке.
       // [текст на согласование]
       consultationsSection: 'Консультации',
