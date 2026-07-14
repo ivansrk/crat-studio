@@ -148,7 +148,15 @@ export default async function Landing({ searchParams }: { searchParams: Promise<
               </li>
               <li className="format-fact">
                 <span className="crat-red-line" aria-hidden="true" />
+                {t.landing.formatHours}
+              </li>
+              <li className="format-fact">
+                <span className="crat-red-line" aria-hidden="true" />
                 {t.landing.formatOnline}
+              </li>
+              <li className="format-fact">
+                <span className="crat-red-line" aria-hidden="true" />
+                {t.landing.formatAccess}
               </li>
               <li className="format-fact">
                 <span className="crat-red-line" aria-hidden="true" />
@@ -162,9 +170,11 @@ export default async function Landing({ searchParams }: { searchParams: Promise<
                 <span className="crat-red-line" aria-hidden="true" />
                 {t.landing.formatCert}
               </li>
+              <li className="format-fact">
+                <span className="crat-red-line" aria-hidden="true" />
+                {t.landing.formatStart}
+              </li>
             </ul>
-            {/* TODO(Иван): факты по цене/датам старта — прислать; до тех пор честная
-                заглушка вместо выдуманной цифры (запрет из брифа §13). */}
             <p className="crat-muted format-price-note">{t.landing.formatPriceNote}</p>
           </div>
         </section>
