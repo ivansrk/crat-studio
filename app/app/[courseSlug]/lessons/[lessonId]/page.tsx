@@ -64,33 +64,31 @@ export default async function LessonPage({ params }: { params: Promise<{ courseS
             <p className="lesson-video-stub-text crat-kicker">{t.lesson.videoSoon}</p>
           </div>
         )}
+      {/* Чтение — основная проза урока. */}
       <div className="lesson-mdx">
         <MDXRemote source={lesson.mdx} components={mdxComponents(base)} />
       </div>
-      {lesson.hasCheatsheet && <p><a className="crat-button" href={`${base}/cheatsheet.pdf`} download>{t.lesson.downloadCheatsheet}</a></p>}
 
-      {state.quizPassed ? (
-        <>
-          <p>{t.lesson.quizPassed}</p>
-          <form action={startQuizAction}>
-            <input type="hidden" name="courseSlug" value={courseSlug} />
-            <input type="hidden" name="lessonId" value={lessonId} />
-            <button className="crat-button" type="submit">{t.lesson.retakeQuiz}</button>
-          </form>
-        </>
-      ) : (
-        <form action={startQuizAction}>
-          <input type="hidden" name="courseSlug" value={courseSlug} />
-          <input type="hidden" name="lessonId" value={lessonId} />
-          <button className="crat-button primary" type="submit">
-            {t.lesson.finishLesson.replace('{n}', String(lesson.quiz.questions.length))}
-          </button>
-        </form>
+      {/* T10 дизайн-урок: страница урока выстроена как маршрут «читаю → пробую →
+          проверяю себя». Материалы и практика — сразу после чтения, квиз — в конце.
+          Это только порядок независимых презентационных блоков (у каждой формы свой
+          server action, общего состояния нет) и mono-кикеры «станций»; бизнес-логика,
+          условия и квиз-механика не тронуты. */}
+
+      {/* Материалы урока — станция «шпаргалка». */}
+      {lesson.hasCheatsheet && (
+        <section className="lesson-station lesson-station-materials">
+          <p className="lesson-station-kicker crat-kicker">{t.lesson.stationMaterials}</p>
+          <a className="crat-button" href={`${base}/cheatsheet.pdf`} download>{t.lesson.downloadCheatsheet}</a>
+        </section>
       )}
 
-      <section className="crat-card">
-        <h2>{t.lesson.practiceTitle}</h2>
-        <MDXRemote source={lesson.practiceMd} components={mdxComponents(base)} />
+      {/* Пробую — станция практики (заголовок даёт h1 из practice.md). */}
+      <section className="crat-card lesson-station lesson-station-practice">
+        <p className="lesson-station-kicker crat-kicker">{t.lesson.stationPractice}</p>
+        <div className="lesson-mdx">
+          <MDXRemote source={lesson.practiceMd} components={mdxComponents(base)} />
+        </div>
         <form action={togglePracticeAction}>
           <input type="hidden" name="courseSlug" value={courseSlug} />
           <input type="hidden" name="lessonId" value={lessonId} />
@@ -100,6 +98,29 @@ export default async function LessonPage({ params }: { params: Promise<{ courseS
           </label>
           <p><button className="crat-button" type="submit">{t.lesson.save}</button></p>
         </form>
+      </section>
+
+      {/* Проверяю себя — станция квиза. */}
+      <section className="lesson-station lesson-station-quiz">
+        <p className="lesson-station-kicker crat-kicker">{t.lesson.stationQuiz}</p>
+        {state.quizPassed ? (
+          <>
+            <p>{t.lesson.quizPassed}</p>
+            <form action={startQuizAction}>
+              <input type="hidden" name="courseSlug" value={courseSlug} />
+              <input type="hidden" name="lessonId" value={lessonId} />
+              <button className="crat-button" type="submit">{t.lesson.retakeQuiz}</button>
+            </form>
+          </>
+        ) : (
+          <form action={startQuizAction}>
+            <input type="hidden" name="courseSlug" value={courseSlug} />
+            <input type="hidden" name="lessonId" value={lessonId} />
+            <button className="crat-button primary" type="submit">
+              {t.lesson.finishLesson.replace('{n}', String(lesson.quiz.questions.length))}
+            </button>
+          </form>
+        )}
       </section>
 
       {/* T5 дизайн-аудита: 🎉 → mono-статус с мятной чертой (дезэмодзификация). */}
@@ -115,7 +136,8 @@ export default async function LessonPage({ params }: { params: Promise<{ courseS
           T4 дизайн-аудита: на уроке блок показывается, только пока миссия пуста — на
           курсовой странице (/app/{courseSlug}) она остаётся всегда (перечитать/поправить). */}
       {lesson.meta.mission_prompt && !user.mission && (
-        <section className="crat-card cabinet-mission">
+        <section className="crat-card cabinet-mission lesson-station">
+          <p className="lesson-station-kicker crat-kicker">{t.lesson.stationMission}</p>
           <h2>{t.lesson.missionTitle}</h2>
           <p className="crat-muted">{t.lesson.missionHint}</p>
           <form action={saveMissionAction}>
