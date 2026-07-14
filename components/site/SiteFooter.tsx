@@ -29,6 +29,8 @@ export function SiteFooter() {
             <Link href="/privacy">{t.footer.navPrivacy}</Link>
             <Link href="/terms">{t.footer.navTerms}</Link>
             <Link href="/cookies">{t.footer.navCookies}</Link>
+            {/* D-045: /refund — новая юр-страница, ссылка в общем юр-блоке футера. */}
+            <Link href="/refund">{t.footer.navRefund}</Link>
           </nav>
         </div>
       </div>

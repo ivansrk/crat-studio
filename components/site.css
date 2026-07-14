@@ -269,6 +269,15 @@ main.crat-page {
   max-width: none;
   padding: 0;
 }
+/* D-045 (найдено скриншот-проверкой юр-страниц на 360px): «Политика конфиденциальности»
+   переносится на .crat-display без overflow-wrap и даёт горизонтальный скролл (bodyScrollWidth
+   425 vs innerWidth 360) — то же семейство бага, что у .hero-section h1 (длинное слово
+   «профессиональной») и .course-focus-copy h3, только раньше не всплывало на этих страницах:
+   их заголовки короче. Правило безопасно на любом .crat-page — включается только когда
+   слово физически не помещается. */
+main.crat-page h1.crat-display {
+  overflow-wrap: anywhere;
+}
 
 /* T3 дизайн-аудита: вход секций главной при скролле — прогрессивное улучшение,
    только там, где браузер понимает animation-timeline: view() (Chrome/Edge;
@@ -1203,6 +1212,26 @@ main.crat-page {
   font-family: var(--font-accent), serif;
   font-size: 1.5rem;
   margin: 0 0 .5rem;
+}
+/* D-045: реальные юр-тексты — длинные многоабзацные секции. Та же локальная граница ~65ch,
+   что у .section-intro (--maxw-text глобально не трогаем), плюс списки внутри секций. */
+.legal-sections p,
+.legal-sections ul {
+  max-width: 65ch;
+}
+.legal-sections p + p,
+.legal-sections p + ul,
+.legal-sections ul + p {
+  margin-top: 1rem;
+}
+.legal-sections ul {
+  display: grid;
+  gap: .5rem;
+  padding-left: 1.3rem;
+  margin: 0;
+}
+.legal-sections li::marker {
+  color: var(--neon);
 }
 
 /* ---------- CookieBanner (Ф7в T5, LEGAL-04/06, D-037) ---------- */

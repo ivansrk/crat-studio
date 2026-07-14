@@ -12,6 +12,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${base}/privacy`, changeFrequency: 'yearly', priority: 0.2 },
     { url: `${base}/terms`, changeFrequency: 'yearly', priority: 0.2 },
     { url: `${base}/cookies`, changeFrequency: 'yearly', priority: 0.2 },
+    // D-045: /refund — новая юр-страница, перенесена со skld.me.
+    { url: `${base}/refund`, changeFrequency: 'yearly', priority: 0.2 },
     ...getArticles().map(({ meta }) => ({
       url: `${base}/articles/${meta.slug}`,
       lastModified: new Date(meta.date),
