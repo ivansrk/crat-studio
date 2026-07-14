@@ -11,7 +11,12 @@ const g = globalThis as unknown as { __certTemplateHtml?: string }
 
 function loadTemplateFile(): string {
   if (g.__certTemplateHtml === undefined) {
-    g.__certTemplateHtml = fs.readFileSync(path.join(process.cwd(), 'lib/cert/certificate.html'), 'utf8')
+    const html = fs.readFileSync(path.join(process.cwd(), 'lib/cert/certificate.html'), 'utf8')
+    // Фирменные шрифты (Cormorant Garamond/Manrope/JetBrains Mono) вшиваются base64
+    // (lib/cert/fonts.css): на сервере рендера Google-шрифтов нет, без этого PDF
+    // падал на Georgia/Arial и терял характер документа (D-044).
+    const fonts = fs.readFileSync(path.join(process.cwd(), 'lib/cert/fonts.css'), 'utf8')
+    g.__certTemplateHtml = html.replace('</head>', `<style>${fonts}</style></head>`)
   }
   return g.__certTemplateHtml
 }
