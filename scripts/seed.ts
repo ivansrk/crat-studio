@@ -121,9 +121,12 @@ async function seedF2() {
   const now = new Date()
   const dueAt = new Date(now.getTime() + DEFERRED_DAYS_MS)
 
-  /** Уроки 1.1/1.2: пройдены целиком — попытка 1 провалена, попытка 2 зачтена, практика отмечена.
-   *  answers/correct взяты из реальных quiz.yaml (correct = [1,1,1] в обоих уроках). */
+  /** Уроки 1.1/1.2: пройдены целиком — попытка 1 провалена (верен только первый вопрос),
+   *  попытка 2 зачтена, практика отмечена. chosen/correct берутся из реального quiz.yaml
+   *  каждого урока (LESSON_ANSWERS — те же верные индексы, что у дипломанта ниже). */
+  const wrongIdx = (correctIdx: number) => (correctIdx === 0 ? 1 : 0) // валидный индекс (вариантов ≥2), заведомо ≠ верного
   for (const lessonId of ['1.1', '1.2']) {
+    const correct = LESSON_ANSWERS[lessonId]
     await db.lessonProgress.upsert({
       where: { userId_courseSlug_lessonId: { userId: student.id, courseSlug: COURSE, lessonId } },
       update: {},
@@ -134,11 +137,10 @@ async function seedF2() {
       update: {},
       create: {
         userId: student.id, courseSlug: COURSE, lessonId, attempt: 1,
-        answers: [
-          { questionIndex: 0, chosen: 1, correct: true },
-          { questionIndex: 1, chosen: 0, correct: false },
-          { questionIndex: 2, chosen: 0, correct: false },
-        ],
+        answers: correct.map((c, questionIndex) =>
+          questionIndex === 0
+            ? { questionIndex, chosen: c, correct: true }
+            : { questionIndex, chosen: wrongIdx(c), correct: false }),
         score: 1, total: 3, passed: false, finishedAt: now,
       },
     })
@@ -147,11 +149,7 @@ async function seedF2() {
       update: {},
       create: {
         userId: student.id, courseSlug: COURSE, lessonId, attempt: 2,
-        answers: [
-          { questionIndex: 0, chosen: 1, correct: true },
-          { questionIndex: 1, chosen: 1, correct: true },
-          { questionIndex: 2, chosen: 1, correct: true },
-        ],
+        answers: correct.map((c, questionIndex) => ({ questionIndex, chosen: c, correct: true })),
         score: 3, total: 3, passed: true, finishedAt: now,
       },
     })
@@ -162,7 +160,7 @@ async function seedF2() {
     })
   }
 
-  // Урок 1.3: квиз зачтён (correct = [1,0,1]), практика — нет, урок «в процессе».
+  // Урок 1.3: квиз зачтён (correct из реального quiz.yaml), практика — нет, урок «в процессе».
   await db.lessonProgress.upsert({
     where: { userId_courseSlug_lessonId: { userId: student.id, courseSlug: COURSE, lessonId: '1.3' } },
     update: {},
@@ -173,11 +171,7 @@ async function seedF2() {
     update: {},
     create: {
       userId: student.id, courseSlug: COURSE, lessonId: '1.3', attempt: 1,
-      answers: [
-        { questionIndex: 0, chosen: 1, correct: true },
-        { questionIndex: 1, chosen: 0, correct: true },
-        { questionIndex: 2, chosen: 1, correct: true },
-      ],
+      answers: LESSON_ANSWERS['1.3'].map((c, questionIndex) => ({ questionIndex, chosen: c, correct: true })),
       score: 3, total: 3, passed: true, finishedAt: now,
     },
   })
@@ -193,7 +187,7 @@ async function seedF2() {
     update: {},
     create: {
       userId: student.id, courseSlug: COURSE, lessonId: '2.1', attempt: 1,
-      answers: [{ questionIndex: 0, chosen: 1, correct: true }],
+      answers: [{ questionIndex: 0, chosen: LESSON_ANSWERS['2.1'][0], correct: true }],
       score: 1, total: 3, passed: false, finishedAt: null,
     },
   })
@@ -202,18 +196,18 @@ async function seedF2() {
 /** Правильные ответы (chosen === correct) на все 3 вопроса каждого из 12 уроков —
  *  сверены с quiz.yaml каждого урока в content/ai-basics (как в seedF2). */
 const LESSON_ANSWERS: Record<string, number[]> = {
-  '1.1': [1, 1, 1],
-  '1.2': [1, 1, 1],
-  '1.3': [1, 0, 1],
-  '2.1': [1, 1, 0],
-  '2.2': [1, 1, 1],
-  '2.3': [1, 1, 0],
-  '3.1': [0, 1, 1],
-  '3.2': [0, 0, 1],
-  '3.3': [0, 0, 1],
-  '4.1': [1, 1, 1],
-  '4.2': [1, 0, 1],
-  '4.3': [1, 1, 0],
+  '1.1': [1, 2, 0],
+  '1.2': [0, 2, 1],
+  '1.3': [1, 0, 2],
+  '1.4': [2, 0, 1],
+  '2.1': [1, 0, 2],
+  '2.2': [0, 1, 2],
+  '2.3': [1, 0, 2],
+  '3.1': [1, 0, 2],
+  '3.2': [0, 1, 2],
+  '3.3': [0, 1, 2],
+  '4.1': [1, 2, 0],
+  '4.2': [1, 2, 0],
 }
 
 /** Ф3/T5 дизайн-аудита: дипломант с живым 12/12 (все LessonProgress/QuizResult/

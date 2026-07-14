@@ -62,10 +62,10 @@ describe('демо-курс (content/demo-course, витрина реестра)
 describe('nextLessonId(courseSlug, lessonId)', () => {
   it('следующий урок из середины курса ai-basics', () => {
     expect(nextLessonId('ai-basics', '1.1')).toBe('1.2')
-    expect(nextLessonId('ai-basics', '1.3')).toBe('2.1') // переход через модуль
+    expect(nextLessonId('ai-basics', '1.4')).toBe('2.1') // переход через модуль
   })
-  it('null для последнего урока (4.3) и для неизвестного id', () => {
-    expect(nextLessonId('ai-basics', '4.3')).toBeNull()
+  it('null для последнего урока (4.2) и для неизвестного id', () => {
+    expect(nextLessonId('ai-basics', '4.2')).toBeNull()
     expect(nextLessonId('ai-basics', '9.9')).toBeNull()
   })
   it('null для единственного урока демо-курса', () => {
@@ -76,7 +76,7 @@ describe('nextLessonId(courseSlug, lessonId)', () => {
 describe('prevLessonId(courseSlug, lessonId) — T4 дизайн-аудита', () => {
   it('предыдущий урок из середины курса ai-basics', () => {
     expect(prevLessonId('ai-basics', '1.2')).toBe('1.1')
-    expect(prevLessonId('ai-basics', '2.1')).toBe('1.3') // переход через модуль назад
+    expect(prevLessonId('ai-basics', '2.1')).toBe('1.4') // переход через модуль назад
   })
   it('null для первого урока (1.1) и для неизвестного id', () => {
     expect(prevLessonId('ai-basics', '1.1')).toBeNull()
@@ -89,9 +89,9 @@ describe('prevLessonId(courseSlug, lessonId) — T4 дизайн-аудита', 
 
 describe('lessonPosition(courseSlug, lessonId) — T4 дизайн-аудита', () => {
   it('позиция урока внутри своего модуля', () => {
-    expect(lessonPosition('ai-basics', '1.1')).toEqual({ index: 1, total: 3, moduleId: 1 })
+    expect(lessonPosition('ai-basics', '1.1')).toEqual({ index: 1, total: 4, moduleId: 1 })
     expect(lessonPosition('ai-basics', '2.1')).toEqual({ index: 1, total: 3, moduleId: 2 })
-    expect(lessonPosition('ai-basics', '4.3')).toEqual({ index: 3, total: 3, moduleId: 4 })
+    expect(lessonPosition('ai-basics', '4.2')).toEqual({ index: 2, total: 2, moduleId: 4 })
   })
   it('null для неизвестного курса/урока', () => {
     expect(lessonPosition('ai-basics', '9.9')).toBeNull()
@@ -107,7 +107,7 @@ describe('lessonExcerpt(courseSlug, lessonId) — T7 дизайн-аудита (
     expect(excerpt!.text).not.toMatch(/^#/)
     expect(excerpt!.text).not.toMatch(/[<>]/)
     expect(excerpt!.text).not.toMatch(/заглушка для разработки/)
-    expect(excerpt!.text.startsWith('Когда мы слышим слово')).toBe(true)
+    expect(excerpt!.text.startsWith('Представьте')).toBe(true)
   })
   it('null для неизвестного курса/урока', () => {
     expect(lessonExcerpt('unknown', '1.1')).toBeNull()

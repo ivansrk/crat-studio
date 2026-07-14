@@ -7,7 +7,7 @@ const baseOpts = {
   courseTitle: 'Искусственный интеллект в профессиональной и личной деятельности',
   hours: 72,
   periodStr: '14 июля — 14 октября 2026',
-  programHtml: '<h3>Модуль 1. Знакомство с ИИ</h3><ol><li>Что такое нейросеть</li></ol>',
+  programHtml: '<h3>Модуль 1. Знакомство с ИИ</h3><ol><li>Что такое ИИ и зачем он вам</li></ol>',
 }
 
 describe('certificateHtml (D-044, шаблон Ивана lib/cert/certificate.html)', () => {
@@ -37,7 +37,7 @@ describe('certificateHtml (D-044, шаблон Ивана lib/cert/certificate.h
   it('НЕ экранирует programHtml повторно — теги модулей/уроков остаются разметкой', () => {
     const html = certificateHtml(baseOpts)
     expect(html).toContain('<h3>Модуль 1. Знакомство с ИИ</h3>')
-    expect(html).toContain('<ol><li>Что такое нейросеть</li></ol>')
+    expect(html).toContain('<ol><li>Что такое ИИ и зачем он вам</li></ol>')
   })
 
   it('кэш файла на процесс не ломает повторный вызов с другими данными (нет утечки между вызовами)', () => {

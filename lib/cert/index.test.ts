@@ -46,7 +46,7 @@ describe('isEligible — MC-06 (знаменатель per-course, не хард
   })
 
   it('ai-basics: все 12 пройдены + APPROVED → eligible (регресс — старое поведение не сломано)', async () => {
-    const rows = ['1.1', '1.2', '1.3', '2.1', '2.2', '2.3', '3.1', '3.2', '3.3', '4.1', '4.2', '4.3'].map(passedRow)
+    const rows = ['1.1', '1.2', '1.3', '1.4', '2.1', '2.2', '2.3', '3.1', '3.2', '3.3', '4.1', '4.2'].map(passedRow)
     vi.mocked(db.lessonProgress.findMany).mockResolvedValue(rows as never)
     vi.mocked(db.submission.findFirst).mockResolvedValue({ status: 'APPROVED' } as never)
 
