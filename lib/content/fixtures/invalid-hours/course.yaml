@@ -1,0 +1,4 @@
+slug: invalid-hours
+title: "Курс с некорректным hours"
+hours: "семьдесят два"
+modules: []

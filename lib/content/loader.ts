@@ -15,18 +15,18 @@ export function loadCourse(courseDir: string): CourseContent {
   const courseYamlPath = path.join(courseDir, 'course.yaml')
   if (!fs.existsSync(courseYamlPath)) {
     issues.push({ level: 'error', message: `course.yaml не найден: ${courseYamlPath}` })
-    return { slug: dirSlug, published: true, course: empty, lessons, issues, loadedAt: new Date() }
+    return { slug: dirSlug, published: true, hours: DEFAULT_HOURS, course: empty, lessons, issues, loadedAt: new Date() }
   }
   let parsed: unknown
   try {
     parsed = yaml.loadAll(fs.readFileSync(courseYamlPath, 'utf8'))[0]
   } catch (e) {
     issues.push({ level: 'error', message: `course.yaml не парсится: ${(e as Error).message}` })
-    return { slug: dirSlug, published: true, course: empty, lessons, issues, loadedAt: new Date() }
+    return { slug: dirSlug, published: true, hours: DEFAULT_HOURS, course: empty, lessons, issues, loadedAt: new Date() }
   }
   if (!isPlainObject(parsed)) {
     issues.push({ level: 'error', message: 'course.yaml пуст или не является объектом' })
-    return { slug: dirSlug, published: true, course: empty, lessons, issues, loadedAt: new Date() }
+    return { slug: dirSlug, published: true, hours: DEFAULT_HOURS, course: empty, lessons, issues, loadedAt: new Date() }
   }
   const course = parsed as CourseYaml
   if (course.slug !== dirSlug)
@@ -42,6 +42,16 @@ export function loadCourse(courseDir: string): CourseContent {
       published = course.published
   }
 
+  // hours (CERT-09/D-044): необязательное аддитивное поле (docs/content-format.md §2). Отсутствует
+  // или не конечное число → значение по умолчанию 72 + warning; загрузка курса не падает (правило 6).
+  let hours = DEFAULT_HOURS
+  if (course.hours !== undefined) {
+    if (typeof course.hours === 'number' && Number.isFinite(course.hours)) hours = course.hours
+    else issues.push({ level: 'warning', message: `hours должен быть числом, получено: ${JSON.stringify(course.hours)} — используется значение по умолчанию ${DEFAULT_HOURS}` })
+  } else {
+    issues.push({ level: 'warning', message: `hours отсутствует в course.yaml — используется значение по умолчанию ${DEFAULT_HOURS}` })
+  }
+
   const seen = new Set<string>()
   const expectedDirs = new Set<string>()
   for (const mod of course.modules ?? []) {
@@ -54,8 +64,10 @@ export function loadCourse(courseDir: string): CourseContent {
     }
   }
   warnOrphanLessonDirs(courseDir, expectedDirs, issues)
-  return { slug: dirSlug, published, course, lessons, issues, loadedAt: new Date() }
+  return { slug: dirSlug, published, hours, course, lessons, issues, loadedAt: new Date() }
 }
+
+const DEFAULT_HOURS = 72
 
 /** Warning §6: каталог урока на диске без записи в course.yaml — игнорируется, но не молча. */
 function warnOrphanLessonDirs(courseDir: string, expectedDirs: Set<string>, issues: ContentIssue[]) {

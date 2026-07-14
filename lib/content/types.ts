@@ -8,6 +8,7 @@ export type LessonRef = { id: string; title: string }
 export type CourseYaml = {
   slug: string; title: string
   published?: boolean // MC-02: необязателен; отсутствует → true (обратная совместимость, D-036)
+  hours?: number       // CERT-09/D-044: необязателен; отсутствует/не число → 72 (см. CourseContent.hours)
   modules: { id: number; title: string; lessons: LessonRef[] }[]
 }
 export type Lesson = {
@@ -20,6 +21,7 @@ export type ContentIssue = { level: 'error' | 'warning'; lessonId?: string; mess
 export type CourseContent = {
   slug: string                   // = имени каталога content/{slug} (MC-01), не путать с course.slug
   published: boolean             // из course.yaml, по умолчанию true (MC-02, D-036)
+  hours: number                  // из course.yaml, по умолчанию 72 (CERT-09, D-044)
   course: CourseYaml
   lessons: Map<string, Lesson>   // только валидные; битые перечислены в issues
   issues: ContentIssue[]

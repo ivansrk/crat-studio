@@ -3,7 +3,8 @@ import { getCourse } from '@/lib/content'
 import { db } from '@/lib/db'
 import { currentUser } from '@/lib/auth/current-user'
 import { renderCertificatePdf } from '@/lib/cert/pdf'
-import { formatDate } from '@/lib/i18n/format-date'
+import { resolveCertPeriodStr } from '@/lib/cert'
+import { buildProgramHtml } from '@/lib/cert/program'
 
 export const dynamic = 'force-dynamic'
 
@@ -21,7 +22,12 @@ export async function GET(_request: Request, { params }: { params: Promise<{ cou
   if (!cert || !cert.fullName) notFound()
 
   const pdf = await renderCertificatePdf({
-    fullName: cert.fullName, courseTitle: cert.courseTitle, number: cert.number, dateStr: formatDate(cert.issuedAt),
+    fullName: cert.fullName,
+    courseTitle: cert.courseTitle,
+    number: cert.number,
+    hours: entry.hours, // CERT-09
+    periodStr: await resolveCertPeriodStr(user.id, courseSlug, cert.issuedAt), // CERT-08
+    programHtml: buildProgramHtml(courseSlug),
   })
   return new Response(new Uint8Array(pdf), {
     headers: {

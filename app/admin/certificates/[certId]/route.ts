@@ -1,8 +1,10 @@
 import { notFound } from 'next/navigation'
 import { currentUser, isAdminEmail } from '@/lib/auth/current-user'
 import { db } from '@/lib/db'
+import { getCourse } from '@/lib/content'
 import { renderCertificatePdf } from '@/lib/cert/pdf'
-import { formatDate } from '@/lib/i18n/format-date'
+import { resolveCertPeriodStr } from '@/lib/cert'
+import { buildProgramHtml } from '@/lib/cert/program'
 
 export const dynamic = 'force-dynamic'
 
@@ -16,10 +18,17 @@ export async function GET(_request: Request, { params }: { params: Promise<{ cer
 
   const { certId } = await params
   const cert = await db.certificate.findUnique({ where: { id: certId } })
-  if (!cert || cert.status !== 'VALID' || !cert.fullName) notFound()
+  // D-010: userId обнуляется ТОЛЬКО вместе с переходом в REVOKED — у VALID он всегда есть;
+  // явная проверка вместо `!` для типобезопасности (cert.userId: string | null в схеме).
+  if (!cert || cert.status !== 'VALID' || !cert.fullName || !cert.userId) notFound()
 
   const pdf = await renderCertificatePdf({
-    fullName: cert.fullName, courseTitle: cert.courseTitle, number: cert.number, dateStr: formatDate(cert.issuedAt),
+    fullName: cert.fullName,
+    courseTitle: cert.courseTitle,
+    number: cert.number,
+    hours: getCourse(cert.courseSlug)?.hours ?? 72, // CERT-09
+    periodStr: await resolveCertPeriodStr(cert.userId, cert.courseSlug, cert.issuedAt), // CERT-08
+    programHtml: buildProgramHtml(cert.courseSlug),
   })
   return new Response(new Uint8Array(pdf), {
     headers: {

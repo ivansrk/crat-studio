@@ -1,16 +1,41 @@
-import { t } from '@/lib/i18n'
+import fs from 'node:fs'
+import path from 'node:path'
+import { escapeHtml, fillPlaceholders } from '@/lib/email/templates'
 
-/** HTML-шаблон PDF-сертификата (черновик-плейсхолдер до Ф5-макета; CERT-04, D-011).
- *  Цвета — литералы токенов lib/design/tokens.css: PDF-рендер не читает CSS-файлы. */
-export function certificateHtml(opts: { fullName: string; courseTitle: string; number: string; dateStr: string }): string {
-  return `<!doctype html><html><body style="margin:0"><div style="width:1123px;height:794px;background:#0E0B0B;color:#F2E9DC;font-family:Georgia,serif;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:60px;box-sizing:border-box">
-    <div style="color:#FF4B3A;font-size:28px;letter-spacing:6px">CRAT STUDIO</div>
-    <div style="font-size:22px;margin-top:40px;color:#B9A7D6">${t.cert.pdfIssuedTo}</div>
-    <div style="font-size:52px;margin:16px 0;overflow-wrap:break-word">${esc(opts.fullName)}</div>
-    <div style="font-size:22px;color:#B9A7D6">${t.cert.pdfCompleted}</div>
-    <div style="font-size:30px;margin:16px 0;max-width:900px;overflow-wrap:break-word">${esc(opts.courseTitle)}</div>
-    <div style="margin-top:48px;font-size:18px;color:#7FD6B4">${opts.dateStr} · ${opts.number}</div>
-    <div style="margin-top:8px;font-size:16px;color:#B9A7D6">${t.cert.pdfVerify}: cratstudio.com/cert/${opts.number}</div>
-  </div></body></html>`
+/** HTML-шаблон PDF-сертификата (D-044): финальный макет Ивана — lib/cert/certificate.html
+ *  (скопирован из _incoming/certificate.html, НЕ редактируется вручную; обновляется только
+ *  заменой файла целиком). 2 страницы A4 landscape: сертификат + приложение с программой курса.
+ *  Кэш файла на процесс — тот же приём, что lib/content/index.ts (globalThis): 843KB с
+ *  base64-логотипами не читать с диска на каждый рендер PDF. */
+const g = globalThis as unknown as { __certTemplateHtml?: string }
+
+function loadTemplateFile(): string {
+  if (g.__certTemplateHtml === undefined) {
+    g.__certTemplateHtml = fs.readFileSync(path.join(process.cwd(), 'lib/cert/certificate.html'), 'utf8')
+  }
+  return g.__certTemplateHtml
 }
-const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+
+export function certificateHtml(opts: {
+  fullName: string
+  number: string
+  courseTitle: string
+  hours: number
+  periodStr: string
+  programHtml: string
+}): string {
+  return fillPlaceholders(loadTemplateFile(), {
+    // fullName/courseTitle — пользовательские/контентные значения, экранируем (M-1, тот же приём,
+    // что renderConsultationEmail в lib/email/templates.ts).
+    fullName: escapeHtml(opts.fullName),
+    number: escapeHtml(opts.number),
+    courseTitle: escapeHtml(opts.courseTitle),
+    hours: escapeHtml(String(opts.hours)),
+    // {{dateStr}} в шаблоне Ивана — это ПЕРИОД обучения (CERT-08), не момент выдачи;
+    // имя плейсхолдера в HTML менять не стали, чтобы не расходиться с исходником Ивана.
+    dateStr: opts.periodStr,
+    // programHtml уже готовая разметка с экранированным текстом внутри (lib/cert/program.ts,
+    // buildProgramHtml) — здесь НЕ экранируем повторно, иначе теги <h3>/<ol>/<li> превратятся в текст.
+    programHtml: opts.programHtml,
+  })
+}

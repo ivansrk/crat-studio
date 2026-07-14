@@ -128,6 +128,28 @@ describe('published (MC-02, D-036)', () => {
   })
 })
 
+describe('hours (CERT-09, D-044)', () => {
+  it('поле отсутствует в course.yaml — 72 по умолчанию + warning', () => {
+    const c = loadCourse(fx('valid-course'))
+    expect(c.hours).toBe(72)
+    const warnings = c.issues.filter(i => i.level === 'warning').map(i => i.message).join('\n')
+    expect(warnings).toMatch(/hours отсутствует.*72/)
+  })
+  it('hours: 40 в course.yaml — используется указанное значение, без warning про hours', () => {
+    const c = loadCourse(fx('with-hours'))
+    expect(c.hours).toBe(40)
+    const warnings = c.issues.filter(i => i.level === 'warning').map(i => i.message).join('\n')
+    expect(warnings).not.toMatch(/hours/)
+  })
+  it('hours не число — 72 по умолчанию + warning, курс не падает', () => {
+    const c = loadCourse(fx('invalid-hours'))
+    expect(c.hours).toBe(72)
+    expect(c.issues.filter(i => i.level === 'error')).toHaveLength(0)
+    const warnings = c.issues.filter(i => i.level === 'warning').map(i => i.message).join('\n')
+    expect(warnings).toMatch(/hours должен быть числом.*72/)
+  })
+})
+
 describe('CourseContent.slug (MC-01)', () => {
   it('slug = имени каталога курса, даже когда course.yaml сломан', () => {
     const c = loadCourse(fx('nope'))
