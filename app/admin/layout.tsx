@@ -27,6 +27,8 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         <NavLink href="/admin/projects">{t.admin.projects}{submittedProjects > 0 && ` (${submittedProjects})`}</NavLink>
         <NavLink href="/admin/consultations">{t.admin.consultations.navLabel}{newConsultations > 0 && ` (${newConsultations})`}</NavLink>
         <NavLink href="/admin/emails">{t.admin.emails}</NavLink>
+        {/* route handler, не страница: обычный <a>, открывает PDF-предпросмотр шаблона */}
+        <a href="/admin/cert-preview" target="_blank" rel="noopener">{t.admin.certPreview}</a>
         <form action={logoutAction} className="admin-nav-logout">
           <button type="submit" className="reveal-line">{t.auth.logout}</button>
         </form>
