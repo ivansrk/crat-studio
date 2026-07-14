@@ -5,18 +5,18 @@ import { SiteFooter } from '@/components/site/SiteFooter'
 import { SectionLabel } from '@/components/site/SectionLabel'
 
 export const metadata: Metadata = {
-  title: t.seo.privacyTitle,
-  description: t.seo.privacyDescription,
-  alternates: { canonical: '/privacy' },
+  title: t.seo.refundTitle,
+  description: t.seo.refundDescription,
+  alternates: { canonical: '/refund' },
 }
 
 /**
- * Ф7в T5, LEGAL-01/02/06 + D-045: политика конфиденциальности (перенесена со skld.me
- * 2026-07-14, дословно — адаптации см. lib/i18n/ru.ts legal.privacy). Каждая секция —
- * последовательность блоков { p } | { ul } (см. комментарий у legal в ru.ts).
+ * D-045: политика возврата — новая юр-страница, перенесена со skld.me 2026-07-14 дословно
+ * (адаптации см. lib/i18n/ru.ts legal.refund). Тот же каркас, что /privacy, /terms, /cookies:
+ * каждая секция — последовательность блоков { p } | { ul } (см. комментарий у legal в ru.ts).
  */
-export default function PrivacyPage() {
-  const tl = t.legal.privacy
+export default function RefundPage() {
+  const tl = t.legal.refund
 
   return (
     <>

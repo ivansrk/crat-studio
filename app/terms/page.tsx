@@ -11,10 +11,9 @@ export const metadata: Metadata = {
 }
 
 /**
- * Ф7в T5, LEGAL-01/02/06: публичный договор (оферта). Структура-каркас с осмысленными
- * разделами; финальные юридические формулировки пришлёт Иван — до этого каждый раздел
- * прямо помечен t.legal.todoNotice (E-LEG1: страница существует и не выглядит битой).
- * TODO: тексты от Ивана.
+ * Ф7в T5, LEGAL-01/02/06 + D-045: регламент платформы (перенесён со skld.me 2026-07-14,
+ * дословно — адаптации см. lib/i18n/ru.ts legal.terms). Каждая секция — последовательность
+ * блоков { p } | { ul } (см. комментарий у legal в ru.ts).
  */
 export default function TermsPage() {
   const tl = t.legal.terms
@@ -28,12 +27,14 @@ export default function TermsPage() {
             <SectionLabel kicker={t.legal.kicker} />
             <h1 className="crat-display">{tl.title}</h1>
             <p className="crat-muted section-intro">{tl.lead}</p>
-            <p className="legal-notice">{t.legal.todoNotice}</p>
             <div className="legal-sections">
               {tl.sections.map(s => (
                 <article key={s.heading}>
                   <h2>{s.heading}</h2>
-                  <p className="crat-muted">{s.body}</p>
+                  {s.blocks.map((b, i) => 'p' in b
+                    ? <p className="crat-muted" key={i}>{b.p}</p>
+                    : <ul className="crat-muted" key={i}>{b.ul.map((item, j) => <li key={j}>{item}</li>)}</ul>
+                  )}
                 </article>
               ))}
             </div>

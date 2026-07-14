@@ -11,10 +11,10 @@ export const metadata: Metadata = {
 }
 
 /**
- * Ф7в T5, LEGAL-01/02/04/06: политика cookies. В отличие от /privacy и /terms, разделы
- * про сам факт использования cookie/аналитики/localStorage уже фактически верны (D-037) —
- * todoNotice здесь про окончательную юридическую формулировку страницы в целом, а не про
- * то, что технические факты неизвестны. TODO: финальный текст от Ивана.
+ * Ф7в T5, LEGAL-01/02/04/06 + D-045: политика cookies. Юридический скелет перенесён со
+ * skld.me 2026-07-14 и совмещён с уже честным списком фактических технологий cratstudio
+ * (D-037) — подробности адаптации см. lib/i18n/ru.ts legal.cookies. Каждая секция —
+ * последовательность блоков { p } | { ul } (см. комментарий у legal в ru.ts).
  */
 export default function CookiesPage() {
   const tl = t.legal.cookies
@@ -28,12 +28,14 @@ export default function CookiesPage() {
             <SectionLabel kicker={t.legal.kicker} />
             <h1 className="crat-display">{tl.title}</h1>
             <p className="crat-muted section-intro">{tl.lead}</p>
-            <p className="legal-notice">{t.legal.todoNotice}</p>
             <div className="legal-sections">
               {tl.sections.map(s => (
                 <article key={s.heading}>
                   <h2>{s.heading}</h2>
-                  <p className="crat-muted">{s.body}</p>
+                  {s.blocks.map((b, i) => 'p' in b
+                    ? <p className="crat-muted" key={i}>{b.p}</p>
+                    : <ul className="crat-muted" key={i}>{b.ul.map((item, j) => <li key={j}>{item}</li>)}</ul>
+                  )}
                 </article>
               ))}
             </div>
