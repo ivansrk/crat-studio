@@ -7,11 +7,15 @@ const TITLE: Record<string, string> = {
   t3: t.trainers.t3Title,
 }
 
-const HREF: Record<string, string> = { t1: '/app/trainers/t1' }
+const HREF: Record<string, string> = {
+  t1: '/app/trainers/t1',
+  t2: '/app/trainers/t2', // TRN-08/D-042
+  t3: '/app/trainers/t3', // TRN-09/D-042
+}
 
 /** TRN-07: карточка-ссылка на тренажёр внутри урока — общая страница/прокси с каталогом
- *  (/app/trainers/{id}), поэтому лимиты общие автоматически. Только T1 реализован (ссылка
- *  ведёт на страницу), T2/T3 — заглушка с пометкой t.trainers.comingSoon, без ссылки (D-020).
+ *  (/app/trainers/{id}), поэтому лимиты общие автоматически. T1/T2/T3 реализованы (ссылка
+ *  ведёт на страницу); неизвестный id — заглушка с пометкой t.trainers.comingSoon, без ссылки (D-020).
  *  mode 'inline'/'link' в Ф4 рендерятся одинаково — полноценный inline-режим появится
  *  при спеках course-factory (см. план T5). */
 export function Trainer({ id }: { id: string; mode?: 'inline' | 'link' }) {
