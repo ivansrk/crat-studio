@@ -48,6 +48,16 @@ export default async function AdminProjects({ searchParams }: { searchParams: Pr
           {banner.text}
         </p>
       )}
+      {/* D-049: свёрнутая методичка критериев зачёта — под рукой у проверяющего (criteria.md). */}
+      <details className="crat-card admin-criteria">
+        <summary>{t.admin.projectCriteriaTitle}</summary>
+        <p className="crat-muted">{t.admin.projectCriteriaIntro}</p>
+        <ol className="admin-criteria-list">
+          {t.admin.projectCriteriaItems.map((c, i) => <li key={i}>{c}</li>)}
+        </ol>
+        <p>{t.admin.projectCriteriaDecision}</p>
+        <p className="crat-muted">{t.admin.projectCriteriaTip}</p>
+      </details>
       {submissions.length === 0 ? <p>{t.admin.noData}</p> : (
         <div className="admin-review-list">
           {submissions.map(sub => (

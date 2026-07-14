@@ -556,6 +556,26 @@ a.course-card {
   font-size: 1.15em;
 }
 
+/* D-049: методичка финального проекта на странице студента — форматы на выбор,
+   подсказки под полями формы, открытые критерии зачёта. */
+.project-brief > .crat-kicker,
+.project-criteria > .crat-kicker {
+  margin: 0 0 .75rem;
+}
+.project-brief-list,
+.project-criteria-list {
+  margin: 0;
+  padding-left: 1.4rem;
+  display: grid;
+  gap: .6rem;
+  line-height: 1.5;
+}
+.project-criteria-list { margin-top: .75rem; }
+/* Подсказка под подписью поля — приглушённый цвет (.crat-muted), но не мельче базового кегля. */
+.project-field-hint {
+  line-height: 1.5;
+}
+
 /* Ф4 T2: карточка повторения в кабинете (CAB-04…06) — заметный блок ВВЕРХУ, до миссии/уроков. */
 .cabinet-review {
   margin-bottom: 2rem;

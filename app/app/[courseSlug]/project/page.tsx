@@ -18,6 +18,9 @@ const FIELD_LABEL: Record<ProjectField, string> = {
   application: t.project.fieldApplication,
 }
 
+// D-049: подсказки под полями формы — из методички финального проекта (report-form.md).
+const FIELD_HINT: Record<ProjectField, string> = t.project.fieldHints
+
 const BANNER: Record<string, string> = {
   saved: t.project.bannerSaved,
   submitted: t.project.bannerSubmitted,
@@ -53,6 +56,14 @@ export default async function ProjectPage({ params, searchParams }: {
       <SectionLabel kicker={t.project.kicker} />
       <h1 className="crat-display">{t.project.title}</h1>
       <p className="crat-muted">{t.project.intro}</p>
+
+      {/* D-049: форматы на выбор и открытые критерии зачёта — из методички финального проекта. */}
+      <section className="crat-card project-brief">
+        <h2 className="crat-kicker">{t.project.formatsTitle}</h2>
+        <ul className="project-brief-list">
+          {t.project.formats.map((f, i) => <li key={i}>{f}</li>)}
+        </ul>
+      </section>
 
       {banner && (
         isAlertBanner
@@ -95,6 +106,7 @@ export default async function ProjectPage({ params, searchParams }: {
             <label key={field}>
               <span className="project-field-num" aria-hidden>{String(i + 1).padStart(2, '0')}</span>
               {' '}{FIELD_LABEL[field]}
+              <span className="project-field-hint crat-muted">{FIELD_HINT[field]}</span>
               <textarea defaultValue={submission?.[field] ?? ''} disabled readOnly />
             </label>
           ))}
@@ -106,6 +118,7 @@ export default async function ProjectPage({ params, searchParams }: {
             <label key={field}>
               <span className="project-field-num" aria-hidden>{String(i + 1).padStart(2, '0')}</span>
               {' '}{FIELD_LABEL[field]}
+              <span className="project-field-hint crat-muted">{FIELD_HINT[field]}</span>
               <textarea name={field} defaultValue={submission?.[field] ?? ''} />
             </label>
           ))}
@@ -115,6 +128,14 @@ export default async function ProjectPage({ params, searchParams }: {
           </div>
         </form>
       )}
+
+      <section className="crat-card project-criteria">
+        <h2 className="crat-kicker">{t.project.criteriaTitle}</h2>
+        <p className="crat-muted">{t.project.criteriaIntro}</p>
+        <ol className="project-criteria-list">
+          {t.project.criteria.map((c, i) => <li key={i}>{c}</li>)}
+        </ol>
+      </section>
     </main>
   )
 }
