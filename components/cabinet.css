@@ -672,6 +672,17 @@ a.trainer-card {
   white-space: pre-wrap;
 }
 
+/* TRN-08: T2 «Дожми ответ» показывает два подписанных блока ответа (первый/после уточнения) —
+   тихая mono-подпись над текстом, тот же приём, что .trainer-remaining/.trainer-pending. */
+.trainer-reply-label {
+  font-family: var(--font-mono), monospace;
+  text-transform: uppercase;
+  font-size: var(--fs-small);
+  color: var(--paper-muted);
+  letter-spacing: .04em;
+  margin: 0 0 .5rem;
+}
+
 /* T5 дизайн-аудита: «осталось N из 20» над формой — mono, тихо. */
 .trainer-remaining {
   font-family: var(--font-mono), monospace;

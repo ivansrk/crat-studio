@@ -24,9 +24,10 @@ export default async function TrainersPage() {
         <Link className="crat-button primary" href="/app/trainers/t1">{t.trainers.open}</Link>
       </div>
 
-      <div className="crat-card trainer-card trainer-card-soon">
+      <div className="crat-card trainer-card">
         <h2>{t.trainers.t2Title}</h2>
-        <span className="trainer-badge">{t.trainers.comingSoon}</span>
+        <p className="crat-muted">{t.trainers.t2Intro}</p>
+        <Link className="crat-button primary" href="/app/trainers/t2">{t.trainers.open}</Link>
       </div>
 
       <div className="crat-card trainer-card trainer-card-soon">
