@@ -169,11 +169,17 @@ export default async function Landing({ searchParams }: { searchParams: Promise<
           </div>
         </section>
 
-        {/* Форма заявки */}
+        {/* Форма заявки (T9b дизайн-аудита, п.2): на ≥1280 форма — узкая колонка
+            (.signup-form max-width:46rem), справа пустело. Добавлен декоративный кадр
+            справа (тот же приём, что auth-frame-col у /login: crat-visual-frame.horizon +
+            crat-noise, без нового копирайта) — только на широких экранах, форма/поля не
+            меняются. .signup-layout скрывает кадр <1280, колонка формы остаётся на всю
+            ширину, как раньше. */}
         {!user && (
           <section className="crat-section">
-            <div className="crat-shell">
+            <div className="crat-shell signup-layout">
               <SignupForm notice={notice} />
+              <div className="crat-visual-frame horizon crat-noise signup-frame-col" aria-hidden="true" />
             </div>
           </section>
         )}
