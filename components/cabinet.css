@@ -5,8 +5,11 @@
   top: 0;
   z-index: 20;
   background: color-mix(in srgb, var(--bg-deep) 82%, transparent);
-  backdrop-filter: blur(8px);
+  /* Адаптив-проход: префикс первым, стандарт последним — иначе Lightning CSS
+     (Turbopack) схлопывал пару в одну -webkit-декларацию, Chrome/Firefox
+     теряли блюр и текст просвечивал сквозь шапку (см. components/site.css). */
   -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
   border-bottom: 1px solid var(--line-soft);
 }
 .cabinet-header-inner {

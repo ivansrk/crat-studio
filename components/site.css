@@ -5,8 +5,12 @@
   top: 0;
   z-index: 20;
   background: color-mix(in srgb, var(--bg-deep) 82%, transparent);
-  backdrop-filter: blur(8px);
+  /* Адаптив-проход: порядок пары важен — нестандартный префикс ПЕРВЫМ,
+     стандартное свойство ПОСЛЕДНИМ. При обратном порядке Lightning CSS
+     (Turbopack) схлопывал пару в одну -webkit-декларацию, Chrome/Firefox
+     оставались без блюра, и текст страницы просвечивал сквозь липкую шапку. */
   -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
   border-bottom: 1px solid var(--line-soft);
 }
 
@@ -277,6 +281,11 @@ main.crat-page {
    слово физически не помещается. */
 main.crat-page h1.crat-display {
   overflow-wrap: anywhere;
+  /* Адаптив-проход: на 360px «Ссылка недействительна» рвалась посреди слова
+     без дефиса («недействите / льна») — anywhere режет по букве. hyphens: auto
+     (html lang="ru") даёт словарный перенос с дефисом; anywhere остаётся
+     страховкой для строк, которые не переносятся по словарю (email, номера). */
+  hyphens: auto;
 }
 
 /* T3 дизайн-аудита: вход секций главной при скролле — прогрессивное улучшение,
@@ -1243,8 +1252,9 @@ main.crat-page h1.crat-display {
   bottom: 0;
   z-index: 30;
   background: color-mix(in srgb, var(--bg-deep) 94%, transparent);
-  backdrop-filter: blur(8px);
+  /* Адаптив-проход: префикс первым, стандарт последним (см. .site-header). */
   -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
   border-top: 1px solid var(--line-soft);
   /* T3 дизайн-аудита: вход снизу. Базовое правило = конечное состояние (виден),
      @starting-style задаёт стартовый кадр «за экраном» в браузерах, что его
