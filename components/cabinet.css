@@ -457,8 +457,18 @@ a.course-card {
   display: grid;
   gap: 1.5rem;
 }
+/* T10 дизайн-урок: .lesson-page — display:grid; дочерние grid-элементы имели
+   min-width:auto (= min-content), из-за чего колонка прозы раздувалась до
+   min-content самого длинного слова и давала ~2px горизонтального скролла на
+   360px (замер ДО: scrollWidth 362 > innerWidth 360). min-width:0 разрешает
+   усадку трека до контейнера, дальше слова переносятся (overflow-wrap ниже). */
+.lesson-page > * {
+  min-width: 0;
+}
+/* Шапка урока — «титульный лист»: крупный serif-заголовок, немного воздуха до видео. */
 .lesson-page h1 {
   overflow-wrap: anywhere;
+  margin-top: .25rem;
 }
 .lesson-page .crat-card {
   margin: 0;
@@ -496,13 +506,29 @@ a.course-card {
 }
 
 /* T4 дизайн-аудита: компактная пара ссылок навигации по урокам внизу страницы —
-   prev слева, next справа; next становится primary-кнопкой после прохождения урока. */
+   prev слева, next справа; next становится primary-кнопкой после прохождения урока.
+   T10: «конец сеанса» — горизонт-линия над пейджером (line-soft) с короткой красной
+   засечкой-рассветом слева (приём красного горизонта из футера сайта). */
 .lesson-pager {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
   gap: .75rem 1.5rem;
+  margin-top: 1rem;
+  padding-top: 1.75rem;
+  border-top: 1px solid var(--line-soft);
+}
+.lesson-pager::before {
+  content: '';
+  position: absolute;
+  top: -1px;
+  left: 0;
+  width: 3.5rem;
+  height: 2px;
+  background: var(--neon);
+  box-shadow: var(--neon-glow);
 }
 .lesson-pager-next {
   margin-left: auto;
@@ -517,6 +543,231 @@ a.course-card {
    поток, margin'ы абзацев схлопываются как в остальной прозе сайта (/articles). */
 .lesson-mdx > :last-child {
   margin-bottom: 0;
+}
+
+/* ============================================================================
+   T10 дизайн-урок (прямой запрос Ивана) — методическая типографика прозы урока
+   и «станции» (читаю → пробую → проверяю себя). Всё — визуальный слой поверх
+   Ф2-разметки: токены tokens.css, CSS-only. prefers-reduced-motion уже глушится
+   глобально (globals.css) — новых бесконечных анимаций тут нет.
+   Область: .lesson-mdx (обёртка и чтения, и практики) — публичные /articles не
+   затрагиваются (у них свой <main> без .lesson-mdx).
+   ============================================================================ */
+
+.lesson-mdx {
+  font-size: var(--fs-base);
+  line-height: 1.65;
+  /* строка ≤75ch для длинного чтения (UX-01: кегль базовый, не мельче) */
+  max-width: 66ch;
+}
+.lesson-mdx p {
+  margin: 0 0 1.15rem;
+  overflow-wrap: break-word;
+}
+
+/* h1 — только в карточке практики (practice.md начинается с # …); в чтении h1 нет.
+   Заголовок «станции практики», кикер над ним даёт page.tsx. */
+.lesson-mdx h1 {
+  font-family: var(--font-accent), serif;
+  font-weight: 700;
+  font-size: clamp(1.7rem, 4vw, 2.4rem);
+  line-height: 1.15;
+  margin: 0 0 1.25rem;
+  text-wrap: balance;
+}
+
+/* h2 — заметная ступень: Cormorant display-характер + короткая красная линия-свет
+   НАД заголовком (горизонтальная — «красная линия» системы CRAT). Крупный верхний
+   отступ задаёт вертикальный ритм между секциями урока (материал «дышит»). */
+.lesson-mdx h2 {
+  font-family: var(--font-accent), serif;
+  font-weight: 700;
+  font-size: clamp(1.7rem, 3.6vw, 2.35rem);
+  line-height: 1.18;
+  margin: 2.75rem 0 1rem;
+  text-wrap: balance;
+}
+.lesson-mdx h2::before {
+  content: '';
+  display: block;
+  width: 3.5rem;
+  height: 2px;
+  margin-bottom: 1rem;
+  background: var(--neon);
+  box-shadow: var(--neon-glow);
+}
+.lesson-mdx h2:first-child {
+  margin-top: .25rem;
+}
+
+/* h3 — средняя ступень, без линии */
+.lesson-mdx h3 {
+  font-family: var(--font-accent), serif;
+  font-weight: 700;
+  font-size: clamp(1.35rem, 2.6vw, 1.7rem);
+  line-height: 1.25;
+  margin: 2rem 0 .75rem;
+}
+
+/* strong — реальное выделение: вес + чуть светлее общего тона (paper → к белому),
+   чтобы ключевые слова всплывали из прозы, а не терялись. */
+.lesson-mdx strong {
+  font-weight: 700;
+  color: color-mix(in srgb, var(--paper) 70%, #fff);
+}
+/* em — курсив «с характером»: Cormorant italic (редакционное крапление),
+   отличается гарнитурой от Manrope-тела. */
+.lesson-mdx em {
+  font-family: var(--font-accent), serif;
+  font-style: italic;
+  font-size: 1.1em;
+  color: var(--paper);
+}
+
+/* Списки — аккуратные маркеры, не слипшиеся: свой ритм между пунктами,
+   неоновая засечка (ul) / mono-номер (ol) вместо браузерных маркеров. */
+.lesson-mdx ul,
+.lesson-mdx ol {
+  margin: 0 0 1.2rem;
+  padding-left: 0;
+  list-style: none;
+  display: grid;
+  gap: .55rem;
+}
+.lesson-mdx li {
+  line-height: 1.55;
+}
+.lesson-mdx ul > li {
+  position: relative;
+  padding-left: 1.6rem;
+}
+.lesson-mdx ul > li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: .62em;
+  width: .8rem;
+  height: 2px;
+  background: var(--neon);
+  box-shadow: 0 0 10px rgba(255, 75, 58, .4);
+}
+.lesson-mdx ol {
+  counter-reset: lesson-step;
+}
+.lesson-mdx ol > li {
+  position: relative;
+  padding-left: 2.2rem;
+  counter-increment: lesson-step;
+}
+.lesson-mdx ol > li::before {
+  content: counter(lesson-step);
+  position: absolute;
+  left: 0;
+  top: .05em;
+  font-family: var(--font-mono), monospace;
+  font-size: .9em;
+  font-weight: 600;
+  color: var(--neon);
+}
+
+/* blockquote — «готовая реплика»: в уроках это примеры того, ЧТО СКАЗАТЬ ИИ.
+   Должны считываться как чужой голос, отдельный от текста автора: серифная
+   гарнитура (реплика), красная кавычка-свет в отступе-жёлобе. */
+.lesson-mdx blockquote {
+  position: relative;
+  margin: 1.6rem 0;
+  padding: 1.15rem 1.4rem 1.15rem 3.1rem;
+  background: color-mix(in srgb, var(--paper) 3%, transparent);
+  border: 1px solid var(--line-soft);
+  border-radius: 12px;
+  font-family: var(--font-accent), serif;
+  font-size: 1.3rem;
+  line-height: 1.4;
+  color: var(--paper);
+}
+.lesson-mdx blockquote::before {
+  content: '\00AB'; /* « — не кириллица; декоративная кавычка-акцент */
+  position: absolute;
+  left: 1rem;
+  top: .5rem;
+  font-family: var(--font-accent), serif;
+  font-size: 2.6rem;
+  line-height: 1;
+  color: var(--neon);
+  text-shadow: 0 0 18px rgba(255, 75, 58, .4);
+}
+.lesson-mdx blockquote p {
+  margin: 0;
+}
+.lesson-mdx blockquote p + p {
+  margin-top: .6rem;
+}
+
+/* Divider — «перебивка» секции урока: тусклая перфорация (как film-perforation на
+   главной) с красной точкой-светом в центре (горизонт CRAT). Только в уроке —
+   у /articles остаётся тонкая линия .mdx-divider (mdx.css). */
+.lesson-mdx .mdx-divider {
+  border: 0;
+  width: 100%;
+  height: 12px;
+  margin: 2.75rem 0;
+  background-image: radial-gradient(circle, var(--line-soft) 2px, transparent 2.6px);
+  background-size: 20px 12px;
+  background-position: center;
+  background-repeat: repeat-x;
+  position: relative;
+}
+.lesson-mdx .mdx-divider::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  background: var(--neon);
+  box-shadow: var(--neon-glow);
+}
+
+/* ---------- «станции» урока ---------- */
+/* Тихий mono-кикер над каждой станцией (пробую / проверяю себя / материалы),
+   чтобы взрослый студент видел структуру: где читать, где пробовать, где
+   проверять себя. */
+.lesson-station-kicker {
+  display: block;
+  margin: 0 0 .75rem;
+  color: var(--paper-muted);
+}
+
+/* Квиз и материалы — не карточки, а лёгкие станции, отделённые тонкой линией
+   сверху (визуально «отдельная станция», без веса карточки). */
+.lesson-station-quiz,
+.lesson-station-materials {
+  display: grid;
+  gap: 1rem;
+  justify-items: start;
+  padding-top: 1.75rem;
+  border-top: 1px solid var(--line-soft);
+}
+.lesson-station-quiz p,
+.lesson-station-materials p {
+  margin: 0;
+}
+.lesson-station-quiz form {
+  margin: 0;
+}
+
+/* Практика — крупная станция-карточка (crat-card): кикер «Пробую», затем
+   заголовок практики (h1 из practice.md), шаги и чекбокс «Сделал». */
+.lesson-station-practice .lesson-mdx {
+  margin-bottom: .5rem;
+}
+.lesson-station-practice label {
+  display: inline-flex;
+  align-items: center;
+  gap: .6rem;
+  line-height: 1.4;
 }
 
 /* Ф3 T5: страница мини-проекта (/app/project, PROJ-01…06) — узкая колонка кабинета. */
@@ -554,6 +805,26 @@ a.course-card {
    не теряется рядом с формой. */
 .admin-comment-text {
   font-size: 1.15em;
+}
+
+/* D-049: методичка финального проекта на странице студента — форматы на выбор,
+   подсказки под полями формы, открытые критерии зачёта. */
+.project-brief > .crat-kicker,
+.project-criteria > .crat-kicker {
+  margin: 0 0 .75rem;
+}
+.project-brief-list,
+.project-criteria-list {
+  margin: 0;
+  padding-left: 1.4rem;
+  display: grid;
+  gap: .6rem;
+  line-height: 1.5;
+}
+.project-criteria-list { margin-top: .75rem; }
+/* Подсказка под подписью поля — приглушённый цвет (.crat-muted), но не мельче базового кегля. */
+.project-field-hint {
+  line-height: 1.5;
 }
 
 /* Ф4 T2: карточка повторения в кабинете (CAB-04…06) — заметный блок ВВЕРХУ, до миссии/уроков. */

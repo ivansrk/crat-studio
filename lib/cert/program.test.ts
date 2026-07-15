@@ -26,7 +26,7 @@ describe('buildProgramHtml (CERT-04, D-044) — программа курса и
     expect((html.match(/<h3>/g) ?? []).length).toBe(4)
     expect((html.match(/<li>/g) ?? []).length).toBe(12)
     expect(html).toContain('Модуль 1. Знакомство с ИИ')
-    expect(html).toContain('Что такое нейросеть')
+    expect(html).toContain('Что такое ИИ и зачем он вам')
   })
 
   it('неизвестный курс — пустая строка, не падает (правило 6)', async () => {
