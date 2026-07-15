@@ -1,11 +1,12 @@
 import Link from 'next/link'
-import { getCourse, lessonCount } from '@/lib/content'
+import { getCourses, lessonCount } from '@/lib/content'
 import { t } from '@/lib/i18n'
 import { SiteHeader } from '@/components/site/SiteHeader'
 import { SiteFooter } from '@/components/site/SiteFooter'
 import { HeroVisual } from '@/components/site/HeroVisual'
 import { SectionLabel } from '@/components/site/SectionLabel'
 import { DirectionCard } from '@/components/site/DirectionCard'
+import { CourseCard } from '@/components/site/CourseCard'
 import { TeamCard } from '@/components/site/TeamCard'
 import { JsonLd, organizationSchema } from '@/components/site/JsonLd'
 import { HeroShader } from '@/components/site/HeroShader'
@@ -19,11 +20,12 @@ import Image from 'next/image'
  * SITE-04 (Войти/В кабинет) — целиком в SiteHeader, hero-CTA не зависят от сессии.
  */
 export default function Home() {
-  // Главная показывает первый курс литералом; при мультикаталоге на главной — переработать.
-  const { course } = getCourse('ai-basics')!
-  const courseFacts = t.home.courseFacts
-    .replace('{modules}', String(course.modules.length))
-    .replace('{lessons}', String(lessonCount('ai-basics')))
+  // Каталог курсов строится от данных: getCourses() (slug asc), только опубликованные —
+  // неопубликованные (demo-course, published:false) на публичную главную не выводим.
+  // Сейчас это ровно один курс; второй появится карточкой без правок кода (MC-02).
+  // Первый курс — крупная афиша с кадром hero-course.webp (протагонист), остальные —
+  // тихие карточки; фото у первого литералом, новый курс нового ассета не требует.
+  const courses = getCourses().filter(c => c.published)
 
   return (
     <>
@@ -74,24 +76,48 @@ export default function Home() {
           </div>
         </section>
 
-        {/* 3. Курс в фокусе (бриф §7.4) — T6: киноафиша 3fr/2fr, курс как главный товар */}
+        {/* 3. Каталог курсов (бриф §7.4) — от данных getCourses(); якорь #course сохранён
+            (на него ссылаются шапка и футер «Курсы»). Композиция «афиша + тумба»: первый
+            курс — крупная киноафиша (протагонист-кадр), рядом рельс с остальными курсами
+            и тихой заглушкой «скоро». Не симметричная сетка 3×N — монтаж 3fr/2fr. */}
         <section className="crat-section" id="course">
           <div className="crat-shell">
-            <div className="course-focus-grid">
-              <div className="course-focus-copy">
-                <SectionLabel kicker={t.home.courseFocusTitle} />
-                <h3 className="crat-display">{course.title}</h3>
-                <p className="crat-muted course-facts">{courseFacts}</p>
-                <Link href="/ai-basics" className="crat-button primary">{t.home.courseCta}</Link>
+            <SectionLabel kicker={t.home.coursesKicker} />
+            <h2 className="crat-display">{t.home.coursesTitle}</h2>
+            <div className="courses-catalog">
+              <div className="courses-featured">
+                {courses.slice(0, 1).map(c => (
+                  <CourseCard
+                    key={c.slug}
+                    href={`/${c.slug}`}
+                    title={c.course.title}
+                    modules={c.course.modules.length}
+                    lessons={lessonCount(c.slug)}
+                    hours={c.hours}
+                    featured
+                    image="/images/hero-course.webp"
+                  />
+                ))}
               </div>
-              <div className="crat-visual-frame horizon crat-noise course-focus-frame" aria-hidden="true">
-                <Image
-                  src="/images/hero-course.webp"
-                  alt=""
-                  fill
-                  sizes="(max-width: 860px) 100vw, 40vw"
-                  className="crat-frame-img"
-                />
+              <div className="courses-rail">
+                {courses.slice(1).map(c => (
+                  <CourseCard
+                    key={c.slug}
+                    href={`/${c.slug}`}
+                    title={c.course.title}
+                    modules={c.course.modules.length}
+                    lessons={lessonCount(c.slug)}
+                    hours={c.hours}
+                  />
+                ))}
+                {/* Тихий слот будущих курсов — редакционная заглушка, не битая карточка:
+                    dashed-контур + mono-лейбл «Скоро» отличают её от настоящих карточек. */}
+                <aside className="course-upcoming">
+                  <span className="crat-kicker course-upcoming-label">{t.home.coursesUpcomingLabel}</span>
+                  <p className="course-upcoming-title">{t.home.coursesUpcomingTitle}</p>
+                  <p className="crat-muted course-upcoming-text">{t.home.coursesUpcomingText}</p>
+                  <Link href="/consult" className="crat-button secondary course-upcoming-cta">{t.home.coursesUpcomingCta}</Link>
+                </aside>
               </div>
             </div>
           </div>
