@@ -11,7 +11,7 @@ async function requireAdmin() {
 }
 
 // F16/CRM-02/03/05: баннер результата — редирект с ?query= на карточку клиента, тот же паттерн,
-// что и у остальных админ-форм (app/actions/admin.ts: gdprDeleteAction/reviewProjectAction),
+// что и у остальных админ-форм (app/actions/admin.ts: deleteParticipantAction/reviewProjectAction),
 // а не useActionState — здесь нет секрета, который нельзя пережить перезагрузкой (в отличие от
 // пароля в GrantForm), обычный redirect+searchParams проще и достаточен.
 

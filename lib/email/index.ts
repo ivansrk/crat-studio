@@ -3,7 +3,10 @@ import { db } from '@/lib/db'
 import type { EmailType, Prisma } from '@/lib/generated/prisma/client'
 
 export const RETRY_DELAYS_MS = [60_000, 300_000, 900_000] // 1/5/15 мин (D-013)
-export const FROM = 'CRAT studio <hello@cratstudio.com>'
+// D-046 (обновление 2026-07-15): исходящий FROM — собственный ящик edu@cratstudio.com (Иван завёл;
+// домен cratstudio.com в Resend верифицирован). Прежний hello@cratstudio.com не имел заведённого
+// ящика — письма double opt-in/WELCOME/сертификат уходили «с несуществующего адреса» (жалоба Ивана).
+export const FROM = 'CRAT studio <edu@cratstudio.com>'
 
 type SendFn = () => Promise<{ id?: string }>
 type Progress = { status: 'SENT' | 'FAILED'; attempts: number; resendId?: string; lastError?: string }

@@ -130,7 +130,7 @@ export async function syncContactUnsubscribe(user: SyncUser, client: DbClient = 
 }
 
 /** CRM-04/ADM-10: GDPR-удаление — удалить контакт из Audience целиком (right to erasure, не
- *  просто unsubscribed). Вызывается ПЕРЕД удалением User в БД (lib/admin/gdpr.ts): resendSyncError
+ *  просто unsubscribed). Вызывается ПЕРЕД удалением User в БД (lib/admin/delete-participant.ts): resendSyncError
  *  писать некуда и незачем — строка User удаляется следом в той же операции в любом случае,
  *  вызывающий код просто логирует сбой (.catch(log)), удаление в БД не блокируется (CRM-05). */
 export async function syncContactDelete(user: SyncUser, client: DbClient = db): Promise<SyncOutcome> {
