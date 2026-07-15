@@ -25,7 +25,7 @@
 
 /* flex-дети по умолчанию min-width:auto — mono-подпись хедера
    ("APPLIED AI / EDUCATION / …") не переносилась и раздувала документ
-   на 360px (тот же класс бага, что у .course-focus-copy > *). */
+   на 360px (тот же класс бага, что у .course-poster-body > *). */
 .site-header-inner > *,
 .site-footer-inner > * {
   min-width: 0;
@@ -286,7 +286,7 @@ main.crat-page {
 /* D-045 (найдено скриншот-проверкой юр-страниц на 360px): «Политика конфиденциальности»
    переносится на .crat-display без overflow-wrap и даёт горизонтальный скролл (bodyScrollWidth
    425 vs innerWidth 360) — то же семейство бага, что у .hero-section h1 (длинное слово
-   «профессиональной») и .course-focus-copy h3, только раньше не всплывало на этих страницах:
+   «профессиональной») и .course-poster-body h3, только раньше не всплывало на этих страницах:
    их заголовки короче. Правило безопасно на любом .crat-page — включается только когда
    слово физически не помещается. */
 main.crat-page h1.crat-display {
@@ -653,58 +653,156 @@ main.crat-page h1.crat-display {
   color: var(--paper);
 }
 
-/* курс в фокусе — T6: киноафиша 3fr/2fr (кадр — полноразмерный, курс = главный товар) */
+/* каталог курсов — секция #course (бриф §7.4): «афиша + тумба».
+   Монтаж 3fr/2fr, НЕ симметричная сетка 3×N: слева крупная киноафиша первого курса
+   (картинка-протагонист), справа рельс с остальными курсами и тихой заглушкой «скоро».
+   Построен от getCourses() — второй курс просто добавит карточку в рельс без правок CSS. */
 
-.course-focus-grid {
+.courses-catalog {
+  margin-top: 2rem;
   display: grid;
   grid-template-columns: 3fr 2fr;
-  gap: clamp(2rem, 5vw, 4rem);
+  gap: clamp(1.25rem, 3vw, 2rem);
   align-items: stretch;
 }
 @media (max-width: 860px) {
-  .course-focus-grid {
+  .courses-catalog {
     grid-template-columns: 1fr;
   }
 }
 
-.course-focus-copy {
-  display: grid;
-  gap: 1.25rem;
-  align-content: center;
+.courses-featured {
+  display: flex; /* афиша тянется на всю высоту строки грида (align-items:stretch) */
 }
 
-/* мобайл 360px: grid-дети по умолчанию min-width:auto — длинный заголовок/факты раздували карточку */
-.course-focus-copy > * {
-  min-width: 0;
+.courses-rail {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(1.25rem, 3vw, 2rem);
 }
 
-.course-focus-copy h3 {
-  overflow-wrap: anywhere;
-}
-
-.course-focus-copy .crat-button {
-  justify-self: start;
-}
-
-.course-focus-frame {
-  aspect-ratio: auto;
-  height: 100%;
-  min-height: 320px;
+/* ---- featured: киноафиша (кадр-протагонист + копия поверх скрима) ----
+   min-height + рост под контент (НЕ aspect-ratio+overflow — иначе длинный заголовок
+   обрезается; та же защита, что у .direction-card, история дефектов). */
+.course-poster {
+  position: relative;
+  overflow: hidden;
+  padding: 0;
+  width: 100%;
+  display: flex;
+  align-items: flex-end;
+  min-height: 440px;
 }
 @media (max-width: 860px) {
-  .course-focus-frame {
-    order: -1;
-    aspect-ratio: 16 / 9;
-    height: auto;
-    min-height: 0;
-  }
+  .course-poster { min-height: 360px; }
+}
+@media (max-width: 480px) {
+  .course-poster { min-height: 320px; }
 }
 
-.course-facts {
-  font-family: var(--font-mono), monospace;
-  font-size: var(--fs-small);
+.course-poster-img {
+  object-fit: cover;
+  z-index: 0;
+  transition: transform 1.2s ease;
+}
+.course-poster:focus-within .course-poster-img { transform: scale(1.04); }
+@media (hover: hover) {
+  .course-poster:hover .course-poster-img { transform: scale(1.04); }
+}
+
+/* скрим сильнее внизу, где текст; тот же приём, что у .direction-card-scrim */
+.course-poster-scrim {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: linear-gradient(to top, rgba(5, 5, 5, .96) 0%, rgba(5, 5, 5, .8) 42%, rgba(5, 5, 5, .3) 100%);
+  pointer-events: none;
+}
+
+.course-poster-body {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  gap: 1.1rem;
+  padding: clamp(1.5rem, 4vw, 2.5rem);
+  text-shadow: 0 1px 10px rgba(0, 0, 0, .9);
+}
+.course-poster-body > * { min-width: 0; }
+/* афишный заголовок мельче секционного display (иерархия: секция «Курсы» — h2,
+   курс — карточка) и с переносом длинных слов, чтобы не рвался посреди слова. */
+.course-poster-body h3 {
+  font-size: clamp(1.7rem, 4.5vw, 3rem);
   overflow-wrap: anywhere;
 }
+.course-poster-body .crat-button { justify-self: start; }
+
+/* ---- compact: тихая карточка курса (CSS-кадр вместо фото) ---- */
+.course-card {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1.5rem;
+}
+.course-card-thumb {
+  display: block;
+  aspect-ratio: 16 / 9;
+  border-radius: 10px;
+}
+.course-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: .85rem;
+}
+.course-card-body h3 {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.course-card-body .crat-button { align-self: start; }
+
+/* ---- факты карточки: число (светлое) + лейбл (приглушённый), mono, через · ---- */
+.course-facts {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: .35rem 1.1rem;
+  font-family: var(--font-mono), monospace;
+  font-size: var(--fs-small);
+  color: var(--paper-muted);
+}
+.course-fact { white-space: nowrap; }
+.course-fact-num {
+  color: var(--paper);
+  font-weight: 600;
+}
+
+/* ---- тихий слот будущих курсов: редакционная заглушка, НЕ битая карточка ----
+   dashed-контур + mono-лейбл «Скоро» отличают её от настоящих карточек; flex:1
+   заполняет остаток высоты рельса, чтобы рядом с высокой афишей не зияла пустота. */
+.course-upcoming {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: .8rem;
+  min-height: 180px;
+  padding: clamp(1.5rem, 4vw, 2.25rem);
+  border: 1px dashed var(--line-soft);
+  border-radius: 14px;
+}
+.course-upcoming-label { color: var(--neon); }
+.course-upcoming-title {
+  margin: 0;
+  font-family: var(--font-accent), serif;
+  font-size: clamp(1.4rem, 3vw, 1.9rem);
+  line-height: 1.1;
+  color: var(--paper);
+}
+.course-upcoming-text {
+  margin: 0;
+  font-size: var(--fs-small);
+  max-width: 40ch;
+}
+.course-upcoming-cta { align-self: start; }
 
 /* номер сертификата (/cert/{number}, кабинет) — CERT-06 */
 .cert-number {
@@ -762,16 +860,6 @@ main.crat-page h1.crat-display {
 .crat-stamp-muted {
   color: var(--line-soft);
   opacity: 1;
-}
-
-/* узкий экран: display-кегль ломал «профессиональной» посреди слова — умеренный размер, слова целые */
-@media (max-width: 480px) {
-  .course-focus-copy h3 {
-    font-size: 1.5rem;
-  }
-  .course-focus-copy .crat-button {
-    padding-inline: 1.2rem;
-  }
 }
 
 /* автоматизации — T6: mono-список вместо карточной сетки 2×2 (Assessment A: display-
@@ -1102,7 +1190,7 @@ main.crat-page h1.crat-display {
 .hero-section h1 {
   margin-top: 1rem;
   /* course.title (из content, не куратированный текст брифа) содержит длинные
-     слова («профессиональной») — та же защита, что у .course-focus-copy h3 на главной. */
+     слова («профессиональной») — та же защита, что у .course-poster-body h3 на главной. */
   overflow-wrap: anywhere;
 }
 @media (max-width: 480px) {
