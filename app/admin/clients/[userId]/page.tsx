@@ -2,6 +2,8 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { getClient } from '@/lib/crm'
 import { updateClientAction, resyncClientAction } from '@/app/actions/crm'
+import { DeleteParticipant } from '@/components/admin/DeleteParticipant'
+import { DeleteBanner } from '@/components/admin/DeleteBanner'
 import { formatDate } from '@/lib/i18n/format-date'
 import { t } from '@/lib/i18n'
 
@@ -26,10 +28,10 @@ export default async function ClientCard({
   params, searchParams,
 }: {
   params: Promise<{ userId: string }>
-  searchParams: Promise<{ updated?: string; resync?: string }>
+  searchParams: Promise<{ updated?: string; resync?: string; del?: string }>
 }) {
   const { userId } = await params
-  const { updated, resync } = await searchParams
+  const { updated, resync, del } = await searchParams
   const detail = await getClient(userId)
   if (!detail) notFound()
   const { user, registration, consents, enrollments, certificates, consultations, subscribed } = detail
@@ -47,6 +49,7 @@ export default async function ClientCard({
         {user.resendSyncError && <span className="form-alert crm-flag"> · {tc.syncErrorFlag}</span>}
       </p>
 
+      <DeleteBanner del={del} />
       {user.resendSyncError && <p role="alert" className="form-alert">{tc.syncErrorBanner}</p>}
       {updateBanner && (
         <p role={updateBanner.alert ? 'alert' : undefined} className={updateBanner.alert ? 'form-alert' : 'crat-muted'}>
@@ -212,6 +215,15 @@ export default async function ClientCard({
           </table>
         </div>
       )}
+
+      {/* ADM-13/D-050: удалить клиента целиком. Успех → список клиентов, ошибка → сюда же. */}
+      <DeleteParticipant
+        refType="user"
+        id={user.id}
+        email={user.email}
+        successTo="/admin/clients"
+        errorTo={`/admin/clients/${user.id}`}
+      />
     </main>
   )
 }

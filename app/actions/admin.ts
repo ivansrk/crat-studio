@@ -62,18 +62,30 @@ export async function reviewProjectAction(formData: FormData) {
   redirect(`/admin/projects?review=${result}`)
 }
 
-export async function gdprDeleteAction(formData: FormData) {
+// ADM-13, D-050: единый экшен удаления участника из ЛЮБОГО раздела админки (заявки/студенты/
+// клиенты + карточки). Один экшен → одна доменная функция deleteParticipant. Ссылка на участника —
+// userId (студент/клиент) ИЛИ registrationId (заявка-лид без учётки); successTo/errorTo задают
+// компоненты вызова (успех → список, ошибка → та же страница с банером ?del=<причина>).
+export async function deleteParticipantAction(formData: FormData) {
   await requireAdmin()
-  const userId = String(formData.get('userId'))
-  const { gdprDeleteStudent } = await import('@/lib/admin/gdpr')
-  const result = await gdprDeleteStudent(userId, String(formData.get('confirmEmail')))
+  const userIdRaw = formData.get('userId')
+  const registrationIdRaw = formData.get('registrationId')
+  const confirmEmail = String(formData.get('confirmEmail') ?? '')
+  const successTo = String(formData.get('successTo') || '/admin/students')
+  const errorTo = String(formData.get('errorTo') || successTo)
+
+  const { deleteParticipant } = await import('@/lib/admin/delete-participant')
+  const ref = userIdRaw
+    ? { userId: String(userIdRaw) }
+    : { registrationId: String(registrationIdRaw) }
+  const result = await deleteParticipant(ref, confirmEmail)
+
+  // Удаление «везде» — обновляем все разделы, где человек мог отображаться.
+  revalidatePath('/admin')
   revalidatePath('/admin/students')
-  revalidatePath(`/admin/students/${userId}`)
-  // T8 дизайн-аудита: форма переехала со строки списка в «Опасную зону» карточки студента
-  // (/admin/students/[userId]) — ошибки (email не совпал / попытка удалить админа) возвращают
-  // ТУДА ЖЕ, с сохранённым контекстом студента, а не на список. Успех — на список: карточки
-  // удалённого студента больше не существует.
-  if (result === 'email_mismatch') redirect(`/admin/students/${userId}?gdpr=mismatch`)
-  if (result === 'is_admin') redirect(`/admin/students/${userId}?gdpr=is_admin`)
-  if (result === 'deleted') redirect('/admin/students?gdpr=deleted')
+  revalidatePath('/admin/clients')
+
+  const sep = (url: string) => (url.includes('?') ? '&' : '?')
+  if (result === 'deleted') redirect(`${successTo}${sep(successTo)}del=deleted`)
+  redirect(`${errorTo}${sep(errorTo)}del=${result}`) // email_mismatch / is_admin / not_found
 }

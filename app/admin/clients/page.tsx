@@ -1,19 +1,22 @@
 import Link from 'next/link'
 import { listClients } from '@/lib/crm'
+import { DeleteParticipant } from '@/components/admin/DeleteParticipant'
+import { DeleteBanner } from '@/components/admin/DeleteBanner'
 import { t } from '@/lib/i18n'
 
 export const dynamic = 'force-dynamic'
 
 /** CRM-01/02: список клиентов + поиск. Server component, форма поиска — обычный GET
  *  (?q=…), без клиентского JS — тот же принцип, что у остальной админки. */
-export default async function Clients({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
-  const { q } = await searchParams
+export default async function Clients({ searchParams }: { searchParams: Promise<{ q?: string; del?: string }> }) {
+  const { q, del } = await searchParams
   const clients = await listClients(q)
   const tc = t.admin.clients
 
   return (
     <main className="admin-wide">
       <h1>{tc.title}</h1>
+      <DeleteBanner del={del} />
 
       <form method="get" className="admin-search">
         <label htmlFor="q">{tc.searchLabel}</label>
@@ -37,6 +40,7 @@ export default async function Clients({ searchParams }: { searchParams: Promise<
               <th>{tc.colSubscribed}</th>
               <th>{tc.colLastCourse}</th>
               <th>{tc.colCertCount}</th>
+              <th></th>
             </tr>
             </thead>
             <tbody>
@@ -52,6 +56,9 @@ export default async function Clients({ searchParams }: { searchParams: Promise<
                 <td>{c.subscribed ? tc.subscribedYes : tc.subscribedNo}</td>
                 <td>{c.lastCourseSlug ?? t.admin.notYet}</td>
                 <td>{c.certCount > 0 ? c.certCount : t.admin.notYet}</td>
+                <td>
+                  <DeleteParticipant refType="user" id={c.id} email={c.email} successTo="/admin/clients" errorTo="/admin/clients" />
+                </td>
               </tr>
             ))}
             </tbody>

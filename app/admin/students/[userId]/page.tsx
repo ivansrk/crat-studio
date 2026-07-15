@@ -5,7 +5,8 @@ import { getCourseProgress } from '@/lib/progress'
 import { isLessonPassed } from '@/lib/progress/quiz-logic'
 import { getCurrentSubmission } from '@/lib/project'
 import { formatDate } from '@/lib/i18n/format-date'
-import { gdprDeleteAction } from '@/app/actions/admin'
+import { DeleteParticipant } from '@/components/admin/DeleteParticipant'
+import { DeleteBanner } from '@/components/admin/DeleteBanner'
 import { t } from '@/lib/i18n'
 
 export const dynamic = 'force-dynamic'
@@ -19,10 +20,10 @@ const SUBMISSION_STATUS_LABEL = {
 
 export default async function StudentProgress({ params, searchParams }: {
   params: Promise<{ userId: string }>
-  searchParams: Promise<{ gdpr?: string }>
+  searchParams: Promise<{ del?: string }>
 }) {
   const { userId } = await params
-  const { gdpr } = await searchParams
+  const { del } = await searchParams
   const user = await db.user.findUnique({ where: { id: userId } })
   if (!user) notFound() // гейт админа — в app/admin/layout.tsx; здесь только валидность userId
 
@@ -42,8 +43,7 @@ export default async function StudentProgress({ params, searchParams }: {
     <main className="admin-wide">
       <h1>{user.firstName} {user.lastName}</h1>
       <p>{user.email}</p>
-      {gdpr === 'mismatch' && <p role="alert" className="form-alert">{t.admin.gdprMismatch}</p>}
-      {gdpr === 'is_admin' && <p role="alert" className="form-alert">{t.admin.gdprIsAdmin}</p>}
+      <DeleteBanner del={del} />
 
       <h2>{t.admin.progress}</h2>
       <div className="admin-table-wrap">
@@ -116,22 +116,15 @@ export default async function StudentProgress({ params, searchParams }: {
         </p>
       ) : <p>{t.admin.notYet}</p>}
 
-      {/* T8 дизайн-аудита (П2): удаление переехало со строки списка сюда — необратимое
-          действие спрятано за <details>, не рядом с обычными действиями таблицы. */}
-      <details className="danger-zone">
-        <summary>{t.admin.dangerZoneTitle}</summary>
-        <div className="danger-zone-body">
-          <p className="crat-muted">{t.admin.dangerZoneWarning}</p>
-          <form action={gdprDeleteAction}>
-            <input type="hidden" name="userId" value={user.id} />
-            <label>
-              {t.admin.gdprConfirm}
-              <input name="confirmEmail" placeholder={user.email} required />
-            </label>
-            <button className="crat-button danger" type="submit">{t.admin.gdprDelete}</button>
-          </form>
-        </div>
-      </details>
+      {/* ADM-13/D-050: удаление участника единой кнопкой. Успех — на список студентов (карточки
+          удалённого уже нет), ошибка — сюда же, с сохранённым контекстом. */}
+      <DeleteParticipant
+        refType="user"
+        id={user.id}
+        email={user.email}
+        successTo="/admin/students"
+        errorTo={`/admin/students/${user.id}`}
+      />
     </main>
   )
 }
