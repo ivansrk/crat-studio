@@ -4,6 +4,14 @@
 
 ---
 
+## 2026-07-15 — Исходящий FROM писем на собственный ящик (D-046-амд)
+
+### D-046-амд. Исходящий FROM писем → edu@cratstudio.com
+**Решение (амендмент к D-046):** `FROM` в `lib/email/index.ts` переключён с `hello@cratstudio.com` на `edu@cratstudio.com`. Прежний D-046 сознательно не трогал FROM, оставляя `hello@`, — но ящика `hello@` на домене нет, поэтому письма double opt-in/WELCOME/сертификат уходили «с несуществующего адреса» (жалоба Ивана «дойдут ли письма double opt-in?»). Ящик `edu@cratstudio.com` заведён, домен `cratstudio.com` в Resend верифицирован — письма с него ходят.
+**Живая проба на этой машине не выполнена:** в локальном `.env` нет `RESEND_API_KEY` (только `DATABASE_URL` и `ADMIN_EMAILS`), одноразовый пробник (renderEmail DOUBLE_OPT_IN → Resend, FROM=edu@) вернул `Missing API key`. Отправку с боевым ключом нужно проверить на Render/с ключом (см. отчёт задачи). Цепочка double opt-in по коду проверена: `/register`→PENDING_OPT_IN→письмо DOUBLE_OPT_IN со ссылкой `${APP_URL}/invite-confirm/{token}`→CONFIRMED+Consent; ссылка строится от `APP_URL` (прод — cratstudio.com).
+
+---
+
 ## 2026-07-15 — Удаление участника отовсюду единой функцией (D-050)
 
 ### D-050. Единая функция удаления участника; сертификат удаляется физически; email_log обезличивается
