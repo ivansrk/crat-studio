@@ -24,7 +24,7 @@ export function TeamCard({
 }) {
   return (
     <article className="crat-card team-card">
-      <div className="crat-visual-frame neon-line crat-noise team-card-frame">
+      <div className="crat-visual-frame crat-noise team-card-frame">
         <Image
           src={`/images/team/${photo}.webp`}
           alt={name}
@@ -37,6 +37,10 @@ export function TeamCard({
       </div>
       <h3>{name}</h3>
       <p className="crat-muted team-card-role">{role}</p>
+      {/* Красная линия-акцент перенесена из кадра (перечёркивала фигуру — «странная»,
+          критика Ивана) в текстовый блок: тот же брендовый штрих, что у DirectionCard,
+          но «на своём месте» — разделитель шапки досье, не поверх лица. */}
+      <span className="crat-red-line team-card-line" aria-hidden="true" />
       <p className="crat-muted">{text}</p>
       <div className="team-card-tags">
         {tags.map(tag => (
