@@ -6,7 +6,9 @@ import { mdxComponents } from '@/components/mdx'
 import { Video } from '@/components/mdx/Video'
 import { currentUser } from '@/lib/auth/current-user'
 import { hasCourseAccess } from '@/lib/progress/access'
-import { ensureProgress, getLessonState } from '@/lib/progress'
+import { ensureProgress, getLessonState, getCourseProgress } from '@/lib/progress'
+import { isLessonPassed } from '@/lib/progress/quiz-logic'
+import { LessonNav, type RailModule } from '@/components/site/LessonNav'
 import { startQuizAction, togglePracticeAction, saveMissionAction } from '@/app/actions/lesson'
 import { t } from '@/lib/i18n'
 
@@ -39,8 +41,35 @@ export default async function LessonPage({ params }: { params: Promise<{ courseS
         .replace('{total}', String(position.total))
         .replace('{module}', String(position.moduleId))
     : null
+
+  // S1 (D-051): данные меню уроков — программа курса (course.yaml) + отметка «пройден»
+  // из прогресса (переиспользуем isLessonPassed, тот же критерий, что на курсовой странице).
+  const { course } = entry
+  const { byLesson } = await getCourseProgress(user.id, courseSlug)
+  const railModules: RailModule[] = course.modules.map(m => ({
+    id: m.id,
+    title: m.title,
+    lessons: m.lessons.map(l => ({
+      id: l.id,
+      title: l.title,
+      passed: isLessonPassed(byLesson.get(l.id)),
+      current: l.id === lessonId,
+    })),
+  }))
+  const flatIds = course.modules.flatMap(m => m.lessons.map(l => l.id))
+  const globalIndex = flatIds.indexOf(lessonId) + 1 // «Урок N из 12» — глобальный номер по course.yaml
+
   return (
-    <main className="lesson-page">
+    <div className="lesson-layout">
+      <LessonNav
+        courseSlug={courseSlug}
+        modules={railModules}
+        globalIndex={globalIndex}
+        globalTotal={flatIds.length}
+        prevId={prev}
+        nextId={next}
+      />
+      <main className="lesson-page">
       {positionText && <p className="lesson-position crat-kicker">{positionText}</p>}
       <h1 className="crat-display">{lesson.meta.title}</h1>
       {/* Ревью T4-T5 m5: компактный чек-лист «квиз/практика» под заголовком — план T5 требовал
@@ -66,7 +95,7 @@ export default async function LessonPage({ params }: { params: Promise<{ courseS
         )}
       {/* Чтение — основная проза урока. */}
       <div className="lesson-mdx">
-        <MDXRemote source={lesson.mdx} components={mdxComponents(base)} />
+        <MDXRemote source={lesson.mdx} components={mdxComponents(base, lessonId)} />
       </div>
 
       {/* T10 дизайн-урок: страница урока выстроена как маршрут «читаю → пробую →
@@ -87,7 +116,7 @@ export default async function LessonPage({ params }: { params: Promise<{ courseS
       <section className="crat-card lesson-station lesson-station-practice">
         <p className="lesson-station-kicker crat-kicker">{t.lesson.stationPractice}</p>
         <div className="lesson-mdx">
-          <MDXRemote source={lesson.practiceMd} components={mdxComponents(base)} />
+          <MDXRemote source={lesson.practiceMd} components={mdxComponents(base, lessonId)} />
         </div>
         <form action={togglePracticeAction}>
           <input type="hidden" name="courseSlug" value={courseSlug} />
@@ -166,6 +195,7 @@ export default async function LessonPage({ params }: { params: Promise<{ courseS
           <span className="crat-muted lesson-pager-next">{t.lesson.courseDone}</span>
         )}
       </nav>
-    </main>
+      </main>
+    </div>
   )
 }

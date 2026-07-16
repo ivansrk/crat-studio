@@ -18,9 +18,11 @@ const HREF: Record<string, string> = {
  *  ведёт на страницу); неизвестный id — заглушка с пометкой t.trainers.comingSoon, без ссылки (D-020).
  *  mode 'inline'/'link' в Ф4 рендерятся одинаково — полноценный inline-режим появится
  *  при спеках course-factory (см. план T5). */
-export function Trainer({ id }: { id: string; mode?: 'inline' | 'link' }) {
+export function Trainer({ id, fromLessonId }: { id: string; mode?: 'inline' | 'link'; fromLessonId?: string }) {
   const title = TITLE[id] ?? id
-  const href = HREF[id]
+  // S5/D-051: со страницы урока прокидываем ?from={lessonId} — страница тренажёра покажет
+  // «Вернуться к уроку». from валидируется на самой странице тренажёра (по контенту курса).
+  const href = HREF[id] ? `${HREF[id]}${fromLessonId ? `?from=${encodeURIComponent(fromLessonId)}` : ''}` : undefined
 
   if (!href) {
     return (
