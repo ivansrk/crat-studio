@@ -151,33 +151,48 @@ export default function Home() {
           </div>
           <div className="studio-bleed">
             <span className="studio-horizon" aria-hidden="true" />
+            {/* studio-cards: expand-ряд 4 кадров-этапов производства (решение Ивана 2026-07-16).
+                Порядок — производственный: Исследование → Раскадровка → Генерация → Монтаж
+                (кадр каждого этапа подобран по содержимому, см. ru.ts studioCaption*).
+                Десктоп (≥768, hover): наведённая карточка плавно растёт, соседние ужимаются в
+                полосы — чистый CSS-hover, без JS/клика (кадры не ссылки). Мобайл/тач: сетка с
+                постоянно видимыми подписями, без обрезанных полос (см. site.css .studio-grid). */}
             <div className="studio-grid">
-              {/* T7 дизайн-аудита (Б.8): mono-подписи под кадрами — честные к содержимому
-                  (см. комментарий у home.studioCaption* в ru.ts). grid-area переехала на
-                  <figure>, картинка/зерно — на вложенный .crat-visual-frame (aria-hidden). */}
-              <figure className="studio-frame-a">
+              <figure className="studio-frame">
                 <div className="crat-visual-frame crat-noise" aria-hidden="true">
-                  <Image src="/images/studio-1.webp" alt="" fill sizes="(max-width: 760px) 100vw, 50vw" className="crat-frame-img" />
+                  <Image src="/images/studio-1.webp" alt="" fill sizes="(max-width: 767px) 100vw, 40vw" className="crat-frame-img" />
                 </div>
-                <figcaption className="studio-frame-caption">{t.home.studioCaptionA}</figcaption>
+                <figcaption className="studio-frame-caption">
+                  <span className="studio-cap-title">{t.home.studioCaptionA}</span>
+                  <span className="studio-cap-sub">{t.home.studioSubA}</span>
+                </figcaption>
               </figure>
-              <figure className="studio-frame-b">
+              <figure className="studio-frame">
                 <div className="crat-visual-frame crat-noise" aria-hidden="true">
-                  <Image src="/images/studio-2.webp" alt="" fill sizes="(max-width: 760px) 100vw, 25vw" className="crat-frame-img" />
+                  <Image src="/images/studio-3.webp" alt="" fill sizes="(max-width: 767px) 100vw, 40vw" className="crat-frame-img" />
                 </div>
-                <figcaption className="studio-frame-caption">{t.home.studioCaptionB}</figcaption>
+                <figcaption className="studio-frame-caption">
+                  <span className="studio-cap-title">{t.home.studioCaptionB}</span>
+                  <span className="studio-cap-sub">{t.home.studioSubB}</span>
+                </figcaption>
               </figure>
-              <figure className="studio-frame-c">
+              <figure className="studio-frame">
                 <div className="crat-visual-frame crat-noise" aria-hidden="true">
-                  <Image src="/images/studio-3.webp" alt="" fill sizes="(max-width: 760px) 100vw, 25vw" className="crat-frame-img" />
+                  <Image src="/images/studio-2.webp" alt="" fill sizes="(max-width: 767px) 100vw, 40vw" className="crat-frame-img" />
                 </div>
-                <figcaption className="studio-frame-caption">{t.home.studioCaptionC}</figcaption>
+                <figcaption className="studio-frame-caption">
+                  <span className="studio-cap-title">{t.home.studioCaptionC}</span>
+                  <span className="studio-cap-sub">{t.home.studioSubC}</span>
+                </figcaption>
               </figure>
-              <figure className="studio-frame-d">
+              <figure className="studio-frame">
                 <div className="crat-visual-frame crat-noise" aria-hidden="true">
-                  <Image src="/images/studio-4.webp" alt="" fill sizes="(max-width: 760px) 100vw, 50vw" className="crat-frame-img" />
+                  <Image src="/images/studio-4.webp" alt="" fill sizes="(max-width: 767px) 100vw, 40vw" className="crat-frame-img" />
                 </div>
-                <figcaption className="studio-frame-caption">{t.home.studioCaptionD}</figcaption>
+                <figcaption className="studio-frame-caption">
+                  <span className="studio-cap-title">{t.home.studioCaptionD}</span>
+                  <span className="studio-cap-sub">{t.home.studioSubD}</span>
+                </figcaption>
               </figure>
             </div>
           </div>
