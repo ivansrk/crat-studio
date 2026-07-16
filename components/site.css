@@ -276,6 +276,27 @@
   margin: 0 0 1.5rem;
 }
 
+/* V1 (перелинковка): «Читать ещё» в конце статьи — тихий блок в узкой колонке чтения.
+   Mono-кикер + список ссылок с red underline-reveal (reveal-line), не карточная лента. */
+.article-more {
+  max-width: var(--maxw-text);
+  margin-top: 3rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--line-soft);
+}
+.article-more-list {
+  list-style: none;
+  padding: 0;
+  margin: .75rem 0 1.5rem;
+  display: grid;
+  gap: .9rem;
+}
+.article-more-list a {
+  font-family: var(--font-accent), serif;
+  font-size: 1.3rem;
+  line-height: 1.35;
+}
+
 /* ---------- главная — редакционный монтаж (Ф5 Task 4, бриф §7) ---------- */
 
 main.crat-home,

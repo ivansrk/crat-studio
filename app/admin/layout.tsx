@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation'
 import { currentUser, isAdminEmail } from '@/lib/auth/current-user'
 import { db } from '@/lib/db'
+import Link from 'next/link'
 import { logoutAction } from '@/app/actions/logout'
 import { t } from '@/lib/i18n'
 import { NavLink } from '@/components/site/NavLink'
@@ -29,6 +30,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         <NavLink href="/admin/emails">{t.admin.emails}</NavLink>
         {/* route handler, не страница: обычный <a>, открывает PDF-предпросмотр шаблона */}
         <a href="/admin/cert-preview" target="_blank" rel="noopener">{t.admin.certPreview}</a>
+        {/* A3 (навигация-связки): тихий выход из админки на публичный сайт, справа рядом с «Выйти».
+            margin-inline-start:auto прижимает пару к правому краю (второй auto у logout = 0). */}
+        <Link href="/" className="reveal-line admin-nav-site">{t.admin.toSite}</Link>
         <form action={logoutAction} className="admin-nav-logout">
           <button type="submit" className="reveal-line">{t.auth.logout}</button>
         </form>

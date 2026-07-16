@@ -37,6 +37,19 @@
   outline-offset: 2px;
 }
 
+/* A3 (навигация-связки): «На сайт» — тихий выход из админки, прижат к правому краю рядом
+   с «Выйти». Первый margin-inline-start:auto забирает всё свободное место, logout встаёт
+   вплотную справа. Кегль/цвет — как у кнопки logout, чтобы пара читалась единым блоком. */
+.admin-nav-site {
+  margin-inline-start: auto;
+  color: var(--paper);
+  font-size: var(--fs-small);
+}
+.admin-nav-site:focus-visible {
+  outline: 2px solid var(--neon);
+  outline-offset: 2px;
+}
+
 .admin-wide {
   max-width: 72rem;
 }
@@ -180,6 +193,22 @@
 .crm-flag {
   font-family: var(--font-mono), monospace;
   font-size: var(--fs-small);
+}
+
+/* A2 (навигация-связки): тихий mono-переход «клиент →» из заявки/консультации в карточку
+   клиента. Живёт в ячейке имени, переносится на свою строку — ширину таблицы не раздувает. */
+.admin-client-link {
+  font-family: var(--font-mono), monospace;
+  font-size: var(--fs-small);
+  color: var(--paper-muted);
+  white-space: nowrap;
+}
+.admin-client-link:hover {
+  color: var(--paper);
+}
+.admin-client-link:focus-visible {
+  outline: 2px solid var(--neon);
+  outline-offset: 2px;
 }
 
 /* ADM-12: номер сертификата в таблице карточки клиента — тот же приём mono-акцента, что у crm-flag. */
