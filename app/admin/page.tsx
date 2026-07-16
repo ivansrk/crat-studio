@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { db } from '@/lib/db'
 import { GrantForm } from './GrantForm'
 import { DeleteParticipant } from '@/components/admin/DeleteParticipant'
@@ -9,6 +10,13 @@ export const dynamic = 'force-dynamic'
 export default async function Registrations({ searchParams }: { searchParams: Promise<{ del?: string }> }) {
   const { del } = await searchParams
   const regs = await db.registration.findMany({ orderBy: { updatedAt: 'desc' } })
+  // A2 (навигация-связки): у заявки email === ключ учётки — если User с этим email есть,
+  // показываем тихий переход в карточку клиента. Один batch-запрос, Map email→userId.
+  const regUsers = regs.length === 0 ? [] : await db.user.findMany({
+    where: { email: { in: regs.map(r => r.email) } },
+    select: { id: true, email: true },
+  })
+  const userIdByEmail = new Map(regUsers.map(u => [u.email, u.id]))
   return (
     <main className="admin-wide">
       <h1>{t.admin.registrations}</h1>
@@ -28,7 +36,12 @@ export default async function Registrations({ searchParams }: { searchParams: Pr
             <tbody>
             {regs.map(r => (
               <tr key={r.id}>
-                <td>{r.firstName} {r.lastName}</td>
+                <td>
+                  {r.firstName} {r.lastName}
+                  {userIdByEmail.has(r.email) && (
+                    <> <Link className="admin-client-link" href={`/admin/clients/${userIdByEmail.get(r.email)}`}>{t.admin.clientLinkLabel}</Link></>
+                  )}
+                </td>
                 <td>{r.email}</td>
                 <td>{formatDate(r.createdAt)}</td>
                 <td>

@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { db } from '@/lib/db'
 import { getCourse } from '@/lib/content'
@@ -41,8 +42,12 @@ export default async function StudentProgress({ params, searchParams }: {
 
   return (
     <main className="admin-wide">
+      {/* A1 (навигация-связки): возврат к списку студентов + взаимный переход в карточку клиента
+          (та же учётка по userId, где профиль/согласия/CRM). */}
+      <p><Link href="/admin/students">{t.admin.backToStudents}</Link></p>
       <h1>{user.firstName} {user.lastName}</h1>
       <p>{user.email}</p>
+      <p><Link className="crat-button compact" href={`/admin/clients/${user.id}`}>{t.admin.clientCardLink}</Link></p>
       <DeleteBanner del={del} />
 
       <h2>{t.admin.progress}</h2>

@@ -1,5 +1,7 @@
+import Link from 'next/link'
 import { listConsultations } from '@/lib/consultation'
 import { updateConsultationStatusAction } from '@/app/actions/consultation'
+import { db } from '@/lib/db'
 import { formatDateTime } from '@/lib/i18n/format-date'
 import { t } from '@/lib/i18n'
 
@@ -12,6 +14,15 @@ const NEXT_STATUS = { NEW: 'CONTACTED', CONTACTED: 'CLOSED' } as const
 export default async function Consultations({ searchParams }: { searchParams: Promise<{ updated?: string }> }) {
   const { updated } = await searchParams
   const consultations = await listConsultations()
+  // A2 (навигация-связки): заявка из кабинета несёт userId (CONS-02) — если учётка ещё жива
+  // (userId без каскада, переживает GDPR-удаление), показываем тихий переход в карточку клиента.
+  // Публичные заявки без userId ссылки не получают: contact — свободный текст, ненадёжен для матча.
+  const consultUserIds = [...new Set(consultations.map(c => c.userId).filter((id): id is string => !!id))]
+  const liveUsers = consultUserIds.length === 0 ? [] : await db.user.findMany({
+    where: { id: { in: consultUserIds } },
+    select: { id: true },
+  })
+  const liveUserIds = new Set(liveUsers.map(u => u.id))
   const tc = t.admin.consultations
 
   return (
@@ -38,7 +49,12 @@ export default async function Consultations({ searchParams }: { searchParams: Pr
               return (
                 <tr key={c.id}>
                   <td>{formatDateTime(c.createdAt)}</td>
-                  <td>{c.name}</td>
+                  <td>
+                    {c.name}
+                    {c.userId && liveUserIds.has(c.userId) && (
+                      <> <Link className="admin-client-link" href={`/admin/clients/${c.userId}`}>{t.admin.clientLinkLabel}</Link></>
+                    )}
+                  </td>
                   <td>{c.contact}</td>
                   <td>{c.topic ? (t.consult.topicOptions[c.topic as keyof typeof t.consult.topicOptions] ?? c.topic) : t.admin.notYet}</td>
                   <td>{c.message}</td>
