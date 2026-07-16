@@ -1,10 +1,10 @@
-import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { currentUser } from '@/lib/auth/current-user'
 import { hasCourseAccess } from '@/lib/progress/access'
 import { db } from '@/lib/db'
 import { DAILY_LIMIT, warsawDayStart } from '@/lib/trainers/limits'
 import { SectionLabel } from '@/components/site/SectionLabel'
+import { TrainerFooterNav } from '@/components/site/TrainerFooterNav'
 import { T2Form } from './T2Form'
 import { t } from '@/lib/i18n'
 
@@ -12,7 +12,8 @@ import { t } from '@/lib/i18n'
  *  сам двухшаговый диалог — client-компонент T2Form. Счётчик «осталось N из 20» — per-trainer
  *  (D-042): T1 и T2 считаются раздельно, trainerId='t2' здесь; шаг «дожать» тратит вторую единицу
  *  лимита T2 (два реальных вызова Anthropic — TRN-03 про запросы, не про диалоги). */
-export default async function T2Page() {
+export default async function T2Page({ searchParams }: { searchParams: Promise<{ from?: string }> }) {
+  const { from } = await searchParams // S5/D-051: урок-источник (?from), валидируется в TrainerFooterNav
   // currentUser не null после layout-гейта (app/app/layout.tsx), но TS этого не знает —
   // паттерн из app/app/page.tsx/lessons/[lessonId]/trainers/t1.
   const user = await currentUser()
@@ -35,7 +36,7 @@ export default async function T2Page() {
 
       <T2Form />
 
-      <p><Link className="crat-button" href="/app/trainers">{t.trainers.backToCatalog}</Link></p>
+      <TrainerFooterNav from={from} />
     </main>
   )
 }

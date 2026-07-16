@@ -1,4 +1,3 @@
-import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { currentUser } from '@/lib/auth/current-user'
 import { hasCourseAccess } from '@/lib/progress/access'
@@ -6,6 +5,7 @@ import { db } from '@/lib/db'
 import { DAILY_LIMIT, warsawDayStart } from '@/lib/trainers/limits'
 import { T3_TASKS } from '@/lib/trainers/t3-tasks'
 import { SectionLabel } from '@/components/site/SectionLabel'
+import { TrainerFooterNav } from '@/components/site/TrainerFooterNav'
 import { T3Form } from './T3Form'
 import { t } from '@/lib/i18n'
 
@@ -17,14 +17,14 @@ import { t } from '@/lib/i18n'
  *  в T2Form — обычный <a>, полная перезагрузка страницы). Клиенту (T3Form) передаётся только
  *  безопасное подмножество задания (id/topic/text) — errors[].truth/howToCheck остаются на
  *  сервере и никогда не попадают в браузер, иначе задание решалось бы просмотром исходного кода. */
-export default async function T3Page({ searchParams }: { searchParams: Promise<{ i?: string }> }) {
+export default async function T3Page({ searchParams }: { searchParams: Promise<{ i?: string; from?: string }> }) {
   // currentUser не null после layout-гейта (app/app/layout.tsx), но TS этого не знает —
   // паттерн из app/app/page.tsx/lessons/[lessonId]/trainers/t1/t2.
   const user = await currentUser()
   if (!user) redirect('/login')
   if (!(await hasCourseAccess(user, 'ai-basics'))) redirect('/app') // тренажёры привязаны к ai-basics до мультикурсовых тренажёров (Ф8+)
 
-  const { i } = await searchParams
+  const { i, from } = await searchParams // from (S5/D-051): урок-источник, валидируется в TrainerFooterNav
   const parsed = Number.parseInt(i ?? '0', 10)
   const index = Number.isFinite(parsed) && parsed >= 0 ? parsed % T3_TASKS.length : 0
   const { id, topic, text } = T3_TASKS[index]
@@ -46,7 +46,7 @@ export default async function T3Page({ searchParams }: { searchParams: Promise<{
 
       <T3Form task={{ id, topic, text }} index={index} nextIndex={nextIndex} />
 
-      <p><Link className="crat-button" href="/app/trainers">{t.trainers.backToCatalog}</Link></p>
+      <TrainerFooterNav from={from} />
     </main>
   )
 }

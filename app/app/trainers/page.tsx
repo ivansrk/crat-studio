@@ -17,6 +17,11 @@ export default async function TrainersPage() {
   return (
     <main className="trainers-page">
       <SectionLabel kicker={t.trainers.catalogTitle} />
+      {/* S7 (аудит навигации 2026-07-16, D-051): видимый h1 каталога — раньше страница
+          открывалась только mono-кикером, без заголовка первого уровня (та же схема, что
+          на страницах отдельных тренажёров: kicker + crat-display h1). */}
+      <h1 className="crat-display">{t.trainers.catalogTitle}</h1>
+      <p className="crat-muted trainers-intro">{t.trainers.catalogIntro}</p>
 
       <div className="crat-card trainer-card">
         <h2>{t.trainers.t1Title}</h2>

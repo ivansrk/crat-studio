@@ -1,10 +1,10 @@
-import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { currentUser } from '@/lib/auth/current-user'
 import { hasCourseAccess } from '@/lib/progress/access'
 import { db } from '@/lib/db'
 import { DAILY_LIMIT, warsawDayStart } from '@/lib/trainers/limits'
 import { SectionLabel } from '@/components/site/SectionLabel'
+import { TrainerFooterNav } from '@/components/site/TrainerFooterNav'
 import { T1Form } from './T1Form'
 import { t } from '@/lib/i18n'
 
@@ -13,7 +13,8 @@ import { t } from '@/lib/i18n'
  *  проверяет tryConsume (lib/trainers/limits): дешёвый count по Warsaw-дню, без
  *  живого обновления после каждого ответа (страница не перезагружается useActionState'ом,
  *  тот же компромисс, что у остальных серверных счётчиков кабинета — обновится при заходе). */
-export default async function T1Page() {
+export default async function T1Page({ searchParams }: { searchParams: Promise<{ from?: string }> }) {
+  const { from } = await searchParams // S5/D-051: урок-источник (?from), валидируется в TrainerFooterNav
   // currentUser не null после layout-гейта (app/app/layout.tsx), но TS этого не знает —
   // паттерн из app/app/page.tsx/lessons/[lessonId].
   const user = await currentUser()
@@ -36,7 +37,7 @@ export default async function T1Page() {
 
       <T1Form />
 
-      <p><Link className="crat-button" href="/app/trainers">{t.trainers.backToCatalog}</Link></p>
+      <TrainerFooterNav from={from} />
     </main>
   )
 }

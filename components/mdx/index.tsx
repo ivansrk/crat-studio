@@ -12,14 +12,17 @@ type Props = Record<string, unknown>
 
 const asProp = <P,>(component: React.ComponentType<P>) => component as React.ComponentType<Props>
 
-export function mdxComponents(assetBase: string): Record<MdxComponentName, React.ComponentType<Props>> {
+/** fromLessonId (S5/D-051) прокидывается только со страницы урока — Trainer добавляет
+ *  его в ссылку как ?from={lessonId}, чтобы страница тренажёра дала «Вернуться к уроку».
+ *  На /articles аргумент не передаётся (Trainer там не встречается, но и без from ссылка валидна). */
+export function mdxComponents(assetBase: string, fromLessonId?: string): Record<MdxComponentName, React.ComponentType<Props>> {
   return {
     Figure: asProp((p: Parameters<typeof Figure>[0]) => <Figure {...p} assetBase={assetBase} />),
     Download: asProp((p: Parameters<typeof Download>[0]) => <Download {...p} assetBase={assetBase} />),
     Gallery: asProp(Gallery),
     Callout: asProp(Callout),
     Video: asProp(Video),
-    Trainer: asProp(Trainer),
+    Trainer: asProp((p: Parameters<typeof Trainer>[0]) => <Trainer {...p} fromLessonId={fromLessonId} />),
     Animation: asProp(Animation),
     Divider: asProp(Divider),
   }
