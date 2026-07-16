@@ -947,61 +947,123 @@ main.crat-page h1.crat-display {
   box-shadow: 0 0 24px rgba(187, 224, 92, .45);
 }
 
+/* studio-cards (решение Ивана 2026-07-16): expand-on-hover ряд 4 кадров-этапов.
+   МОБАЙЛ/ТАЧ — база (mobile-first): вертикальная стопка кадров с подписями ПОД
+   кадром, всегда видимыми; никаких обрезанных полос и «нажми чтобы раскрыть». */
 .studio-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  grid-template-rows: repeat(2, minmax(160px, auto));
-  grid-template-areas:
-    'a a b c'
-    'a a d d';
-  gap: 1.25rem;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+  padding: 0 clamp(1rem, 5vw, 1.5rem);
 }
-/* T7 дизайн-аудита (Б.8): mono-подписи под кадрами — рамка + подпись теперь внутри
-   <figure>, grid-area переехала на figure (была на .crat-visual-frame); figure —
-   flex-колонка, чтобы подпись не съедалась фикс. высотой ячейки (та же логика,
-   что предупреждение crat-design про aspect-ratio+overflow:hidden). */
 .studio-grid figure {
   margin: 0;
   display: flex;
   flex-direction: column;
-  min-height: 0;
+  min-width: 0;
 }
 .studio-grid figure .crat-visual-frame {
-  aspect-ratio: auto;
-  flex: 1 1 auto;
-  min-height: 160px;
+  aspect-ratio: 16 / 9;
 }
 .studio-frame-caption {
-  display: block;
-  margin: .75rem 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: .3rem;
+  margin-top: .75rem;
+}
+.studio-cap-title {
   font-family: var(--font-mono), monospace;
   text-transform: uppercase;
   letter-spacing: .1em;
   font-size: var(--fs-small);
+  color: var(--paper);
+}
+.studio-cap-sub {
+  font-family: var(--font-body), system-ui, sans-serif;
+  font-size: var(--fs-small);
+  line-height: 1.35;
   color: var(--paper-muted);
 }
-.studio-frame-a { grid-area: a; }
-.studio-frame-b { grid-area: b; }
-.studio-frame-c { grid-area: c; }
-.studio-frame-d { grid-area: d; }
 
-@media (max-width: 760px) {
+/* Планшет 520–767px: 2×2 — компактнее длинной стопки, ритм «плёнки» сохраняется. */
+@media (min-width: 520px) and (max-width: 767.98px) {
   .studio-grid {
-    grid-template-columns: 1fr;
-    /* grid-template-rows тоже сбрасываем: иначе унаследованный
-       "repeat(2, minmax(160px, auto))" и старые grid-area: a/b/c/d (ниже)
-       ссылаются на несуществующие именованные линии — Ф7в-ревью нашло
-       гигантский пустой промежуток перед последним кадром на 360px. */
-    grid-template-rows: none;
-    grid-template-areas: none;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.25rem;
+  }
+}
+
+/* ДЕСКТОП с реальным hover (≥768) — expand-on-hover.
+   Ряд из 4 кадров flex:1; наведённый растёт (flex-grow), соседние ужимаются в
+   полосы. Подпись оверлеем на кадре: в покое/ужатии — вертикальный mono-корешок
+   (всегда читаем, аудитория 40+ не теряет смысл без наведения), на активной —
+   горизонтальный заголовок + пояснение. Кривая — фирменная cubic-bezier(.23,1,.32,1).
+   Только под @media(hover:hover): на тач-ноутбуках ряд не превращается в полосы. */
+@media (min-width: 768px) and (hover: hover) {
+  .studio-grid {
+    display: flex;
+    grid-template-columns: none;
+    gap: 1rem;
+    height: clamp(340px, 52vh, 470px);
+    padding: 0 clamp(1rem, 4vw, 2rem);
   }
   .studio-grid figure {
-    grid-area: auto;
+    flex: 1 1 0;
+    min-width: 0;
+    position: relative;
+    display: block;
+    overflow: hidden;
+    border-radius: 14px;
+    transition: flex-grow .6s cubic-bezier(.23, 1, .32, 1);
+  }
+  .studio-grid figure:hover {
+    flex-grow: 3.4;
   }
   .studio-grid figure .crat-visual-frame {
-    aspect-ratio: 16 / 9;
-    flex: none;
-    min-height: 0;
+    position: absolute;
+    inset: 0;
+    aspect-ratio: auto;
+    height: 100%;
+    border-radius: 0;
+  }
+  /* оверлей: затемнение снизу и по левому краю — под обе ориентации подписи */
+  .studio-frame-caption {
+    position: absolute;
+    inset: 0;
+    z-index: 4;
+    margin: 0;
+    pointer-events: none;
+    background:
+      linear-gradient(to top, rgba(5, 5, 5, .85) 0%, rgba(5, 5, 5, .35) 42%, transparent 66%),
+      linear-gradient(to right, rgba(5, 5, 5, .55) 0%, transparent 26%);
+  }
+  /* корешок: mono-заголовок, position:absolute (не влияет на раскладку соседей);
+     в покое повёрнут вертикально, на hover — распрямляется в горизонталь. */
+  .studio-cap-title {
+    position: absolute;
+    left: clamp(1rem, 2vw, 1.4rem);
+    bottom: clamp(1rem, 2vw, 1.4rem);
+    white-space: nowrap;
+    transform-origin: left bottom;
+    transform: rotate(-90deg);
+    transition: transform .55s cubic-bezier(.23, 1, .32, 1);
+  }
+  .studio-grid figure:hover .studio-cap-title {
+    transform: rotate(0deg);
+  }
+  /* пояснение: скрыто в покое, проявляется над горизонтальным заголовком на hover */
+  .studio-cap-sub {
+    position: absolute;
+    left: clamp(1rem, 2vw, 1.4rem);
+    right: clamp(1rem, 2vw, 1.4rem);
+    bottom: calc(clamp(1rem, 2vw, 1.4rem) + 1.7rem);
+    opacity: 0;
+    transform: translateY(8px);
+    transition: opacity .4s ease, transform .5s cubic-bezier(.23, 1, .32, 1);
+  }
+  .studio-grid figure:hover .studio-cap-sub {
+    opacity: 1;
+    transform: none;
   }
 }
 
