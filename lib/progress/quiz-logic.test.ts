@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { scoreAnswers, isQuizPassed, isLessonPassed, nextQuestionIndex, isReplay, isValidChoice, PASS_SCORE, QUIZ_TOTAL, type StoredAnswer } from './quiz-logic'
+import { scoreAnswers, isQuizPassed, isLessonPassed, firstUnpassedLesson, nextQuestionIndex, isReplay, isValidChoice, PASS_SCORE, QUIZ_TOTAL, type StoredAnswer } from './quiz-logic'
 
 const a = (questionIndex: number, chosen: number, correct: boolean): StoredAnswer => ({ questionIndex, chosen, correct })
 
@@ -55,5 +55,31 @@ describe('quiz-logic', () => {
     expect(isLessonPassed({ quizPassedAt: null, practiceDoneAt: new Date() })).toBe(false)
     expect(isLessonPassed(null)).toBe(false)
     expect(isLessonPassed(undefined)).toBe(false)
+  })
+})
+
+describe('firstUnpassedLesson (S8/NAV-09) — цель кнопки «Продолжить»', () => {
+  const passed = { quizPassedAt: new Date(), practiceDoneAt: new Date() }
+  const partial = { quizPassedAt: new Date(), practiceDoneAt: null }
+  const lessons = [{ id: '1.1', title: 'A' }, { id: '1.2', title: 'B' }, { id: '2.1', title: 'C' }]
+
+  it('пустой прогресс → первый урок курса', () => {
+    expect(firstUnpassedLesson(lessons, new Map())).toEqual({ id: '1.1', title: 'A' })
+  })
+  it('первый пройден → первый непройденный дальше по порядку course.yaml', () => {
+    const by = new Map([['1.1', passed]])
+    expect(firstUnpassedLesson(lessons, by)).toEqual({ id: '1.2', title: 'B' })
+  })
+  it('начатый, но не пройденный урок (только квиз) не считается пройденным', () => {
+    const by = new Map([['1.1', partial]])
+    expect(firstUnpassedLesson(lessons, by)).toEqual({ id: '1.1', title: 'A' })
+  })
+  it('дырка в середине: 1.1 и 2.1 пройдены, 1.2 нет → 1.2 (порядок, а не «последний открытый»)', () => {
+    const by = new Map([['1.1', passed], ['2.1', passed]])
+    expect(firstUnpassedLesson(lessons, by)).toEqual({ id: '1.2', title: 'B' })
+  })
+  it('все пройдены → null (кнопки нет, дальше финальный проект)', () => {
+    const by = new Map([['1.1', passed], ['1.2', passed], ['2.1', passed]])
+    expect(firstUnpassedLesson(lessons, by)).toBeNull()
   })
 })

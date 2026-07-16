@@ -5,7 +5,7 @@ import { getCourse, lessonCount } from '@/lib/content'
 import { currentUser } from '@/lib/auth/current-user'
 import { hasCourseAccess } from '@/lib/progress/access'
 import { getCourseProgress } from '@/lib/progress'
-import { isLessonPassed } from '@/lib/progress/quiz-logic'
+import { isLessonPassed, firstUnpassedLesson } from '@/lib/progress/quiz-logic'
 import { getDueDeferred } from '@/lib/progress/deferred'
 import { saveMissionAction } from '@/app/actions/lesson'
 import { getCurrentSubmission } from '@/lib/project'
@@ -39,7 +39,7 @@ export default async function CourseCabinet({ params }: { params: Promise<{ cour
       <main className="crat-page">
         <section className="crat-section">
           <div className="crat-shell">
-            <h1 className="crat-display">{t.auth.cabinetTitle}</h1>
+            <h1 className="crat-display">{entry.course.title}</h1>
             <p className="crat-muted">{t.cabinet.noAccess}</p>
           </div>
         </section>
@@ -49,6 +49,8 @@ export default async function CourseCabinet({ params }: { params: Promise<{ cour
 
   const { course } = entry
   const { byLesson, completedCount } = await getCourseProgress(user.id, courseSlug)
+  // S8/NAV-09: первый непройденный урок — цель кнопки «Продолжить» (null → все пройдены).
+  const nextLesson = firstUnpassedLesson(course.modules.flatMap(m => m.lessons), byLesson)
   const total = lessonCount(courseSlug) // знаменатель «N/12» из course.yaml, не хардкод (ревью T6)
   const pct = Math.min(100, (completedCount / total) * 100)
   // Ф4 T2/F19: due-блок повторения (CAB-04/06) — по всем курсам студента (без courseSlug — deferred.ts T2),
@@ -63,7 +65,15 @@ export default async function CourseCabinet({ params }: { params: Promise<{ cour
     <main className="crat-page">
       <section className="crat-section">
         <div className="crat-shell">
-          <h1 className="crat-display">{t.auth.cabinetTitle}</h1>
+          {/* S3/NAV-08: тихий путь к хабу/каталогу — единственный курс редиректит /app сюда,
+              поэтому «Все курсы» ведёт на /app?all=1 (минует редирект), иначе хаб недостижим. */}
+          <p className="cabinet-back-row">
+            <Link className="reveal-line cabinet-back-link" href="/app?all=1">{t.cabinet.allCourses}</Link>
+          </p>
+          {/* S4/NAV-09: h1 — название курса (раньше на хабе и на курсе была одинаковая «Кабинет»).
+              Шапка кабинета показывает то же название тихим mono-кикером — крупный display-h1 и
+              мелкий kicker-ярлык в липкой шапке не дублируют друг друга некрасиво. */}
+          <h1 className="crat-display">{course.title}</h1>
 
           {/* CAB-01 бриф §9: «линия горизонта» — 4 модуля-«здания» над полосой прогресса,
               точка света идёт по существующему pct; статус здания считается из byLesson
@@ -106,6 +116,19 @@ export default async function CourseCabinet({ params }: { params: Promise<{ cour
             </div>
             <p className="crat-muted">{completedCount}/{total} · {t.cabinet.progressLabel}</p>
           </section>
+
+          {/* S8/NAV-09: заметная primary-кнопка «Продолжить» на первый непройденный урок —
+              главный путь взрослого студента обратно в курс, рядом с горизонтом прогресса, до
+              списка модулей. Все уроки пройдены (nextLesson === null) → кнопки нет: следующий шаг
+              это финальный проект, чей блок с CTA уже виден ниже (дублировать его тут не нужно). */}
+          {nextLesson && (
+            <Link
+              className="crat-button primary cabinet-continue"
+              href={`/app/${courseSlug}/lessons/${nextLesson.id}`}
+            >
+              {t.cabinet.continueLesson.replace('{id}', nextLesson.id).replace('{title}', nextLesson.title)}
+            </Link>
+          )}
 
           {/* Ф4 T2: повторение приоритетно — сразу после прогресса, до миссии и уроков (CAB-04…06). */}
           {dueReview && (

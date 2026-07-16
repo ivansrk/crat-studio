@@ -140,20 +140,30 @@ describe('splitCourseCatalog (MC-03) — мои курсы vs каталог', (
   })
 })
 
-describe('soleCourseRedirect — редирект хаба на единственный курс', () => {
-  it('один мой курс и пустой каталог остальных → slug этого курса', () => {
-    // реестр из одного курса (моделирует единственный курс в проде) — реальные фикстуры дают 2 (MC-08)
-    const onlyCourse = getCourses().filter(c => c.slug === 'ai-basics')
-    const { mine, others } = splitCourseCatalog(onlyCourse, ['ai-basics'])
-    expect(soleCourseRedirect(mine, others)).toBe('ai-basics')
+describe('soleCourseRedirect — редирект хаба на единственный курс (S3/NAV-08)', () => {
+  it('ровно один мой (опубликованный) курс → slug этого курса', () => {
+    const { mine } = splitCourseCatalog(getCourses(), ['ai-basics'])
+    expect(soleCourseRedirect(mine)).toBe('ai-basics')
   })
-  it('один мой курс, но каталог остальных непуст (demo-course «Скоро») → null (хаб нужен)', () => {
+  it('один мой курс, при непустом каталоге остальных (demo-course «Скоро») → всё равно редирект', () => {
+    // S3: demo-course «Скоро» в каталоге больше НЕ блокирует редирект — «домой» это сам курс,
+    // каталог доступен ссылкой «Все курсы» (/app?all=1). Раньше здесь ожидался null.
     const { mine, others } = splitCourseCatalog(getCourses(), ['ai-basics'])
-    expect(soleCourseRedirect(mine, others)).toBeNull()
+    expect(others.length).toBeGreaterThan(0)
+    expect(soleCourseRedirect(mine)).toBe('ai-basics')
   })
   it('нет моих курсов → null', () => {
-    const { mine, others } = splitCourseCatalog(getCourses(), [])
-    expect(soleCourseRedirect(mine, others)).toBeNull()
+    const { mine } = splitCourseCatalog(getCourses(), [])
+    expect(soleCourseRedirect(mine)).toBeNull()
+  })
+  it('несколько моих курсов → null (хаб нужен для выбора)', () => {
+    const { mine } = splitCourseCatalog(getCourses(), ['ai-basics', 'demo-course'])
+    expect(soleCourseRedirect(mine)).toBeNull()
+  })
+  it('единственный мой курс не опубликован → null (не редиректить на 404)', () => {
+    const { mine } = splitCourseCatalog(getCourses(), ['demo-course'])
+    expect(mine.map(c => c.slug)).toEqual(['demo-course'])
+    expect(soleCourseRedirect(mine)).toBeNull()
   })
 })
 

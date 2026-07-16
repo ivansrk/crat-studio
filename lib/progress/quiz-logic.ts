@@ -21,6 +21,19 @@ export function isLessonPassed<T extends { quizPassedAt: Date | null; practiceDo
   return !!p?.quizPassedAt && !!p?.practiceDoneAt
 }
 
+/** S8 (аудит навигации 2026-07-16, NAV-09): первый НЕ пройденный урок курса — цель кнопки
+ *  «Продолжить». Идёт по уроками в порядке course.yaml (как их передал вызывающий), возвращает
+ *  первый, для которого isLessonPassed ложно (тот же критерий LES-12, что и везде), или null,
+ *  если пройдены все (тогда кнопки «Продолжить урок» нет — следующий шаг это финальный проект,
+ *  чей блок с CTA уже виден ниже на странице курса). Чистая функция без БД — тестируется отдельно. */
+export function firstUnpassedLesson<
+  P extends { quizPassedAt: Date | null; practiceDoneAt: Date | null },
+  L extends { id: string },
+>(lessons: L[], byLesson: Map<string, P | undefined>): L | null {
+  for (const l of lessons) if (!isLessonPassed(byLesson.get(l.id))) return l
+  return null
+}
+
 /** Идемпотентный повтор ответа (двойной клик, ревью T2): вопрос уже отвечен ТЕМ ЖЕ chosen →
  *  сохранённая запись; иначе null (реальный out-of-order). Первый ответ побеждает (как в scoreAnswers). */
 export function isReplay(answers: StoredAnswer[], questionIndex: number, chosen: number): StoredAnswer | null {

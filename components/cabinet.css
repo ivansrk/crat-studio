@@ -38,6 +38,27 @@
   white-space: nowrap;
   margin-right: auto;
 }
+/* S2 (NAV-07): название курса — ссылка на /app/{slug}. Остаётся тихим: цвет kicker,
+   не глобальный neon (a{color:var(--neon)}). Подчёркивание — только под hover-указателем.
+   Высота шапки не меняется: подчёркивание рисуется background-image (reveal-line-паттерн),
+   не text-decoration, и не увеличивает line-box. */
+a.cabinet-header-course {
+  color: var(--paper-muted);
+  text-decoration: none;
+  background-image: linear-gradient(var(--paper-muted), var(--paper-muted));
+  background-position: 0 100%;
+  background-repeat: no-repeat;
+  background-size: 0% 1px;
+  transition: background-size .18s cubic-bezier(.23, 1, .32, 1);
+}
+@media (hover: hover) {
+  a.cabinet-header-course:hover { background-size: 100% 1px; }
+}
+a.cabinet-header-course:focus-visible {
+  outline: 2px solid var(--neon);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
 .cabinet-header-actions {
   display: flex;
   align-items: center;
@@ -60,6 +81,29 @@
   cursor: pointer;
   padding-block: .7rem;
   margin-block: -.7rem;
+}
+
+/* S3 (NAV-08): тихая ссылка-возврат «Все курсы» над h1 страницы курса. Крупный тач-таргет,
+   без лишнего вертикального веса — маленький mono-ярлык уровня «хлебных крошек». */
+.cabinet-back-row {
+  margin: 0 0 .75rem;
+}
+.cabinet-back-link {
+  display: inline-block;
+  font-family: var(--font-mono), monospace;
+  text-transform: uppercase;
+  letter-spacing: .14em;
+  font-size: var(--fs-small);
+  color: var(--paper-muted);
+  padding-block: .35rem;
+}
+
+/* S8 (NAV-09): primary-кнопка «Продолжить» под горизонтом прогресса. Своя строка (block),
+   заметный отступ от полосы прогресса и от блоков ниже — главный путь обратно в курс. */
+.cabinet-continue {
+  display: inline-flex;
+  margin: 0 0 2rem;
+  max-width: 100%;
 }
 
 /* CAB-01 бриф §9: «линия горизонта» — 4 модуля-«здания» + полоса прогресса с точкой света. */

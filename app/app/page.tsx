@@ -15,9 +15,11 @@ const COURSE_LANDING: Record<string, string> = { 'ai-basics': '/ai-basics' }
 
 /** MC-03: /app — хаб «Мои курсы» + каталог остальных курсов + консультации/повторение.
  *  Курсовые вещи (миссия, горизонт-прогресс, модули/уроки, мини-проект, сертификат) живут на
- *  /app/{courseSlug} — хаб их НЕ дублирует. Единственный enrollment и пустой каталог
- *  остальных курсов → редирект сразу на /app/{slug} (soleCourseRedirect), без лишнего клика. */
-export default async function Cabinet() {
+ *  /app/{courseSlug} — хаб их НЕ дублирует. S3/NAV-08: единственный enrollment → редирект сразу
+ *  на /app/{slug} (soleCourseRedirect), без лишнего экрана-хаба; тихая ссылка «Все курсы» со
+ *  страницы курса приходит сюда с ?all=1 и минует редирект, чтобы каталог/хаб оставались доступны. */
+export default async function Cabinet({ searchParams }: { searchParams: Promise<{ all?: string }> }) {
+  const { all } = await searchParams
   // currentUser не null после layout-гейта (app/app/layout.tsx), но TS этого не знает —
   // на всякий случай (истёкшая сессия между рендерами) отправляем на /login, а не падаем.
   const user = await currentUser()
@@ -26,7 +28,8 @@ export default async function Cabinet() {
   const enrollments = await db.enrollment.findMany({ where: { userId: user.id } })
   const { mine, others } = splitCourseCatalog(getCourses(), enrollments.map(e => e.courseSlug))
 
-  const redirectSlug = soleCourseRedirect(mine, others)
+  // ?all=1 (ссылка «Все курсы» со страницы курса) — показать полный хаб, не редиректить назад в курс.
+  const redirectSlug = all ? null : soleCourseRedirect(mine)
   if (redirectSlug) redirect(`/app/${redirectSlug}`)
 
   // T5 дизайн-аудита: статусы «Проект на проверке»/«Сертификат готов» — видны сразу на
