@@ -1,6 +1,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import { validateMdx } from './validate-mdx'
+import { ARTICLE_COMPONENTS } from './whitelist'
 import { isNonEmptyString, readYaml, readFile } from './yaml-utils'
 import { animationIds } from '@/lib/design/animations/registry'
 
@@ -10,7 +11,9 @@ export type ArticleMeta = {
   description: string
   date: string
   draft?: boolean
-  /** Ф7в: обложка статьи, аддитивное поле контракта §8 — имя файла в public/images/. Опционально: нет поля → карточка/шапка без картинки, как раньше. */
+  /** Ф7в/D-052: обложка статьи, аддитивное поле контракта §8. Имя файла в public/images/
+   *  ЛИБО путь в assets/ статьи (напр. `assets/cover.webp`). Опционально: нет поля →
+   *  карточка/шапка без картинки, как раньше. */
   cover?: string
 }
 export type Article = { meta: ArticleMeta; mdx: string; dir: string }
@@ -42,11 +45,18 @@ export function loadArticles(dir: string): { articles: Article[]; issues: Articl
       if (!isNonEmptyString(meta.description)) err('description пуст или не строка')
       if (!meta.date || Number.isNaN(Date.parse(String(meta.date)))) err(`date некорректна: "${meta.date}"`)
       // cover — аддитивное поле §8: warning, не error (не роняем статью из-за отсутствующей картинки).
+      // Путь `assets/…` ищем в каталоге статьи, иначе — в public/images/ (D-052).
       if (meta.cover !== undefined) {
         if (!isNonEmptyString(meta.cover)) {
           issues.push({ level: 'warning', slug, message: 'cover задан, но не непустая строка — игнорируется' })
-        } else if (!fs.existsSync(path.join(process.cwd(), 'public', 'images', meta.cover))) {
-          issues.push({ level: 'warning', slug, message: `cover "${meta.cover}" не найден в public/images/` })
+        } else {
+          const coverPath = meta.cover.startsWith('assets/')
+            ? path.join(articleDir, meta.cover)
+            : path.join(process.cwd(), 'public', 'images', meta.cover)
+          if (!fs.existsSync(coverPath)) {
+            const where = meta.cover.startsWith('assets/') ? `assets/ статьи` : 'public/images/'
+            issues.push({ level: 'warning', slug, message: `cover "${meta.cover}" не найден в ${where}` })
+          }
         }
       }
     }
@@ -56,7 +66,14 @@ export function loadArticles(dir: string): { articles: Article[]; issues: Articl
         fs.existsSync(assetsDir) ? fs.readdirSync(assetsDir).map(f => `assets/${f}`) : [],
       )
       // Trainer запрещён в статьях: тренажёры — только студентам (TRN-06, §8).
-      for (const m of validateMdx(mdx, { existingAssets, animationIds, forbidComponents: ['Trainer'] }))
+      // ARTICLE_COMPONENTS (Lead/PullQuote/KeyPoints/Sources) разрешены сверх базового
+      // белого списка — только в статьях (§8 v2.1/D-052).
+      for (const m of validateMdx(mdx, {
+        existingAssets,
+        animationIds,
+        forbidComponents: ['Trainer'],
+        extraComponents: [...ARTICLE_COMPONENTS],
+      }))
         err(`article.mdx: ${m}`)
     }
 

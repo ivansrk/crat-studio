@@ -7,6 +7,10 @@ import { Download } from './Download'
 import { Trainer } from './Trainer'
 import { Animation } from './Animation'
 import { Divider } from './Divider'
+import { Lead } from './Lead'
+import { PullQuote } from './PullQuote'
+import { KeyPoints } from './KeyPoints'
+import { Sources } from './Sources'
 
 type Props = Record<string, unknown>
 
@@ -14,7 +18,9 @@ const asProp = <P,>(component: React.ComponentType<P>) => component as React.Com
 
 /** fromLessonId (S5/D-051) прокидывается только со страницы урока — Trainer добавляет
  *  его в ссылку как ?from={lessonId}, чтобы страница тренажёра дала «Вернуться к уроку».
- *  На /articles аргумент не передаётся (Trainer там не встречается, но и без from ссылка валидна). */
+ *  На /articles аргумент не передаётся (Trainer там не встречается, но и без from ссылка валидна).
+ *  Lead/PullQuote/KeyPoints/Sources (D-052) валидны только в статьях (ARTICLE_COMPONENTS);
+ *  регистрируются всегда — валидатор не пускает их в уроки, так что коллизии нет. */
 export function mdxComponents(assetBase: string, fromLessonId?: string): Record<MdxComponentName, React.ComponentType<Props>> {
   return {
     Figure: asProp((p: Parameters<typeof Figure>[0]) => <Figure {...p} assetBase={assetBase} />),
@@ -25,5 +31,9 @@ export function mdxComponents(assetBase: string, fromLessonId?: string): Record<
     Trainer: asProp((p: Parameters<typeof Trainer>[0]) => <Trainer {...p} fromLessonId={fromLessonId} />),
     Animation: asProp(Animation),
     Divider: asProp(Divider),
+    Lead: asProp(Lead),
+    PullQuote: asProp(PullQuote),
+    KeyPoints: asProp(KeyPoints),
+    Sources: asProp(Sources),
   }
 }

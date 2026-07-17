@@ -10,6 +10,9 @@ export type MdxValidationCtx = {
   animationIds: Set<string>
   /** Opt-in: имена компонентов, запрещённых в этом разделе (напр. Trainer в статьях, §8). Не влияет на уроки. */
   forbidComponents?: string[]
+  /** Opt-in: компоненты, разрешённые сверх базового белого списка (напр. ARTICLE_COMPONENTS
+   *  в статьях, §8 v2.1/D-052). Не задано → только MDX_COMPONENTS (поведение уроков). */
+  extraComponents?: string[]
 }
 
 /** Обязательные строковые пропы компонентов; отсутствие — ошибка. */
@@ -55,7 +58,7 @@ export function validateMdx(src: string, ctx: MdxValidationCtx): string[] {
     return [`MDX не парсится: ${(e as Error).message}`]
   }
 
-  const whitelist = new Set<string>(MDX_COMPONENTS)
+  const whitelist = new Set<string>([...MDX_COMPONENTS, ...(ctx.extraComponents ?? [])])
 
   visit(tree, (node) => {
     switch (node.type) {
