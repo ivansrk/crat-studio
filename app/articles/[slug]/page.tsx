@@ -4,7 +4,7 @@ import { notFound } from 'next/navigation'
 import Image from 'next/image'
 import { MDXRemote } from 'next-mdx-remote/rsc'
 import Link from 'next/link'
-import { getArticle, getArticles } from '@/lib/content'
+import { getArticle, getArticles, articleCoverSrc } from '@/lib/content'
 import { extractH2, readingTimeMin, slugifyHeading } from '@/lib/content/toc'
 import { mdxComponents } from '@/components/mdx'
 import { formatDate } from '@/lib/i18n/format-date'
@@ -55,11 +55,7 @@ export default async function ArticlePage({ params }: Props) {
   const components = { ...mdxComponents(base), h2: ArticleH2 }
 
   // Обложка (D-052): `assets/…` — из каталога статьи, иначе — из public/images/.
-  const cover = article.meta.cover
-    ? article.meta.cover.startsWith('assets/')
-      ? `${base}/${article.meta.cover}`
-      : `/images/${article.meta.cover}`
-    : null
+  const cover = articleCoverSrc(slug, article.meta.cover)
 
   const minutes = readingTimeMin(article.mdx)
   const headings = extractH2(article.mdx)
