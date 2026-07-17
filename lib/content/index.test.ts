@@ -167,9 +167,9 @@ describe('soleCourseRedirect — редирект хаба на единстве
   })
 })
 
-describe('статьи репозитория валидны (content/articles: 2 заглушки Ф6 + 6 статей course-factory 15.07 + 1 лонгрид-выпуск 17.07)', () => {
-  it('9 статей валидны, без ошибок', () => {
-    expect(getArticles().length).toBe(9)
+describe('статьи репозитория валидны (content/articles: 2 заглушки Ф6 + 6 статей course-factory 15.07 + 3 лонгрид-выпуска 17.07)', () => {
+  it('11 статей валидны, без ошибок', () => {
+    expect(getArticles().length).toBe(11)
     expect(articleIssues()).toEqual([])
   })
   it('getArticle(slug) — статья по существующему slug, null для мусора', () => {
