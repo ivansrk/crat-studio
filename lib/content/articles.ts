@@ -84,6 +84,20 @@ export function loadArticles(dir: string): { articles: Article[]; issues: Articl
 }
 
 /**
+ * URL обложки статьи (D-052). `assets/…` — файл в каталоге статьи, отдаётся через
+ * маршрут /content-assets/; иначе cover — имя файла в public/images/. null, если поля нет.
+ * Знание о раскладке контента живёт в lib/content: и карточка каталога (/articles), и
+ * шапка статьи (/articles/{slug}) обязаны резолвить путь одинаково — общий хелпер против
+ * расхождения (карточка раньше игнорировала префикс assets/ и давала /images/assets/…).
+ */
+export function articleCoverSrc(slug: string, cover: string | undefined): string | null {
+  if (!cover) return null
+  return cover.startsWith('assets/')
+    ? `/content-assets/articles/${slug}/${cover}`
+    : `/images/${cover}`
+}
+
+/**
  * Опубликованные статьи (без draft), по дате по убыванию (ART-02).
  * Тай-брейк при равных датах — slug asc: порядок readdir не гарантирован,
  * а список публично виден в /articles и sitemap.

@@ -1,7 +1,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import { loadCourse } from './loader'
-import { loadArticles, publishedArticles } from './articles'
+import { loadArticles, publishedArticles, articleCoverSrc } from './articles'
 import type { CourseContent, Lesson, ContentIssue } from './types'
 import type { Article, ArticleIssue } from './articles'
 
@@ -181,3 +181,4 @@ export function getArticle(slug: string): Article | null {
 export function articleIssues(): ArticleIssue[] {
   return getArticlesRaw().issues
 }
+export { articleCoverSrc }

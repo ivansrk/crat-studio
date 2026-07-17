@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import Image from 'next/image'
-import { getArticles } from '@/lib/content'
+import { getArticles, articleCoverSrc } from '@/lib/content'
 import { formatDate } from '@/lib/i18n/format-date'
 import { t } from '@/lib/i18n'
 import { SiteHeader } from '@/components/site/SiteHeader'
@@ -34,13 +34,15 @@ export default function ArticlesPage() {
               <p className="crat-muted">{t.articles.empty}</p>
             ) : (
               <div className="crat-grid">
-                {articles.map(a => (
+                {articles.map(a => {
+                  const coverSrc = articleCoverSrc(a.meta.slug, a.meta.cover)
+                  return (
                   <Link key={a.meta.slug} href={`/articles/${a.meta.slug}`} className="crat-card article-card">
                     <article>
-                      {a.meta.cover && (
+                      {coverSrc && (
                         <div className="article-card-cover">
                           <Image
-                            src={`/images/${a.meta.cover}`}
+                            src={coverSrc}
                             alt={a.meta.title}
                             fill
                             sizes="(max-width: 700px) 100vw, 33vw"
@@ -52,7 +54,8 @@ export default function ArticlesPage() {
                       <p className="crat-kicker">{formatDate(new Date(a.meta.date))}</p>
                     </article>
                   </Link>
-                ))}
+                  )
+                })}
               </div>
             )}
           </div>
