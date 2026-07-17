@@ -1,6 +1,7 @@
 import { t } from '@/lib/i18n'
 import type { CourseYaml } from '@/lib/content/types'
 import type { Article } from '@/lib/content/articles'
+import { readingTimeMin } from '@/lib/content/toc'
 
 type Schema = Record<string, unknown>
 
@@ -70,6 +71,8 @@ export function articleSchema(article: Article): Schema {
     headline: article.meta.title,
     description: article.meta.description,
     datePublished: article.meta.date,
+    // D-052: время чтения считается из текста (слов/200), в мету не выносится.
+    timeRequired: `PT${readingTimeMin(article.mdx)}M`,
     inLanguage: 'ru',
     publisher: organizationNode(),
   }

@@ -95,4 +95,24 @@ describe('validateMdx', () => {
   it('forbidComponents не задан — поведение уроков не меняется (Trainer с известным id проходит)', () => {
     expect(ok('<Trainer id="t1" />')).toHaveLength(0)
   })
+
+  // D-052 (§8 v2.1): ARTICLE_COMPONENTS — только в статьях (extraComponents), не в уроках.
+  it('компонент статьи (Lead/KeyPoints/…) в уроке (без extraComponents) — вне белого списка', () => {
+    expect(ok('<Lead>текст</Lead>').join()).toMatch(/вне белого списка.*Lead|Lead.*вне белого списка/)
+    expect(ok('<KeyPoints>x</KeyPoints>').join()).toMatch(/KeyPoints/)
+  })
+  it('extraComponents разрешает компоненты статьи; базовый белый список остаётся', () => {
+    const art = (src: string) =>
+      validateMdx(src, {
+        existingAssets: new Set(),
+        animationIds: new Set(ANIMS),
+        extraComponents: ['Lead', 'PullQuote', 'KeyPoints', 'Sources'],
+      })
+    expect(art('<Lead>лид</Lead>')).toHaveLength(0)
+    expect(art('<PullQuote cite="кто-то">цитата</PullQuote>')).toHaveLength(0)
+    expect(art('<KeyPoints>\n- пункт\n</KeyPoints>')).toHaveLength(0)
+    expect(art('<Sources>\n- [дом](https://example.com)\n</Sources>')).toHaveLength(0)
+    // компонент вне обоих списков всё равно ошибка
+    expect(art('<Hacker />').join()).toMatch(/Hacker/)
+  })
 })

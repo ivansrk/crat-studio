@@ -254,33 +254,421 @@
   }
 }
 
-/* обложка в шапке статьи (Ф7в/D-038) — та же узкая колонка, что у остального текста статьи */
-.article-cover {
-  position: relative;
-  aspect-ratio: 16 / 9;
-  border-radius: 14px;
-  overflow: hidden;
-  margin-bottom: 1.5rem;
+/* ============================================================================
+   D-052 — редакционный лонгрид /articles/{slug}. Тёмная система CRAT + приёмы
+   типографики урока (.lesson-mdx), скоуп .article-mdx (уроки не затрагиваются).
+   Референсы брифа: MUBI/NOWNESS/e-flux. «Image is the protagonist» — обложка-кадр
+   со скримом; «Interface is quiet» — тихие mono-кикеры, красная линия = свет.
+   ============================================================================ */
+
+/* main статьи — на всю ширину (обложка-кадр full-bleed); колонку чтения даёт .article-body */
+main.article-page {
+  max-width: none;
+  padding: 0;
 }
-.article-cover img {
+
+/* ---------- обложка-«кадр» (image is the protagonist) ---------- */
+.article-hero {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  min-height: clamp(340px, 62vh, 600px);
+  overflow: hidden;
+}
+.article-hero-media {
+  position: absolute;
+  inset: 0;
+}
+.article-hero-media img {
   object-fit: cover;
 }
-
-/* T7 дизайн-аудита (Б.6): лид статьи — meta.description под заголовком, крупнее
-   основного текста и курсивом Cormorant (T6 .crat-em) — description УЖЕ выводился
-   только в <meta>, в теле статьи отсутствовал. */
-.article-lead {
-  font-size: 1.25rem;
-  line-height: 1.5;
-  max-width: var(--maxw-text);
-  margin: 0 0 1.5rem;
+/* скрим: читаемость заголовка поверх кадра (анти-дефолт: текст на фото без scrim запрещён).
+   Тёмный к низу, где лежит текст; лёгкое затемнение по всему кадру. */
+.article-hero-scrim {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(to top, var(--bg-deep) 1%, rgba(14, 11, 11, .88) 24%, rgba(14, 11, 11, .42) 56%, rgba(14, 11, 11, .55) 100%);
+}
+.article-hero-inner {
+  position: relative;
+  width: 100%;
+  max-width: 44rem;
+  margin: 0 auto;
+  padding: 2.5rem 1.25rem 2.75rem;
+}
+.article-hero-inner .article-title,
+.article-hero-inner .article-meta {
+  /* дополнительная страховка читаемости поверх кадра */
+  text-shadow: 0 2px 18px rgba(0, 0, 0, .55);
 }
 
-/* V1 (перелинковка): «Читать ещё» в конце статьи — тихий блок в узкой колонке чтения.
-   Mono-кикер + список ссылок с red underline-reveal (reveal-line), не карточная лента. */
+/* ---------- типографическая шапка (без обложки) ---------- */
+.article-header {
+  max-width: 44rem;
+  margin: 0 auto;
+  padding: 3rem 1.25rem 0;
+}
+
+/* заголовок статьи — редакционный headline (чуть спокойнее hero-display главной) */
+.article-title {
+  font-size: clamp(2rem, 5.2vw, 3.4rem);
+  margin: .6rem 0 0;
+  overflow-wrap: anywhere;
+  hyphens: auto;
+}
+
+/* дата · время чтения — тихий mono под заголовком */
+.article-meta {
+  font-family: var(--font-mono), monospace;
+  font-size: var(--fs-small);
+  letter-spacing: .04em;
+  color: var(--paper-muted);
+  margin: 1rem 0 0;
+}
+
+/* ---------- колонка чтения ---------- */
+.article-body {
+  max-width: 42rem;   /* ≤75ch при базовом кегле (UX-01) */
+  margin: 0 auto;
+  padding: 2.5rem 1.25rem 4rem;
+}
+
+/* standfirst — meta.description крупным курсивом Cormorant (T6 .crat-em), резюме под заголовком */
+.article-lead {
+  font-size: clamp(1.3rem, 3.5vw, 1.6rem);
+  line-height: 1.45;
+  color: var(--paper);
+  margin: 0 0 1.75rem;
+}
+
+/* оглавление «В этой статье» — тихий блок (≥4 h2), не загромождает: mono-номера, red reveal */
+.article-toc {
+  margin: 0 0 2.5rem;
+  padding: 1.25rem 0;
+  border-top: 1px solid var(--line-soft);
+  border-bottom: 1px solid var(--line-soft);
+}
+.article-toc ol {
+  list-style: none;
+  counter-reset: toc;
+  margin: .85rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: .6rem;
+}
+.article-toc li {
+  counter-increment: toc;
+  position: relative;
+  padding-left: 2.1rem;
+  line-height: 1.4;
+}
+.article-toc li::before {
+  content: counter(toc, decimal-leading-zero);
+  position: absolute;
+  left: 0;
+  top: .15em;
+  font-family: var(--font-mono), monospace;
+  font-size: .82em;
+  color: var(--neon);
+}
+.article-toc a {
+  color: var(--paper);
+}
+
+/* ---------- проза статьи (.article-mdx) — приёмы .lesson-mdx, свой скоуп ---------- */
+.article-mdx {
+  font-size: var(--fs-base);
+  line-height: 1.75;
+}
+.article-mdx > :last-child {
+  margin-bottom: 0;
+}
+.article-mdx p {
+  margin: 0 0 1.3rem;
+  overflow-wrap: break-word;
+}
+/* ссылки в прозе — красный свет + подчёркивание (не «синяя ссылка») */
+.article-mdx a {
+  color: var(--neon);
+  text-underline-offset: .18em;
+  text-decoration-color: var(--line-red);
+}
+@media (hover: hover) {
+  .article-mdx a:hover {
+    text-decoration-color: var(--neon);
+  }
+}
+
+/* h2 — ступень с красной линией-светом над заголовком (горизонт CRAT) */
+.article-mdx h2 {
+  font-family: var(--font-accent), serif;
+  font-weight: 700;
+  font-size: clamp(1.6rem, 3.6vw, 2.2rem);
+  line-height: 1.18;
+  margin: 2.85rem 0 1rem;
+  text-wrap: balance;
+}
+.article-mdx h2::before {
+  content: '';
+  display: block;
+  width: 3.5rem;
+  height: 2px;
+  margin-bottom: 1rem;
+  background: var(--neon);
+  box-shadow: var(--neon-glow);
+}
+.article-mdx h2:first-child {
+  margin-top: 0;
+}
+.article-mdx h3 {
+  font-family: var(--font-accent), serif;
+  font-weight: 700;
+  font-size: clamp(1.3rem, 2.6vw, 1.6rem);
+  line-height: 1.25;
+  margin: 2rem 0 .75rem;
+}
+
+/* strong — ключевые слова всплывают (вес + к белому); em — Cormorant italic */
+.article-mdx strong {
+  font-weight: 700;
+  color: color-mix(in srgb, var(--paper) 70%, #fff);
+}
+.article-mdx em {
+  font-family: var(--font-accent), serif;
+  font-style: italic;
+  font-size: 1.08em;
+  color: var(--paper);
+}
+
+/* списки — неоновая засечка (ul) / mono-номер (ol), свой ритм */
+.article-mdx ul,
+.article-mdx ol {
+  margin: 0 0 1.3rem;
+  padding-left: 0;
+  list-style: none;
+  display: grid;
+  gap: .55rem;
+}
+.article-mdx li {
+  line-height: 1.6;
+}
+.article-mdx ul > li {
+  position: relative;
+  padding-left: 1.6rem;
+}
+.article-mdx ul > li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: .68em;
+  width: .8rem;
+  height: 2px;
+  background: var(--neon);
+  box-shadow: 0 0 10px rgba(255, 75, 58, .4);
+}
+.article-mdx ol {
+  counter-reset: art-step;
+}
+.article-mdx ol > li {
+  position: relative;
+  padding-left: 2.2rem;
+  counter-increment: art-step;
+}
+.article-mdx ol > li::before {
+  content: counter(art-step);
+  position: absolute;
+  left: 0;
+  top: .1em;
+  font-family: var(--font-mono), monospace;
+  font-size: .9em;
+  font-weight: 600;
+  color: var(--neon);
+}
+
+/* blockquote (markdown `>`) — чужой голос: серифная реплика, красная кавычка-свет */
+.article-mdx blockquote {
+  position: relative;
+  margin: 1.7rem 0;
+  padding: 1.15rem 1.4rem 1.15rem 3.1rem;
+  background: color-mix(in srgb, var(--paper) 3%, transparent);
+  border: 1px solid var(--line-soft);
+  border-radius: 12px;
+  font-family: var(--font-accent), serif;
+  font-size: 1.3rem;
+  line-height: 1.4;
+  color: var(--paper);
+}
+.article-mdx blockquote::before {
+  content: '\00AB';
+  position: absolute;
+  left: 1rem;
+  top: .5rem;
+  font-family: var(--font-accent), serif;
+  font-size: 2.6rem;
+  line-height: 1;
+  color: var(--neon);
+  text-shadow: 0 0 18px rgba(255, 75, 58, .4);
+}
+.article-mdx blockquote p {
+  margin: 0;
+}
+
+/* Divider — перфорация-«перебивка» с красной точкой-светом (как в уроке) */
+.article-mdx .mdx-divider {
+  border: 0;
+  width: 100%;
+  height: 12px;
+  margin: 2.85rem 0;
+  background-image: radial-gradient(circle, var(--line-soft) 2px, transparent 2.6px);
+  background-size: 20px 12px;
+  background-position: center;
+  background-repeat: repeat-x;
+  position: relative;
+}
+.article-mdx .mdx-divider::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  background: var(--neon);
+  box-shadow: var(--neon-glow);
+}
+
+/* ---------- новые редакционные компоненты статьи (D-052) ---------- */
+
+/* <Lead> — крупный вводный абзац (opening), Manrope, отделён от прозы */
+.article-lead-block {
+  font-size: clamp(1.2rem, 3vw, 1.45rem);
+  line-height: 1.55;
+  color: color-mix(in srgb, var(--paper) 80%, #fff);
+  margin: 0 0 1.8rem;
+}
+
+/* <KeyPoints> — «Главное за 30 секунд»: тихая карточка, mono-кикер, red-линия под ним */
+.mdx-keypoints {
+  margin: 1.9rem 0 2.1rem;
+  padding: 1.35rem 1.5rem;
+  border: 1px solid var(--line-soft);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--paper) 3%, transparent);
+}
+.mdx-keypoints-label {
+  display: inline-block;
+  font-family: var(--font-mono), monospace;
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  font-size: var(--fs-small);
+  color: var(--neon);
+  margin: 0 0 1rem;
+  padding-bottom: .35rem;
+  border-bottom: 2px solid var(--neon);
+  box-shadow: 0 2px 12px -4px var(--neon);
+}
+.mdx-keypoints > :last-child {
+  margin-bottom: 0;
+}
+
+/* <PullQuote> — крупная вынесенная цитата, красная кавычка-свет, выход за колонку на десктопе */
+.mdx-pullquote {
+  margin: 2.4rem 0;
+  padding: 0 0 0 2.4rem;
+  position: relative;
+}
+/* сбрасываем «карточку» и внутреннюю кавычку .article-mdx blockquote — у PullQuote
+   свой крупный вид и одна кавычка-свет (.mdx-pullquote::before). Спецификация выше
+   базового `.article-mdx blockquote`. */
+.article-mdx .mdx-pullquote blockquote {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  font-family: var(--font-accent), serif;
+  font-size: clamp(1.55rem, 4.5vw, 2.15rem);
+  line-height: 1.25;
+  color: color-mix(in srgb, var(--paper) 85%, #fff);
+}
+.article-mdx .mdx-pullquote blockquote::before {
+  content: none;
+}
+.mdx-pullquote::before {
+  content: '\00AB';
+  position: absolute;
+  left: 0;
+  top: -.35rem;
+  font-family: var(--font-accent), serif;
+  font-size: 3.4rem;
+  line-height: 1;
+  color: var(--neon);
+  text-shadow: 0 0 22px rgba(255, 75, 58, .45);
+}
+.mdx-pullquote figcaption {
+  margin-top: .9rem;
+  font-family: var(--font-mono), monospace;
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  font-size: var(--fs-small);
+  color: var(--paper-muted);
+}
+@media (min-width: 1024px) {
+  /* выход за колонку чтения — цитата шире прозы (e-flux/NYT-приём) */
+  .article-mdx .mdx-pullquote {
+    margin-inline: -5rem;
+    padding-left: 3.4rem;
+  }
+}
+
+/* <Sources> — источники в конце: тихий mono-список ссылок */
+.mdx-sources {
+  margin: 2.6rem 0 0;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--line-soft);
+}
+.mdx-sources-label {
+  font-family: var(--font-mono), monospace;
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  font-size: var(--fs-small);
+  color: var(--paper-muted);
+  margin: 0 0 .9rem;
+}
+.mdx-sources ul,
+.mdx-sources ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: .6rem;
+}
+/* спецификация выше `.article-mdx ul > li` — убираем неоновую засечку и отступ,
+   чтобы источники были тихим mono-списком, а не «пунктами прозы». */
+.article-mdx .mdx-sources li {
+  font-size: var(--fs-small);
+  line-height: 1.45;
+  padding-left: 0;
+}
+.article-mdx .mdx-sources ul > li::before,
+.article-mdx .mdx-sources ol > li::before {
+  content: none;
+}
+.mdx-sources a {
+  color: var(--paper-muted);
+  text-underline-offset: .18em;
+}
+@media (hover: hover) {
+  .mdx-sources a:hover {
+    color: var(--neon);
+  }
+}
+
+/* V1 (перелинковка): «Читать ещё» — тихий mono-кикер + список ссылок (не карточная лента) */
 .article-more {
-  max-width: var(--maxw-text);
-  margin-top: 3rem;
+  margin-top: 3.5rem;
   padding-top: 1.5rem;
   border-top: 1px solid var(--line-soft);
 }
