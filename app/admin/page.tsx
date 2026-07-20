@@ -4,8 +4,9 @@ import { GrantForm } from './GrantForm'
 import { DeleteParticipant } from '@/components/admin/DeleteParticipant'
 import { DeleteBanner } from '@/components/admin/DeleteBanner'
 import { resendOptInAction } from '@/app/actions/admin'
+import { canResendOptIn } from '@/lib/admin/resend-opt-in'
 import { t } from '@/lib/i18n'
-import { formatDate } from '@/lib/i18n/format-date'
+import { formatDate, formatDateTime } from '@/lib/i18n/format-date'
 
 export const dynamic = 'force-dynamic'
 
@@ -26,6 +27,17 @@ export default async function Registrations({ searchParams }: { searchParams: Pr
     select: { id: true, email: true },
   })
   const userIdByEmail = new Map(regUsers.map(u => [u.email, u.id]))
+  // ADM-14 (уточнение 2026-07-20): пока письмо-подтверждение «в пути», кнопок у строки нет —
+  // только подпись с датой отправки; переотправка появляется после суток тишины (canResendOptIn).
+  // Один batch-запрос последних DOUBLE_OPT_IN по email всех ожидающих заявок.
+  const pendingEmails = regs.filter(r => r.status === 'PENDING_OPT_IN').map(r => r.email)
+  const optInLogs = pendingEmails.length === 0 ? [] : await db.emailLog.findMany({
+    where: { type: 'DOUBLE_OPT_IN', toEmail: { in: pendingEmails } },
+    orderBy: { createdAt: 'asc' }, // asc + Map.set → в мапе остаётся самое свежее письмо
+    select: { toEmail: true, createdAt: true },
+  })
+  const lastOptInByEmail = new Map(optInLogs.map(l => [l.toEmail, l.createdAt]))
+  const now = new Date()
   return (
     <main className="admin-wide">
       <h1>{t.admin.registrations}</h1>
@@ -61,18 +73,30 @@ export default async function Registrations({ searchParams }: { searchParams: Pr
                   {r.alreadyEnrolled && r.status !== 'ENROLLED' && ` · ${t.admin.alreadyEnrolled}`}
                 </td>
                 <td>
-                  {r.status !== 'ENROLLED' && (
-                    <GrantForm registrationId={r.id} canGrant={r.status !== 'PENDING_OPT_IN'} />
+                  {/* Ручная выдача — только для заявок с подтверждённым email (легаси-CONFIRMED и до-opt-in
+                      NEW/RESUBMITTED); у PENDING_OPT_IN кнопок нет — человеку уже ушло письмо (ADM-14). */}
+                  {r.status !== 'ENROLLED' && r.status !== 'PENDING_OPT_IN' && (
+                    <GrantForm registrationId={r.id} />
                   )}
-                  {/* ADM-14 (D-053): застрявшим в PENDING_OPT_IN — новое письмо-подтверждение (свежий токен, 72 ч).
-                      Пометка «отправлено» — у конкретной строки (rid): верхний баннер в длинной таблице не видно. */}
-                  {r.status === 'PENDING_OPT_IN' && (
-                    <form action={resendOptInAction}>
-                      <input type="hidden" name="registrationId" value={r.id} />
-                      <button className="crat-button compact" type="submit">{t.admin.resendOptIn}</button>
-                      {optin === 'sent' && rid === r.id && <p className="crat-muted">{t.admin.optInSentInline}</p>}
-                    </form>
-                  )}
+                  {r.status === 'PENDING_OPT_IN' && (() => {
+                    const lastSent = lastOptInByEmail.get(r.email) ?? null
+                    const justSent = optin === 'sent' && rid === r.id
+                    return (
+                      <>
+                        <p className="crat-muted">
+                          {justSent ? t.admin.optInSentInline
+                            : lastSent ? `${t.admin.optInEmailSentAt} ${formatDateTime(lastSent)}` : null}
+                        </p>
+                        {/* Сутки тишины → человек застрял, даём переотправить (свежий токен, 72 ч) */}
+                        {!justSent && canResendOptIn(lastSent, now) && (
+                          <form action={resendOptInAction}>
+                            <input type="hidden" name="registrationId" value={r.id} />
+                            <button className="crat-button compact" type="submit">{t.admin.resendOptIn}</button>
+                          </form>
+                        )}
+                      </>
+                    )
+                  })()}
                   {/* ADM-13/D-050: удалить заявку-лид (и связанную учётку, если доступ уже выдан) */}
                   <DeleteParticipant refType="registration" id={r.id} email={r.email} successTo="/admin" errorTo="/admin" />
                 </td>
