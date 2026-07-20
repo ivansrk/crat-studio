@@ -6,11 +6,16 @@ import { getInviteState, incrementInviteCount } from '@/lib/invite'
 import { appendConsent } from '@/lib/registration/consents'
 import { isUniqueViolation } from '@/lib/db-errors'
 import { syncContactSubscribe } from '@/lib/resend-audience'
-import { ResetTokenPurpose, type ConsentType, type PrismaClient } from '@/lib/generated/prisma/client'
+import { ResetTokenPurpose, type ConsentType, type PrismaClient, type Registration, type Prisma } from '@/lib/generated/prisma/client'
+
+// D-054: до Ф8 (Stripe) публичная подтверждённая заявка зачисляется автоматически — предзапускной
+// набор идёт без оплаты. Курс один (MVP); с приходом Stripe курс/источник приедут из платёжной сессии.
+const PUBLIC_COURSE_SLUG = 'ai-basics'
+const PUBLIC_ENROLL_SOURCE = 'site-optin'
 
 export type ConfirmRegistrationResult =
   | { mode: 'auto'; plainPassword: string | null; courseSlug: string } // F14, REG-13 инвайт-путь: авто User+Enrollment
-  | { mode: 'manual' } // F15, D-035: публичная заявка → CONFIRMED, доступ выдаёт админ (ADM-03)
+  | { mode: 'manual' } // легаси (D-035): с D-054 не возвращается — публичный путь тоже 'auto'; экран в ConfirmForm сохранён
   | { mode: 'already' } // E-INV3/E-INV5: доступ уже выдан (повторный клик/двойной токен/гонка)
   | { mode: 'invite_gone' } // E-INV2: инвайт исчерпан/отозван/просрочен между формой и подтверждением
   | { mode: 'invalid'; reason: 'invalid' | 'used' | 'expired' } // AUTH-05/06 или заявки нет
@@ -55,44 +60,58 @@ export async function confirmRegistration(rawToken: string, client: ConfirmClien
       return { mode: 'invite_gone' }
     }
 
-    let provisioned: { user: { id: string; email: string }; plainPassword: string | null; url: string }
-    try {
-      provisioned = await client.$transaction(async tx => {
-        const p = await createUserWithPassword(
-          { email: reg.email, firstName: reg.firstName, lastName: reg.lastName, phone: reg.phone, telegram: reg.telegram, whatsapp: reg.whatsapp },
-          tx,
-        )
-        await tx.consent.updateMany({ where: { email: reg.email, userId: null }, data: { userId: p.user.id } }) // F2, тот же приём, что grant-access
-        await tx.enrollment.create({ data: { userId: p.user.id, courseSlug: invite.courseSlug, source: invite.sourceLabel } }) // P2002 → E-INV5, already
-        await incrementInviteCount(tx, invite.id) // INV-05
-        await tx.registration.update({ where: { id: reg.id }, data: { status: 'ENROLLED', confirmedAt: new Date() } })
-        const url = p.plainPassword === null
-          ? (await mintResetToken(reg.email, ResetTokenPurpose.PASSWORD_RESET, tx)).url
-          : `${process.env.APP_URL ?? 'http://localhost:3000'}/login`
-        return { user: p.user, plainPassword: p.plainPassword, url }
-      })
-    } catch (e) {
-      if (isUniqueViolation(e)) return { mode: 'already' } // E-INV5: unique(userId, courseSlug) — гонка двух подтверждений
-      throw e
-    }
-
-    // Транзакция уже успешна (доступ выдан) — сбой постановки письма в очередь не должен превращать
-    // «доступ выдан» в ошибку (тот же принцип, что T5/T9 в grant-access.ts); ретраи доставки — фон.
-    try {
-      await sendWelcomeEmail(provisioned.user, provisioned.plainPassword, provisioned.url)
-    } catch (e) {
-      console.error('[confirm] не смог поставить WELCOME в очередь:', e)
-    }
-    // CRM-04/05, F17: контакт синкается в Resend Audience после того, как доступ уже выдан —
-    // сбой Resend не должен откатывать успешный auto-enroll (та же логика, что WELCOME выше).
-    if (reg.wantsNewsletter) {
-      await syncContactSubscribe({ id: provisioned.user.id, email: provisioned.user.email, firstName: reg.firstName, lastName: reg.lastName })
-        .catch(e => console.error('[confirm] Resend-синк подписки не удался (CRM-05):', e))
-    }
-    return { mode: 'auto', plainPassword: provisioned.plainPassword, courseSlug: invite.courseSlug }
+    return finishAutoEnroll(client, reg, { courseSlug: invite.courseSlug, source: invite.sourceLabel },
+      tx => incrementInviteCount(tx, invite.id)) // INV-05
   }
 
-  // F15/D-035: публичная заявка (без инвайта) — доступ не выдаём автоматически, курс платный.
-  await client.registration.update({ where: { id: reg.id }, data: { status: 'CONFIRMED', confirmedAt: new Date() } })
-  return { mode: 'manual' }
+  // D-054 (заменяет ручной путь D-035): публичная заявка после подтверждения email зачисляется
+  // автоматически — предзапускной набор без оплаты. Админ видит участника в /admin («зачислен»,
+  // новые сверху) и /admin/students. С Ф8 (Stripe) триггером станет оплата, эта ветка отключится.
+  return finishAutoEnroll(client, reg, { courseSlug: PUBLIC_COURSE_SLUG, source: PUBLIC_ENROLL_SOURCE })
+}
+
+/** Общий финал авто-зачисления (инвайт F14 и публичный путь D-054): User + Enrollment + ENROLLED
+ *  одной транзакцией, затем WELCOME и best-effort Resend-синк. Гонка двух подтверждений
+ *  (unique userId+courseSlug, E-INV5) → 'already'. */
+async function finishAutoEnroll(
+  client: ConfirmClient,
+  reg: Registration,
+  enroll: { courseSlug: string; source: string },
+  inTx?: (tx: Prisma.TransactionClient) => Promise<void>,
+): Promise<ConfirmRegistrationResult> {
+  let provisioned: { user: { id: string; email: string }; plainPassword: string | null; url: string }
+  try {
+    provisioned = await client.$transaction(async tx => {
+      const p = await createUserWithPassword(
+        { email: reg.email, firstName: reg.firstName, lastName: reg.lastName, phone: reg.phone, telegram: reg.telegram, whatsapp: reg.whatsapp },
+        tx,
+      )
+      await tx.consent.updateMany({ where: { email: reg.email, userId: null }, data: { userId: p.user.id } }) // F2, тот же приём, что grant-access
+      await tx.enrollment.create({ data: { userId: p.user.id, courseSlug: enroll.courseSlug, source: enroll.source } }) // P2002 → E-INV5, already
+      if (inTx) await inTx(tx)
+      await tx.registration.update({ where: { id: reg.id }, data: { status: 'ENROLLED', confirmedAt: new Date() } })
+      const url = p.plainPassword === null
+        ? (await mintResetToken(reg.email, ResetTokenPurpose.PASSWORD_RESET, tx)).url
+        : `${process.env.APP_URL ?? 'http://localhost:3000'}/login`
+      return { user: p.user, plainPassword: p.plainPassword, url }
+    })
+  } catch (e) {
+    if (isUniqueViolation(e)) return { mode: 'already' } // E-INV5: unique(userId, courseSlug) — гонка двух подтверждений
+    throw e
+  }
+
+  // Транзакция уже успешна (доступ выдан) — сбой постановки письма в очередь не должен превращать
+  // «доступ выдан» в ошибку (тот же принцип, что T5/T9 в grant-access.ts); ретраи доставки — фон.
+  try {
+    await sendWelcomeEmail(provisioned.user, provisioned.plainPassword, provisioned.url)
+  } catch (e) {
+    console.error('[confirm] не смог поставить WELCOME в очередь:', e)
+  }
+  // CRM-04/05, F17: контакт синкается в Resend Audience после того, как доступ уже выдан —
+  // сбой Resend не должен откатывать успешный auto-enroll (та же логика, что WELCOME выше).
+  if (reg.wantsNewsletter) {
+    await syncContactSubscribe({ id: provisioned.user.id, email: provisioned.user.email, firstName: reg.firstName, lastName: reg.lastName })
+      .catch(e => console.error('[confirm] Resend-синк подписки не удался (CRM-05):', e))
+  }
+  return { mode: 'auto', plainPassword: provisioned.plainPassword, courseSlug: enroll.courseSlug }
 }

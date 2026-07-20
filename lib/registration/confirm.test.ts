@@ -172,29 +172,41 @@ describe('confirmRegistration — токен (AUTH-04/05/06 через consumeRe
   })
 })
 
-describe('confirmRegistration — публичный путь без инвайта (F15, D-035, REG-13)', () => {
-  it('happy: Registration → CONFIRMED, Consent DATA_PROCESSING записан, письмо WELCOME не шлётся', async () => {
+describe('confirmRegistration — публичный путь без инвайта: автозачисление (D-054, REG-13)', () => {
+  it('happy: User создан, Enrollment(ai-basics/site-optin), ENROLLED, Consent записаны, WELCOME с паролем', async () => {
     const { client, store, registration, consent } = fakeClient({ reg: makeReg({ wantsNewsletter: true }) })
     const result = await confirmRegistration(RAW, client)
 
-    expect(result).toEqual({ mode: 'manual' })
-    expect(registration.update).toHaveBeenCalledOnce()
-    expect(store.reg?.status).toBe('CONFIRMED')
+    expect(result).toMatchObject({ mode: 'auto', courseSlug: 'ai-basics' })
+    if (result.mode !== 'auto') throw new Error('unreachable')
+    expect(result.plainPassword).toMatch(/^[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}$/)
+
+    expect(store.user?.email).toBe('a@b.c')
+    expect(store.enrollments).toEqual([{ userId: store.user!.id, courseSlug: 'ai-basics', source: 'site-optin' }])
+    expect(store.reg?.status).toBe('ENROLLED')
     expect(store.reg?.confirmedAt).toBeInstanceOf(Date)
+    expect(registration.update).toHaveBeenCalledOnce()
 
     expect(consent.create).toHaveBeenCalledTimes(2) // DATA_PROCESSING + NEWSLETTER (wantsNewsletter=true)
     expect(store.consents.map(c => c.type).sort()).toEqual(['DATA_PROCESSING', 'NEWSLETTER'])
     expect(store.consents.every(c => c.granted && c.source === 'REGISTRATION_FORM')).toBe(true)
+    expect(store.consents.every(c => c.userId === store.user!.id)).toBe(true) // F2: Consent получил userId
 
-    expect(sendEmail).not.toHaveBeenCalled() // ручная выдача — WELCOME шлёт grantAccess позже (ADM-03)
+    expect(sendEmail).toHaveBeenCalledOnce()
+    const call = vi.mocked(sendEmail).mock.calls[0][0]
+    expect(call.type).toBe('WELCOME')
+    expect(call.html).toContain(result.plainPassword!)
+    expect(call.payload).toEqual({}) // D-028
   })
 
-  it('wantsNewsletter=false → NEWSLETTER не пишется, только DATA_PROCESSING', async () => {
+  it('wantsNewsletter=false → NEWSLETTER не пишется и Resend-синк не вызывается', async () => {
     const { client, consent } = fakeClient({ reg: makeReg({ wantsNewsletter: false }) })
-    await confirmRegistration(RAW, client)
+    const result = await confirmRegistration(RAW, client)
 
+    expect(result).toMatchObject({ mode: 'auto' })
     expect(consent.create).toHaveBeenCalledOnce()
     expect(consent.create.mock.calls[0][0].data.type).toBe('DATA_PROCESSING')
+    expect(syncContactSubscribe).not.toHaveBeenCalled()
   })
 
   it('уже ENROLLED (повторный клик после успеха, E-INV3) → already, Consent не пишется, Registration не трогается', async () => {
@@ -206,19 +218,39 @@ describe('confirmRegistration — публичный путь без инвай�
     expect(consent.create).not.toHaveBeenCalled()
   })
 
-  it('Consent-идемпотентность: повторный confirm-путь (пересдача формы → новый токен) не дублирует granted-запись', async () => {
-    const { client, store, consent } = fakeClient({ reg: makeReg({ wantsNewsletter: true }) })
-    await confirmRegistration(RAW, client) // первый confirm: CONFIRMED, 2 Consent-строки
+  it('гонка двух подтверждений (P2002 на Enrollment, E-INV5) → already, WELCOME не шлётся', async () => {
+    const { client } = fakeClient({ reg: makeReg(), enrollmentP2002: true })
 
-    // Пересдача формы после CONFIRMED снова уводит заявку в PENDING_OPT_IN (submitRegistration, REG-15) —
-    // симулируем новым токеном на тот же email, тот же общий store.
-    store.reg = { ...store.reg!, status: 'PENDING_OPT_IN' as RegistrationStatus, confirmedAt: null }
-    store.token = { ...store.token, id: 'tok-2', usedAt: null }
+    expect(await confirmRegistration(RAW, client)).toEqual({ mode: 'already' })
+    expect(sendEmail).not.toHaveBeenCalled()
+  })
+
+  it('Consent-идемпотентность: действующее granted-согласие не дублируется при повторном подтверждении', async () => {
+    const { client, store, consent } = fakeClient({ reg: makeReg({ wantsNewsletter: true }) })
+    // согласия уже действуют (например, записаны прошлым циклом REG-15 до пересдачи формы)
+    store.consents.push(
+      { id: 'c-old-1', email: 'a@b.c', userId: null, type: 'DATA_PROCESSING', granted: true, source: 'REGISTRATION_FORM', createdAt: new Date() },
+      { id: 'c-old-2', email: 'a@b.c', userId: null, type: 'NEWSLETTER', granted: true, source: 'REGISTRATION_FORM', createdAt: new Date() },
+    )
 
     const result = await confirmRegistration(RAW, client)
-    expect(result).toEqual({ mode: 'manual' })
-    expect(consent.create).toHaveBeenCalledTimes(2) // не 4 — идемпотентно
+    expect(result).toMatchObject({ mode: 'auto' })
+    expect(consent.create).not.toHaveBeenCalled() // не 4 записи — идемпотентно
     expect(store.consents).toHaveLength(2)
+  })
+
+  it('юзер уже существует с паролем → plainPassword null, письмо со ссылкой /reset/', async () => {
+    const reg = makeReg()
+    const existingUser = { id: 'u-existing', email: reg.email, firstName: reg.firstName, lastName: reg.lastName, phone: reg.phone, telegram: reg.telegram, whatsapp: reg.whatsapp, passwordHash: 'already-set' }
+    const { client, store } = fakeClient({ reg, user: existingUser })
+
+    const result = await confirmRegistration(RAW, client)
+
+    expect(result).toMatchObject({ mode: 'auto', plainPassword: null, courseSlug: 'ai-basics' })
+    expect(store.enrollments).toEqual([{ userId: 'u-existing', courseSlug: 'ai-basics', source: 'site-optin' }])
+    const call = vi.mocked(sendEmail).mock.calls[0][0]
+    expect(call.html).not.toContain('already-set')
+    expect(call.html).toContain('/reset/')
   })
 })
 
