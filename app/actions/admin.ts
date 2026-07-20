@@ -35,6 +35,17 @@ export async function grantAccessAction(_prevState: GrantActionState, formData: 
   return result
 }
 
+// ADM-14 (D-053): переотправка письма-подтверждения double opt-in прямо из строки заявки —
+// единственный админский рычаг для застрявших в PENDING_OPT_IN (ручное подтверждение запрещено:
+// согласие фиксируется только кликом самого человека, REG-13).
+export async function resendOptInAction(formData: FormData) {
+  await requireAdmin()
+  const { resendOptIn } = await import('@/lib/admin/resend-opt-in')
+  const result = await resendOptIn(String(formData.get('registrationId')))
+  revalidatePath('/admin')
+  redirect(`/admin?optin=${result}`)
+}
+
 export async function resendEmailAction(formData: FormData) {
   await requireAdmin()
   const { resendFromLog } = await import('@/lib/admin/resend-email')

@@ -10,6 +10,9 @@ import { ResetTokenPurpose, type PrismaClient } from '@/lib/generated/prisma/cli
 // AUTH-16/17, D-031: reset/первый-вход на той же token-механике, что и magic-link (T8),
 // но с более длинным TTL — ссылку присылают на восстановление, не на каждый вход.
 export const RESET_TTL_MS = 60 * 60 * 1000
+// D-053/REG-11: OPT_IN-токен живёт дольше — он лишь подтверждает email (риск ниже reset-ссылки,
+// дающей вход в учётку), а аудитория 40+ читает почту не мгновенно: часовой TTL терял людей.
+export const OPT_IN_TTL_MS = 72 * 60 * 60 * 1000
 
 /** Выпускает reset-токен и URL. purpose=PASSWORD_RESET → /reset/{raw}; OPT_IN (Ф7б) → /invite-confirm/{raw}.
  *  Сырой токен живёт только в url — не логируется отдельно (D-028). userId проставляется, если
@@ -21,8 +24,9 @@ export async function mintResetToken(
 ): Promise<{ url: string; tokenId: string }> {
   const user = await client.user.findUnique({ where: { email } })
   const raw = newToken()
+  const ttl = purpose === ResetTokenPurpose.OPT_IN ? OPT_IN_TTL_MS : RESET_TTL_MS // D-053
   const token = await client.passwordResetToken.create({
-    data: { tokenHash: hashToken(raw), email, userId: user?.id ?? null, purpose, expiresAt: new Date(Date.now() + RESET_TTL_MS) },
+    data: { tokenHash: hashToken(raw), email, userId: user?.id ?? null, purpose, expiresAt: new Date(Date.now() + ttl) },
   })
   const path = purpose === ResetTokenPurpose.PASSWORD_RESET ? 'reset' : 'invite-confirm'
   // Ревью m3: fallback на localhost, как у бывшего printMagicLink — без него seed на машине без
