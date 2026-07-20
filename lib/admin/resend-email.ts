@@ -15,7 +15,7 @@ export function isStaleQueued(log: Pick<EmailLog, 'status' | 'createdAt'>, now: 
   return log.status === 'QUEUED' && now.getTime() - log.createdAt.getTime() > STALE_QUEUED_MS
 }
 
-export type ResendResult = 'sent' | 'not_found' | 'user_gone' | 'unsupported_type' | 'cert_gone' | 'send_failed'
+export type ResendResult = 'sent' | 'not_found' | 'user_gone' | 'unsupported_type' | 'cert_gone' | 'send_failed' | 'opt_in_done'
 
 /** ADM-08: переотправка = НОВАЯ запись в email_log (MAIL-05) с НОВЫМ токеном (D-028) —
  *  сырых токенов в payload не храним, свежая ссылка полезнее истёкшей. */
@@ -57,10 +57,22 @@ export async function resendFromLog(emailLogId: string): Promise<ResendResult> {
     })
     return 'sent'
   }
+  if (log.type === 'DOUBLE_OPT_IN') {
+    // ADM-08/ADM-14 (D-053-доп): письмо-подтверждение переотправляется и отсюда — админ ищет его
+    // именно в «Письмах» (боевой случай 2026-07-20: кнопка отвечала unsupported, выглядело как
+    // «ничего не происходит»). Всегда свежий OPT_IN-токен (72 ч); если заявка уже подтверждена
+    // или зачислена — переотправлять нечего (opt_in_done), заявка удалена — user_gone.
+    const reg = await db.registration.findUnique({ where: { email: log.toEmail } })
+    if (!reg) return 'user_gone'
+    if (reg.status !== 'PENDING_OPT_IN') return 'opt_in_done'
+    const { sendOptInEmail } = await import('@/lib/admin/resend-opt-in')
+    await sendOptInEmail(reg.email)
+    return 'sent'
+  }
   // T6 (Ф7а, D-031): MAGIC_LINK и ACCESS_GRANTED — оба сняты вместе с magic-link-входом
   // (mintLoginUrl больше не существует); переотправка этих исторических записей email_log
   // невозможна и не нужна (сама выдача доступа теперь всегда идёт через WELCOME, T5).
-  // CERTIFICATE/WELCOME обработаны выше; PASSWORD_RESET/DOUBLE_OPT_IN/CONSULTATION — без
+  // CERTIFICATE/WELCOME/DOUBLE_OPT_IN обработаны выше; PASSWORD_RESET/CONSULTATION — без
   // адресной переотправки (D-028: свежий токен запрашивается заново самим пользователем).
   return 'unsupported_type'
 }

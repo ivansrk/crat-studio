@@ -16,8 +16,8 @@ function OptInBanner({ optin }: { optin?: string }) {
   return null
 }
 
-export default async function Registrations({ searchParams }: { searchParams: Promise<{ del?: string; optin?: string }> }) {
-  const { del, optin } = await searchParams
+export default async function Registrations({ searchParams }: { searchParams: Promise<{ del?: string; optin?: string; rid?: string }> }) {
+  const { del, optin, rid } = await searchParams
   const regs = await db.registration.findMany({ orderBy: { updatedAt: 'desc' } })
   // A2 (навигация-связки): у заявки email === ключ учётки — если User с этим email есть,
   // показываем тихий переход в карточку клиента. Один batch-запрос, Map email→userId.
@@ -64,11 +64,13 @@ export default async function Registrations({ searchParams }: { searchParams: Pr
                   {r.status !== 'ENROLLED' && (
                     <GrantForm registrationId={r.id} canGrant={r.status !== 'PENDING_OPT_IN'} />
                   )}
-                  {/* ADM-14 (D-053): застрявшим в PENDING_OPT_IN — новое письмо-подтверждение (свежий токен, 72 ч) */}
+                  {/* ADM-14 (D-053): застрявшим в PENDING_OPT_IN — новое письмо-подтверждение (свежий токен, 72 ч).
+                      Пометка «отправлено» — у конкретной строки (rid): верхний баннер в длинной таблице не видно. */}
                   {r.status === 'PENDING_OPT_IN' && (
                     <form action={resendOptInAction}>
                       <input type="hidden" name="registrationId" value={r.id} />
                       <button className="crat-button compact" type="submit">{t.admin.resendOptIn}</button>
+                      {optin === 'sent' && rid === r.id && <p className="crat-muted">{t.admin.optInSentInline}</p>}
                     </form>
                   )}
                   {/* ADM-13/D-050: удалить заявку-лид (и связанную учётку, если доступ уже выдан) */}

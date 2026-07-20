@@ -15,6 +15,7 @@ export default async function Emails({ searchParams }: { searchParams: Promise<{
       {resend === 'ok' && <p className="crat-muted">{t.admin.resent}</p>}
       {resend === 'user_gone' && <p role="alert" className="form-alert">{t.admin.emailUserGone}</p>}
       {resend === 'unsupported' && <p role="alert" className="form-alert">{t.admin.emailUnsupported}</p>}
+      {resend === 'opt_in_done' && <p className="crat-muted">{t.admin.emailOptInDone}</p>}
       {resend === 'cert_gone' && <p role="alert" className="form-alert">{t.admin.emailCertGone}</p>}
       {resend === 'send_failed' && <p role="alert" className="form-alert">{t.admin.emailSendFailed}</p>}
       {logs.length === 0 ? (
