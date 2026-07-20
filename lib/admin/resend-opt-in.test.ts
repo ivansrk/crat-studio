@@ -11,7 +11,7 @@ vi.mock('@/lib/db', () => ({
 }))
 vi.mock('@/lib/email', () => ({ sendEmail: vi.fn().mockResolvedValue('log-id') }))
 
-import { resendOptIn } from './resend-opt-in'
+import { resendOptIn, canResendOptIn, OPT_IN_RESEND_AFTER_MS } from './resend-opt-in'
 import { OPT_IN_TTL_MS, RESET_TTL_MS, mintResetToken } from '@/lib/auth/reset'
 import { ResetTokenPurpose } from '@/lib/generated/prisma/client'
 import { db } from '@/lib/db'
@@ -64,5 +64,22 @@ describe('TTL токена по назначению (REG-11, D-053)', () => {
     expect(Math.abs(ttlOf(optIn as { expiresAt: Date }) - OPT_IN_TTL_MS)).toBeLessThan(5000)
     expect(Math.abs(ttlOf(reset as { expiresAt: Date }) - RESET_TTL_MS)).toBeLessThan(5000)
     expect(OPT_IN_TTL_MS).toBe(72 * 60 * 60 * 1000)
+  })
+})
+
+// ADM-14, уточнение 2026-07-20: кнопка переотправки — только после суток тишины.
+describe('canResendOptIn (порог показа кнопки)', () => {
+  const now = new Date('2026-07-20T12:00:00Z')
+
+  it('письма не было вовсе → можно (кнопка нужна)', () => {
+    expect(canResendOptIn(null, now)).toBe(true)
+  })
+
+  it('письмо свежее (меньше суток) → нельзя, человек ещё «в пути»', () => {
+    expect(canResendOptIn(new Date(now.getTime() - OPT_IN_RESEND_AFTER_MS + 60_000), now)).toBe(false)
+  })
+
+  it('сутки тишины и больше → можно', () => {
+    expect(canResendOptIn(new Date(now.getTime() - OPT_IN_RESEND_AFTER_MS), now)).toBe(true)
   })
 })
