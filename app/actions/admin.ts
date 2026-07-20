@@ -40,10 +40,13 @@ export async function grantAccessAction(_prevState: GrantActionState, formData: 
 // согласие фиксируется только кликом самого человека, REG-13).
 export async function resendOptInAction(formData: FormData) {
   await requireAdmin()
+  const registrationId = String(formData.get('registrationId'))
   const { resendOptIn } = await import('@/lib/admin/resend-opt-in')
-  const result = await resendOptIn(String(formData.get('registrationId')))
+  const result = await resendOptIn(registrationId)
   revalidatePath('/admin')
-  redirect(`/admin?optin=${result}`)
+  // rid — чтобы пометка «письмо отправлено» появилась у КОНКРЕТНОЙ строки (верхний баннер в длинной
+  // таблице не виден — боевой случай 2026-07-20 «жму, а ничего не происходит»)
+  redirect(`/admin?optin=${result}&rid=${registrationId}`)
 }
 
 export async function resendEmailAction(formData: FormData) {
@@ -52,6 +55,7 @@ export async function resendEmailAction(formData: FormData) {
   const result = await resendFromLog(String(formData.get('emailLogId')))
   revalidatePath('/admin/emails')
   if (result === 'user_gone') redirect('/admin/emails?resend=user_gone') // GDPR-удалённый адресат (D-028)
+  if (result === 'opt_in_done') redirect('/admin/emails?resend=opt_in_done') // email уже подтверждён — переотправка не нужна
   if (result === 'unsupported_type') redirect('/admin/emails?resend=unsupported')
   if (result === 'cert_gone') redirect('/admin/emails?resend=cert_gone') // CERT-05: сертификат отозван/не найден
   if (result === 'send_failed') redirect('/admin/emails?resend=send_failed') // рендер PDF/письма упал (ревью T3)

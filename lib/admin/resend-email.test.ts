@@ -9,6 +9,7 @@ vi.mock('@/lib/db', () => ({
     user: { findUnique: vi.fn() },
     passwordResetToken: { create: vi.fn() },
     certificate: { findFirst: vi.fn() },
+    registration: { findUnique: vi.fn() }, // ветка DOUBLE_OPT_IN (ADM-08/D-053-доп)
   },
 }))
 vi.mock('@/lib/email', () => ({ sendEmail: vi.fn().mockResolvedValue('log-id') }))
@@ -89,6 +90,47 @@ describe('resendFromLog — WELCOME (T5/D-028)', () => {
     const result = await resendFromLog('log-3')
 
     expect(result).toBe('unsupported_type')
+    expect(sendEmail).not.toHaveBeenCalled()
+  })
+})
+
+// D-053-доп (боевой случай 2026-07-20): переотправка DOUBLE_OPT_IN из «Писем» — всегда свежий
+// OPT_IN-токен; для уже подтверждённых заявок — opt_in_done, а не тихий unsupported.
+describe('resendFromLog — DOUBLE_OPT_IN (ADM-08/ADM-14)', () => {
+  beforeEach(() => {
+    vi.mocked(sendEmail).mockClear()
+    vi.mocked(db.emailLog.findUnique).mockReset()
+    vi.mocked(db.registration.findUnique).mockReset()
+    vi.mocked(db.user.findUnique).mockReset().mockResolvedValue(null as never)
+    ;(db.passwordResetToken.create as unknown as { mockImplementation: (fn: (args: { data: Record<string, unknown> }) => Promise<unknown>) => void })
+      .mockImplementation(async ({ data }) => ({ id: 'tok-1', usedAt: null, createdAt: new Date(), ...data }))
+    vi.mocked(db.emailLog.findUnique).mockResolvedValue(
+      { id: 'log-o', type: 'DOUBLE_OPT_IN', toEmail: 'sh@test.c', userId: null } as never,
+    )
+  })
+
+  it('заявка PENDING_OPT_IN → sent: свежий OPT_IN-токен, письмо DOUBLE_OPT_IN со ссылкой /invite-confirm/', async () => {
+    vi.mocked(db.registration.findUnique).mockResolvedValue({ id: 'reg-1', email: 'sh@test.c', status: 'PENDING_OPT_IN' } as never)
+
+    expect(await resendFromLog('log-o')).toBe('sent')
+
+    const tokenData = vi.mocked(db.passwordResetToken.create).mock.calls[0][0].data
+    expect(tokenData).toMatchObject({ email: 'sh@test.c', purpose: 'OPT_IN' })
+    const call = vi.mocked(sendEmail).mock.calls[0][0]
+    expect(call).toMatchObject({ to: 'sh@test.c', type: 'DOUBLE_OPT_IN' })
+    expect(call.html).toContain('/invite-confirm/')
+    expect(call.payload).toEqual({}) // D-028
+  })
+
+  it.each(['CONFIRMED', 'ENROLLED'])('заявка %s → opt_in_done, письмо не шлётся', async status => {
+    vi.mocked(db.registration.findUnique).mockResolvedValue({ id: 'reg-1', email: 'sh@test.c', status } as never)
+    expect(await resendFromLog('log-o')).toBe('opt_in_done')
+    expect(sendEmail).not.toHaveBeenCalled()
+  })
+
+  it('заявки больше нет (удалена) → user_gone', async () => {
+    vi.mocked(db.registration.findUnique).mockResolvedValue(null as never)
+    expect(await resendFromLog('log-o')).toBe('user_gone')
     expect(sendEmail).not.toHaveBeenCalled()
   })
 })
