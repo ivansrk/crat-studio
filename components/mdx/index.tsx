@@ -1,6 +1,7 @@
 import type { MdxComponentName } from '@/lib/content/whitelist'
 import { Figure } from './Figure'
 import { Gallery } from './Gallery'
+import { Comic } from './Comic'
 import { Callout } from './Callout'
 import { Video } from './Video'
 import { Download } from './Download'
@@ -26,6 +27,7 @@ export function mdxComponents(assetBase: string, fromLessonId?: string): Record<
     Figure: asProp((p: Parameters<typeof Figure>[0]) => <Figure {...p} assetBase={assetBase} />),
     Download: asProp((p: Parameters<typeof Download>[0]) => <Download {...p} assetBase={assetBase} />),
     Gallery: asProp(Gallery),
+    Comic: asProp(Comic),
     Callout: asProp(Callout),
     Video: asProp(Video),
     Trainer: asProp((p: Parameters<typeof Trainer>[0]) => <Trainer {...p} fromLessonId={fromLessonId} />),
