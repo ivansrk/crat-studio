@@ -1,5 +1,5 @@
-/** Компоненты белого списка урока (lesson.mdx) — контракт §4/v2. */
-export const MDX_COMPONENTS = ['Figure', 'Gallery', 'Callout', 'Video', 'Download', 'Trainer', 'Animation', 'Divider'] as const
+/** Компоненты белого списка урока (lesson.mdx) — контракт §4/v2.2 (Comic — D-055). */
+export const MDX_COMPONENTS = ['Figure', 'Gallery', 'Comic', 'Callout', 'Video', 'Download', 'Trainer', 'Animation', 'Divider'] as const
 /** D-052 (§8 v2.1): редакционные компоненты, разрешённые ТОЛЬКО в статьях (article.mdx).
  *  В уроках они вне белого списка — валидатор их отклонит (уроки принимать не обязаны). */
 export const ARTICLE_COMPONENTS = ['Lead', 'PullQuote', 'KeyPoints', 'Sources'] as const

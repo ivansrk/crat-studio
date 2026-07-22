@@ -3,6 +3,13 @@
 
 .mdx-gallery { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem; }
 
+/* Комикс (D-055/LES-17): страницы встык, единая вертикальная лента. Внешняя
+   рамка-карточка как у callout (line-soft, радиус 12); внутренних скруглений
+   и зазоров нет — лента читается как одно произведение. */
+.mdx-comic { margin: 1.6rem 0; border: 1px solid var(--line-soft); border-radius: 12px; overflow: hidden; }
+.mdx-comic .mdx-figure { margin: 0; }
+.mdx-comic .mdx-figure img { display: block; width: 100%; border-radius: 0; }
+
 /* impeccable P2-2а: side-stripe (border-left) — забаненный AI-slop паттерн (детектор
    критики 2026-07-10). Фоновый тинт + полная тонкая рамка вместо полосы, радиус
    симметричный.

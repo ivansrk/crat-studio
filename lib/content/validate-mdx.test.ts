@@ -29,6 +29,12 @@ describe('validateMdx', () => {
     expect(ok('<Animation id="wat" />').join()).toMatch(/wat/)
     expect(ok('<Animation id="neon-pulse" />')).toHaveLength(0)
   })
+  // v2.2 (D-055): Comic — в базовом белом списке; проверка src у вложенных Figure работает и внутри него.
+  it('Comic с вложенными Figure — ок; Figure внутри Comic с несуществующим asset — ошибка', () => {
+    const comic = '<Comic>\n  <Figure src="assets/comic-01.webp" />\n  <Figure src="assets/comic-02.webp" />\n</Comic>'
+    expect(ok(comic, ['assets/comic-01.webp', 'assets/comic-02.webp'])).toHaveLength(0)
+    expect(ok(comic, ['assets/comic-01.webp']).join()).toMatch(/comic-02\.webp/)
+  })
   it('Figure/Download/![…] на несуществующий asset — ошибка; на существующий — ок', () => {
     expect(ok('<Figure src="assets/no.png" />').join()).toMatch(/no\.png/)
     expect(ok('<Figure src="assets/yes.png" />', ['assets/yes.png'])).toHaveLength(0)
