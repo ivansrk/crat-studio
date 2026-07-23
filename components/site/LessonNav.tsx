@@ -84,6 +84,8 @@ export function LessonNav({
               <span className="lesson-subbar-caret" aria-hidden>▾</span>
             </summary>
             <nav className="lesson-subbar-panel" aria-label={t.lesson.railAria}>
+              {/* NAV-10: возврат к обзору курса первой строкой — там, где студент ищет навигацию. */}
+              <Link className="lesson-rail-back" href={`/app/${courseSlug}`}>{t.lesson.backToCourse}</Link>
               <RailList modules={modules} courseSlug={courseSlug} />
             </nav>
           </details>
@@ -100,6 +102,8 @@ export function LessonNav({
           <span className="lesson-rail-caret" aria-hidden>▾</span>
         </label>
         <nav className="lesson-rail-panel" aria-label={t.lesson.railAria}>
+          {/* NAV-10: возврат к обзору курса первой строкой панели рейла. */}
+          <Link className="lesson-rail-back" href={`/app/${courseSlug}`}>{t.lesson.backToCourse}</Link>
           <RailList modules={modules} courseSlug={courseSlug} />
         </nav>
       </aside>
