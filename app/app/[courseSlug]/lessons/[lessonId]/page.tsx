@@ -70,6 +70,11 @@ export default async function LessonPage({ params }: { params: Promise<{ courseS
         nextId={next}
       />
       <main className="lesson-page">
+      {/* NAV-10: видимый возврат к обзору курса (модули/прогресс/проект) — ссылка в шапке
+          (NAV-07) есть, но её аффорданс невидим для аудитории 40+ (жалоба Ивана 2026-07-23). */}
+      <p className="lesson-breadcrumb">
+        <Link className="lesson-breadcrumb-link" href={`/app/${courseSlug}`}>{t.lesson.backToCourse}</Link>
+      </p>
       {positionText && <p className="lesson-position crat-kicker">{positionText}</p>}
       <h1 className="crat-display">{lesson.meta.title}</h1>
       {/* Ревью T4-T5 m5: компактный чек-лист «квиз/практика» под заголовком — план T5 требовал
